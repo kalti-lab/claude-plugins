@@ -1,0 +1,18 @@
+{
+  "name": "kalti-lab",
+  "description": "kalti 연구실 Claude Code 플러그인",
+  "owner": {
+    "name": "kalti-lab"
+  },
+  "plugins": [
+    {
+      "name": "kalti-lab-notes",
+      "description": "kalti 연구일지 시스템 — 일지 작성·온톨로지 정제 규약을 LLM에 주입하는 스킬 묶음",
+      "source": "./plugins/kalti-lab-notes",
+      "skills": [
+        "./skills/kalti-journal",
+        "./skills/kalti-ontology"
+      ]
+    }
+  ]
+}
