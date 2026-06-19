@@ -5,8 +5,8 @@ kalti 연구실의 Claude Code 플러그인 마켓플레이스.
 ## kalti-lab-notes
 
 연구일지 작성·온톨로지 정제 규약을 LLM에 주입하는 스킬 묶음.
-- `kalti-journal` — 멤버용 일지 작성 규약
-- `kalti-ontology` — 운영자용 온톨로지 정제 규약
+- `kalti-journal` — 일지 작성 규약(증거 남기기)
+- `kalti-ontology` — 온톨로지 정제 규약(증거를 지식 객체로, 다같이)
 
 ### 설치
 ```
@@ -33,4 +33,4 @@ export KALTI_VAULT="$HOME/path/to/lab-notes"
 git clone https://github.com/kalti-lab/lab-notes.git ~/dev/lab-notes
 ```
 
-연구일지 볼트는 [`kalti-lab/lab-notes`](https://github.com/kalti-lab/lab-notes), 온톨로지는 [`kalti-lab/ontology`](https://github.com/kalti-lab/ontology).
+연구일지 볼트는 [`kalti-lab/lab-notes`](https://github.com/kalti-lab/lab-notes) — `journals/`(증거)와 `ontology/`(지식 그래프)가 한 볼트에 함께 있어 Obsidian 그래프로 이어 본다.
