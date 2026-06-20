@@ -14,7 +14,7 @@ kalti 연구실의 Claude Code 플러그인 마켓플레이스.
 /plugin marketplace add kalti-lab/claude-plugins
 /plugin install kalti-lab-notes@kalti-lab
 ```
-설치 후 **한 번** `/kalti-setup`을 돌리면 볼트 위치·본인 폴더·환경변수가 잡힌다. 그다음부턴 **어느 작업 폴더에서든** `/kalti-journal`(일지)·`/kalti-ontology`(정제)를 호출하면 된다 — 연구 작업은 보통 볼트가 아닌 코드·실험 폴더에서 일어나므로 전역으로 동작한다.
+설치 후 **한 번** `/kalti-setup`을 돌리면 볼트 위치·본인 폴더·환경변수가 잡힌다. 그다음부턴 **호출 위치는 자유** — 작업하던 코드·실험 폴더 어디서 `/kalti-journal`(일지)·`/kalti-ontology`(정제)를 불러도, **일지는 항상 셋업에서 지정한 `journals/<본인>/`에 저장**된다. (저장 위치가 자유로운 게 아니라, *부르는 곳*이 자유로운 것 — 연구 작업이 보통 볼트 밖에서 일어나므로 호출만 전역으로 푼 것이다.)
 
 ### 환경변수 (kalti-setup이 잡아줌)
 스킬이 볼트와 본인 폴더를 찾는 순서:
