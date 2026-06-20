@@ -1,5 +1,6 @@
 ---
 name: kalti-ontology
+disable-model-invocation: true
 description: "kalti 연구일지를 온톨로지(지식 그래프)로 정제하는 규약. journals/의 일지에서 가설·발견을 뽑아 ontology/에 6가지 객체(project·hypothesis·finding·concept·source·person)와 타입드 링크로 큐레이션한다. kalti 온톨로지 객체를 새로 만들거나, 일지를 정제·승격하거나, '온톨로지 정제'·'지식그래프 갱신'·'이번 주 일지 정제해줘'·'발견/가설 카드로 올려줘' 같은 요청 시 반드시 사용. 일지 작성(kalti-journal 스킬)이 증거를 남기는 쪽이라면 이건 그 증거를 지식으로 끌어올리는 쪽이다(다같이 관리). 근거 없는 객체를 만들지 않도록 일지 원문 인용으로 검증하는 게 핵심."
 ---
 
