@@ -40,8 +40,8 @@ git clone https://github.com/kalti-lab/lab-notes.git ~/dev/lab-notes
 
 CLI는 켜져 있는 Obsidian 앱을 원격 조종한다(닫혀 있으면 첫 명령이 자동으로 띄움). 헤드리스 환경에선 정제 스킬이 파일 읽기로 fallback 한다. *일지 쓰기는 CLI를 쓰지 않고 파일을 직접 쓴다* — 앱 없이도 캡처되게.
 
-### kepano obsidian-skills (선택)
-Obsidian CLI 사용법과 Obsidian 문법(마크다운·Bases·Canvas)을 모델에 더 풍부하게 가르치는 **공식 스킬 묶음**(Obsidian CEO 제작). 우리 스킬에 핵심 그래프 명령은 이미 들어 있어 없어도 동작하지만, 폭넓은 Obsidian 작업엔 깔면 좋다:
+### kepano obsidian-skills (필수)
+Obsidian CLI 사용법과 Obsidian 문법(마크다운·Bases·Canvas)을 모델에 가르치는 **공식 스킬 묶음**(Obsidian CEO 제작). `/kalti-setup`이 설치를 요구하는 필수 구성요소다 — 다음 두 줄을 직접 실행한다:
 ```
 /plugin marketplace add kepano/obsidian-skills
 /plugin install obsidian@obsidian-skills
