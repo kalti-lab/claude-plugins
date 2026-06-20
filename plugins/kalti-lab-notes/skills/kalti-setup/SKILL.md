@@ -24,12 +24,12 @@ description: "kalti 연구일지 시스템을 처음 쓰기 전 1회 셋업. lab
 
 ## 영구화
 
-`~/.zshrc`(zsh / bash면 `~/.bashrc`)에 아래 두 줄을 **멱등하게** 추가한다 — 같은 값이 이미 있으면 건너뛰고, 값이 다르면 그때만 사용자에게 알린다. 큰 블록을 펼쳐 보이거나 다시 확인받지 말고 그냥 추가한다.
+zsh면 **`~/.zshenv`**(bash면 `~/.bashrc`)에 아래 두 줄을 **멱등하게** 추가한다 — 이미 같은 값이 있으면 건너뛰고, 다르면 그때만 알린다. 큰 블록 펼치거나 재확인하지 말 것.
 ```
 export KALTI_VAULT="<경로>"
 export KALTI_AUTHOR="<이름>"
 ```
-(이 스킬이 띄운 셸의 export는 사용자 셸에 안 남으므로 rc 편집이 핵심. 요약에서 `source ~/.zshrc` 한 줄만 안내.)
+**zsh는 `~/.zshrc`가 아니라 `~/.zshenv`에 넣는다.** `~/.zshrc`는 *대화형* 셸만 source하지만, Claude Code가 스킬을 돌리는 *비대화형* 셸은 `~/.zshenv`만 읽는다. 여기 넣어야 `/kalti-journal`·`/kalti-ontology`가 **어느 폴더에서든** `$KALTI_VAULT`·`$KALTI_AUTHOR`를 본다. (요약에서 `source ~/.zshenv` 한 줄 안내.)
 
 ## Obsidian CLI (선택)
 

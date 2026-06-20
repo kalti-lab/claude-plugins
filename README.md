@@ -22,7 +22,7 @@ kalti 연구실의 Claude Code 플러그인 마켓플레이스.
 - **`KALTI_VAULT`** — lab-notes 볼트(클론) 루트. 없으면 기본 `~/dev/lab-notes` → 그래도 없으면 물어봄.
 - **`KALTI_AUTHOR`** — 본인 일지 폴더 핸들(예: `aram`). 없으면 `journals/`의 기존 폴더 중 고르게 함(추측 안 함).
 
-`/kalti-setup`이 이 둘을 셸 설정(`~/.zshrc` 등)에 영구화한다. 수동으로 한다면:
+`/kalti-setup`이 이 둘을 셸 설정에 영구화한다 — **zsh는 `~/.zshenv`**(비대화형 셸도 읽는 곳; `~/.zshrc`는 Claude Code가 스킬 돌릴 때 안 읽혀 무용). 수동으로 한다면 `~/.zshenv`에:
 ```
 export KALTI_VAULT="$HOME/dev/lab-notes"
 export KALTI_AUTHOR="aram"
