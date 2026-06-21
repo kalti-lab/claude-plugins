@@ -50,20 +50,22 @@ EOF
 
 ## Obsidian에 볼트 등록
 
-`notes.env`를 써도 그건 kalti 쪽 설정일 뿐, **Obsidian 앱은 그 폴더가 볼트인 줄 모른다.** 그래서 등록 단계가 없으면 유저가 Obsidian을 열어도 lab-notes가 안 보인다(이번에 빠졌던 부분). 사람이 그래프를 보고 정제 때 CLI도 동작하려면, 클론했거나 Obsidian이 아직 모르는 볼트는 앱의 볼트 목록(`obsidian.json`)에 넣어줘야 한다.
+`notes.env`를 써도 그건 kalti 쪽 설정일 뿐, **Obsidian 앱은 그 폴더가 볼트인 줄 모른다.** 등록 단계가 없으면 유저가 Obsidian을 열어도 lab-notes가 안 보인다. 사람이 그래프를 보고 정제 때 CLI도 동작하려면, 클론했거나 Obsidian이 아직 모르는 볼트는 앱의 볼트 목록(`obsidian.json`)에 넣어줘야 한다.
 
-이 등록은 번들 스크립트로 안전하게 한다(멱등·원자적 쓰기·OS별 경로 처리):
+까다로운 건 타이밍이다 — Obsidian은 실행 중에 `obsidian.json`을 고쳐도 종료할 때 제 상태로 다시 써서 추가분을 지운다. 그래서 떠 있으면 **곱게 닫고 → 등록 → 다시 여는** 순서가 안전하다. 이 전부(상태 확인·멱등 등록·원자적 쓰기·맥에서의 종료/재실행)를 번들 스크립트가 처리한다.
+
+Obsidian이 떠 있을 땐 유저의 실행 중인 앱을 잠깐 닫는 일이므로, **먼저 한 줄로 알리거나 AskUserQuestion으로 확인하고** 돌린다("등록하려면 Obsidian을 잠깐 닫았다 다시 열게 — 진행할까?"). 확인되면:
 ```
-python3 <이 스킬 경로>/scripts/register_obsidian_vault.py "$VAULT"
+python3 <이 스킬 경로>/scripts/register_obsidian_vault.py "$VAULT" --restart
 ```
-`ALREADY_REGISTERED`(이미 있음)·`REGISTERED`(새로 더함) 중 하나를 찍는다. 이미 클론 안에서 셋업해 등록돼 있으면 조용히 넘어간다.
+스크립트가 찍는 상태로 분기한다:
 
-단, **타이밍이 중요하다.** Obsidian은 실행 중에 종료할 때 `obsidian.json`을 제 상태로 다시 써서 방금 더한 항목을 지울 수 있다. 그래서 `pgrep -x Obsidian`로 먼저 본다:
+- `REGISTERED`(꺼져 있어 바로 등록) · `REGISTERED_WITH_RESTART`(맥에서 곱게 닫고 등록 후 다시 엶) · `ALREADY_REGISTERED` → 됐다. 직전에 열려 있던 볼트는 그대로 복원되고, lab-notes가 볼트 목록에 새로 떠 있다.
+- `NEEDS_GUI`(맥이 아니거나 앱이 안 닫힘 등 자동 불가) → 밀어붙이지 말고 GUI 등록을 안내한다: Obsidian 좌하단 볼트 아이콘 → '다른 볼트 열기' → '폴더를 볼트로 열기'에서 `$VAULT` 선택.
 
-- **꺼져 있으면** — 스크립트를 돌린다. 다음에 Obsidian을 열면 볼트 목록에 뜬다.
-- **떠 있으면** — 종료 때 덮어써져 날아갈 수 있으니, 유저에게 한 번만 직접 등록하도록 안내하는 게 확실하다: Obsidian 좌하단 볼트 아이콘 → '다른 볼트 열기' → '폴더를 볼트로 열기'에서 `$VAULT` 선택. (Obsidian을 잠깐 끄고 이 단계를 다시 돌려도 된다.)
+종료는 강제 kill이 아니라 정상 quit이라 작업이 저장된 뒤 닫히고, 닫힌 걸 확인한 다음에야 등록한다 — 데이터가 날아갈 일은 없다. (앱을 건드리지 않는 보수 모드가 필요하면 `--restart` 없이 부른다 — 떠 있으면 그냥 `NEEDS_GUI`를 돌려준다.)
 
-요약에 "Obsidian에서 lab-notes 볼트를 열면 그래프가 보인다"를 한 줄 남긴다.
+요약에 "Obsidian 볼트 목록에 lab-notes 등록됨 — 거기서 열면 그래프가 보인다"를 한 줄 남긴다.
 
 ## Obsidian CLI
 
