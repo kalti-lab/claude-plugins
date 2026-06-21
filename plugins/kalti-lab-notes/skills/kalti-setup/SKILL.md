@@ -1,7 +1,7 @@
 ---
 name: kalti-setup
 disable-model-invocation: true
-description: "kalti 연구일지 시스템을 처음 쓰기 전 1회 셋업. lab-notes 볼트 위치(KALTI_VAULT)와 본인 일지 폴더(KALTI_AUTHOR)를 잡아 설정 파일 ~/.config/kalti/notes.env에 박고, 볼트가 없으면 git clone하며, 그래프 탐색용 Obsidian 공식 CLI와 kepano obsidian-skills 설치를 안내한다. /kalti-setup 으로 호출 — '셋업'·'처음 설정'·'볼트 연결해줘' 같은 요청이나, kalti-journal/kalti-ontology가 KALTI_VAULT·KALTI_AUTHOR 미설정으로 막혔을 때 사용. 전역 플러그인이라 작업 디렉터리와 무관하게 동작한다."
+description: "kalti 연구일지 시스템을 처음 쓰기 전 1회 셋업. lab-notes 볼트 위치(KALTI_VAULT)와 본인 일지 폴더(KALTI_AUTHOR)를 잡아 설정 파일 ~/.config/kalti/notes.env에 박고, 볼트가 없으면 git clone하며, 그래프 탐색용 Obsidian 공식 CLI와 kepano obsidian-skills 설치를 안내한다. /kalti-setup 으로 호출 — '셋업'·'처음 설정'·'볼트 연결해줘' 같은 요청이나, kalti-journal/kalti-ontology가 KALTI_VAULT·KALTI_AUTHOR 미설정으로 막혔을 때 사용. 이미 설정한 값을 잘못 박았거나 본인 폴더·볼트를 바꾸고 싶을 때 다시 호출하면 현재 값을 보여주고 고친다(재설정). 전역 플러그인이라 작업 디렉터리와 무관하게 동작한다."
 ---
 
 # kalti 셋업 (1회)
@@ -9,6 +9,20 @@ description: "kalti 연구일지 시스템을 처음 쓰기 전 1회 셋업. lab
 `KALTI_VAULT`(볼트 루트)와 `KALTI_AUTHOR`(본인 일지 폴더 이름) 두 값을 잡아 설정 파일 `~/.config/kalti/notes.env`에 박는 게 전부다.
 
 **조용히 실행한다.** 단계마다 이유·과정을 늘어놓거나 사소한 걸 재확인하지 말 것. 꼭 필요한 것만 묻고(예: 새 폴더 이름) 나머지는 그냥 하고, 끝나면 짧게 요약한다.
+
+## 호출되면 맨 먼저: 신규냐, 이미 설정돼 있냐
+
+`/kalti-setup`은 유저가 일부러 친다 — 이미 설정된 상태에서 또 불렀다면 보통 **뭔가 고치려는** 것이다. 그러니 맨 먼저 `. ~/.config/kalti/notes.env 2>/dev/null`로 현재 값을 읽고 갈라진다:
+
+- **파일이 없거나 값이 비었으면** → 신규 셋업. 아래 "볼트" → "본인 폴더" → "영구화" 순서대로.
+- **값이 있는데 깨졌으면**(`$KALTI_VAULT`에 `journals/` 없음, 또는 `$VAULT/journals/$KALTI_AUTHOR/`가 없음) → 뭐가 잘못됐는지 한 줄로 알리고, **깨진 그 항목만** 해당 섹션을 다시 돌려 고친다. 막다른 "이미 설정됨"으로 끝내지 말 것.
+- **값이 있고 멀쩡하면** → 현재 값(`KALTI_VAULT`·`KALTI_AUTHOR`)을 보여주고 AskUserQuestion으로 묻는다:
+  1. **그대로 둔다** — 확인만 하고 종료
+  2. **본인 폴더 바꾸기** — "본인 폴더" 섹션 재실행
+  3. **볼트 경로 바꾸기** — "볼트" 섹션 재실행
+  4. **처음부터 다시** — 둘 다 재실행
+
+  **바꾸기로 들어가면 현재 값이 유효해도 자동 채택하지 말고 새로 고르게 한다**(그게 재설정의 목적이다). 고른 뒤 "영구화"로 `notes.env`를 새 값으로 덮어쓴다.
 
 ## 볼트 (`KALTI_VAULT`)
 
