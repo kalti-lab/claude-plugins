@@ -73,7 +73,8 @@ python3 <this skill's path>/scripts/register_obsidian_vault.py "$VAULT" --restar
 Branch on the status the script prints:
 
 - `REGISTERED` (was closed, registered directly) / `REGISTERED_WITH_RESTART` (macOS: quit gracefully, registered, relaunched) / `ALREADY_REGISTERED` — done. Any vault that was open is restored, and lab-notes now shows in the vault list.
-- `NEEDS_GUI` (not macOS, or the app wouldn't close, etc.) — don't force it; guide the user through GUI registration: Obsidian's vault icon (bottom-left) → "Open another vault" → "Open folder as vault" → pick `$VAULT`.
+- `NOT_INSTALLED` — the Obsidian app isn't on this machine (the script checks for the app, not just the CLI, and won't write a phantom config). This isn't a failure: journaling works without Obsidian, since entries are written directly as files (headless OK). Skip registration and mention that Obsidian is recommended for the graph view and the refinement CLI — install it from obsidian.md, then re-run `/kalti-setup` (or add the folder via the GUI) to register the vault.
+- `NEEDS_GUI` (the app is installed but can't be driven automatically — not macOS, or it wouldn't close, etc.) — don't force it; guide the user through GUI registration: Obsidian's vault icon (bottom-left) → "Open another vault" → "Open folder as vault" → pick `$VAULT`.
 
 The quit is graceful, not a force-kill, so work is saved before it closes, and registration only happens after the close is confirmed — no data loss. (If a conservative mode that never touches the app is needed, call the script without `--restart`; it returns `NEEDS_GUI` when the app is running.)
 

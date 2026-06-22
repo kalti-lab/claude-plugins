@@ -1,5 +1,5 @@
 {
   "name": "kalti-lab-notes",
   "description": "kalti 연구일지 시스템 — 일지 작성·온톨로지 정제 규약을 LLM에 주입하는 스킬 묶음",
-  "version": "0.14.0"
+  "version": "0.15.0"
 }

@@ -8,6 +8,7 @@
   ALREADY_REGISTERED       이미 등록돼 있음 (변경 없음)
   REGISTERED               등록 완료 (Obsidian이 꺼져 있었음)
   REGISTERED_WITH_RESTART  Obsidian을 곱게 닫고 등록 후 다시 열었음 (--restart, macOS)
+  NOT_INSTALLED            Obsidian 앱이 이 기기에 없음 — 등록 건너뜀(실패 아님)
   NEEDS_GUI                Obsidian이 떠 있는데 자동 불가 — GUI로 등록 필요
   NOT_A_DIR <path>         볼트 경로가 폴더가 아님
   OBSIDIAN_JSON_UNREADABLE obsidian.json을 읽을 수 없음
@@ -49,6 +50,35 @@ def is_running():
         for name in ("Obsidian", "obsidian"):
             if subprocess.run(["pgrep", "-x", name], capture_output=True).returncode == 0:
                 return True
+        return False
+    except Exception:
+        return False
+
+
+def app_installed():
+    """Obsidian *앱*(CLI 아님)이 설치돼 있는지 best-effort로 본다."""
+    system = platform.system()
+    try:
+        if system == "Darwin":
+            # Launch Services가 번들 id를 알면 설치된 것
+            if subprocess.run(["osascript", "-e", 'id of app "Obsidian"'], capture_output=True).returncode == 0:
+                return True
+            for p in ("/Applications/Obsidian.app", os.path.expanduser("~/Applications/Obsidian.app")):
+                if os.path.isdir(p):
+                    return True
+            return False
+        if system == "Windows":
+            local = os.environ.get("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local"))
+            for p in (os.path.join(local, "Programs", "obsidian", "Obsidian.exe"),
+                      os.path.join(local, "Obsidian", "Obsidian.exe")):
+                if os.path.exists(p):
+                    return True
+            return False
+        # Linux/기타 — AppImage·flatpak·snap이라 제각각이라 best-effort
+        if subprocess.run(["which", "obsidian"], capture_output=True).returncode == 0:
+            return True
+        if subprocess.run(["flatpak", "info", "md.obsidian"], capture_output=True).returncode == 0:
+            return True
         return False
     except Exception:
         return False
@@ -115,6 +145,12 @@ def main():
 
     if already_registered(data, vault):
         print("ALREADY_REGISTERED")
+        return 0
+
+    # 앱이 없으면 phantom obsidian.json을 만들지 않는다. 떠 있거나, 기존
+    # obsidian.json이 있거나(=쓴 적 있음), 앱이 탐지되면 설치된 것으로 본다.
+    if not is_running() and not os.path.exists(oj) and not app_installed():
+        print("NOT_INSTALLED")
         return 0
 
     if not is_running():
