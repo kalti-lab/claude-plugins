@@ -104,22 +104,29 @@ Example: `project: "[[이미지생성-파이프라인]]"` (good), `"[[proj-image
 
 ## After writing/editing: sync with git
 
-Entries are written **directly as files** in the author folder — they persist with no Obsidian, and even when an agent runs headless. So syncing at that same moment is natural; sharing entries between members is the point of this system, and if you write but don't push, nobody else sees it. Right **after** writing or extending an entry, commit just the author folder and push to the shared repo:
+Entries are written **directly as files** in the author folder — they persist with no Obsidian, even when an agent runs headless. Sharing them is the point of this system, so they need to reach the shared git repo; if you write but don't push, nobody else sees it. How far to go is the user's preference in `KALTI_GIT_SYNC` (from the `notes.env` already sourced when resolving the vault; treat unset as `ask`):
+
+- `push` — commit and push automatically.
+- `commit` — commit locally only, don't push; tell the user it's committed but not yet shared.
+- `ask` — ask once via AskUserQuestion (push now / commit only / skip), then do that.
+- `off` — don't run git; the file is already saved.
+
+When committing/pushing, scope it to the author folder so other people's changes and stray files aren't swept in:
 
 ```
 cd "$VAULT"
-git add "journals/$AUTHOR/"          # author folder only — don't touch others' changes or stray files
+git add "journals/$AUTHOR/"          # author folder only
 git commit -m "journal: <note title or one-line summary>"
 git pull --rebase --autostash        # integrate others' pushes first
-git push                             # share the entry
+git push                             # only in push mode, or when the user chose push in ask mode
 ```
 
-Cases:
+Whatever the mode, handle these gracefully:
 - **Vault isn't a git repo, or has no remote** — the file is already saved, so leave it and note in the summary that git sync was skipped (no remote).
 - **push blocked by permissions** (no SSH key/token set) — the commit is already local, so the evidence is safe. Tell the user to run `git push` once they've set up access (it's a secret, so setup/skill can't supply it).
 - **rebase conflict** (rare — usually the author folder doesn't collide) — auto-merging is risky, so revert with `git rebase --abort` and tell the user. A human needs to look at conflicts.
 
-Put the commit/push result in the summary in one line.
+Put the sync result in the summary in one line.
 
 ## The five principles
 

@@ -141,17 +141,17 @@ Create only the candidates that pass, as files in `ontology/` (using the blocks 
 
 ## After applying: sync with git
 
-The ontology is **shared knowledge managed by the group**, so right **after** creating or editing an object, push with git so it reaches everyone else's graph too (`ontology/` is in the same lab-notes repo):
+The ontology is **shared knowledge managed by the group**, so changes should reach everyone else's graph (`ontology/` is in the same lab-notes repo). How far to go is the user's preference in `KALTI_GIT_SYNC` (from the `notes.env` already sourced when resolving the vault; unset = `ask`) — same modes as the journal skill: `push` (commit + push), `commit` (commit only), `ask` (ask via AskUserQuestion: push now / commit only / skip), `off` (don't run git). Scope the add to `ontology/`:
 
 ```
 cd "$VAULT"
 git add "ontology/"
 git commit -m "ontology: <one line on what was refined/added>"
 git pull --rebase --autostash        # integrate others' pushes first
-git push
+git push                             # only in push mode, or when the user chose push in ask mode
 ```
 
-Handle no-remote / blocked-push / rebase-conflict the same as the journal side — the files are already saved; push again once access (SSH key/token) is set; and for conflicts don't auto-merge — `git rebase --abort` and tell the user. Put the commit/push result in the summary in one line.
+Handle no-remote / blocked-push / rebase-conflict the same as the journal side — the files are already saved; push again once access (SSH key/token) is set; and for conflicts don't auto-merge — `git rebase --abort` and tell the user. Put the sync result in the summary in one line.
 
 ## Why two layers
 

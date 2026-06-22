@@ -14,9 +14,9 @@ This is preparation, not research work, so the user wants it over quickly. Settl
 
 `/kalti-setup` is typed deliberately. If it's run when things are already set up, it usually means the user wants to fix something. So read the current values first with `. ~/.config/kalti/notes.env 2>/dev/null` and branch:
 
-- **File missing or empty** — new setup. Go through "Vault" → "Author folder" → "Persist" below.
+- **File missing or empty** — new setup. Go through "Vault" → "Author folder" → "Git sync mode" → "Persist" below.
 - **Values present but pointing at something broken** (`$KALTI_VAULT` has no `journals/`, or `$VAULT/journals/$KALTI_AUTHOR/` is gone) — say what's broken and re-resolve just that item via its section. The user came to fix it; declaring "already set up" and stopping would waste the trip.
-- **Values present and valid** — show the current `KALTI_VAULT`/`KALTI_AUTHOR` and let the user choose what to do (AskUserQuestion): keep as-is / change the author folder / change the vault / start over. If they pick a change, have them re-pick that value even though it's currently valid — re-offering the existing value defeats the point of coming to change it. Then overwrite `notes.env` via "Persist".
+- **Values present and valid** — show the current settings (`KALTI_VAULT`/`KALTI_AUTHOR`/`KALTI_GIT_SYNC`) and let the user choose what to do (AskUserQuestion): keep as-is / change a setting / start over. If they pick "change a setting", ask which one (author folder / vault / git-sync mode) and re-resolve just that — re-offering the current value defeats the point of coming to change it. Then overwrite `notes.env` via "Persist".
 
 ## Vault (`KALTI_VAULT`)
 
@@ -36,15 +36,27 @@ With the vault set, pick the user's own journal folder. Pick from folders that a
 2. Otherwise list the folders in `journals/` and let the user pick (AskUserQuestion).
 3. If they pick "create new", take a single folder name and `mkdir -p "$VAULT/journals/<name>"`.
 
+## Git sync mode (`KALTI_GIT_SYNC`)
+
+After writing an entry, `/kalti-journal` and `/kalti-ontology` can sync to the shared git repo. How far they go is the user's preference, stored here so the skills can read it. Ask once (AskUserQuestion) and default to **ask** — the safe choice, since nothing leaves the machine without a per-write confirmation. The modes:
+
+- `ask` (default) — after writing, the skill asks each time: push / commit only / skip.
+- `push` — commit + `pull --rebase` + push automatically.
+- `commit` — commit locally only; the user pushes later.
+- `off` — don't touch git; just write the file.
+
+This is a per-write preference for the kalti skills. Separately, Claude Code may still show its own permission prompt for the underlying git commands unless the user has allowlisted them in CC settings — that's a CC-level thing, independent of this value, so it's worth a one-line mention if they want truly prompt-free pushing.
+
 ## Persist
 
-Write the two settled values to `~/.config/kalti/notes.env`. Leave the shell config (`~/.zshrc`/`~/.zshenv`) alone — the skills read this file directly on every call, so there's no need to lean on the shell environment, and that also sidesteps the old problem of non-interactive shells not reading rc files. Just rewrite the file whole:
+Write the settled values to `~/.config/kalti/notes.env`. Leave the shell config (`~/.zshrc`/`~/.zshenv`) alone — the skills read this file directly on every call, so there's no need to lean on the shell environment, and that also sidesteps the old problem of non-interactive shells not reading rc files. Just rewrite the file whole:
 
 ```
 mkdir -p ~/.config/kalti
 cat > ~/.config/kalti/notes.env <<EOF
 KALTI_VAULT=<path>
 KALTI_AUTHOR=<name>
+KALTI_GIT_SYNC=<mode>
 EOF
 ```
 (This is a different path from `~/.kalti/`, which holds infrastructure secrets.)
@@ -83,7 +95,7 @@ Make clear in the summary that setup isn't complete until kepano is installed, s
 
 ## When done
 
-Show the final values (`KALTI_VAULT`/`KALTI_AUTHOR`) and what was done (folder created / `notes.env` written / Obsidian vault registered / kepano installed or not).
+Show the final values (`KALTI_VAULT`/`KALTI_AUTHOR`/`KALTI_GIT_SYNC`) and what was done (folder created / `notes.env` written / Obsidian vault registered / kepano installed or not).
 
 Then tell the user about the two skills they can now use — the user just finished setup, often doesn't know what these do, and a bare name goes unused. Two points matter and are easy to get wrong:
 
