@@ -1,94 +1,95 @@
 ---
 name: kalti-setup
 disable-model-invocation: true
-description: "kalti 연구일지 시스템을 처음 쓰기 전 1회 셋업. lab-notes 볼트 위치(KALTI_VAULT)와 본인 일지 폴더(KALTI_AUTHOR)를 잡아 설정 파일 ~/.config/kalti/notes.env에 박고, 볼트가 없으면 git clone하고 그 폴더를 Obsidian 앱에 볼트로 등록하며, 그래프 탐색용 Obsidian 공식 CLI와 kepano obsidian-skills 설치를 안내한다. /kalti-setup 으로 호출 — '셋업'·'처음 설정'·'볼트 연결해줘' 같은 요청이나, kalti-journal/kalti-ontology가 KALTI_VAULT·KALTI_AUTHOR 미설정으로 막혔을 때 사용. 이미 설정한 값을 잘못 박았거나 본인 폴더·볼트를 바꾸고 싶을 때 다시 호출하면 현재 값을 보여주고 고친다(재설정). 전역 플러그인이라 작업 디렉터리와 무관하게 동작한다."
+description: "One-time setup before using the kalti research-journal system. Resolves the lab-notes vault location (KALTI_VAULT) and the user's own journal folder (KALTI_AUTHOR), writes them to the config file ~/.config/kalti/notes.env, clones the vault if missing, registers that folder as an Obsidian vault in the app, and points the user at the Obsidian CLI and the kepano obsidian-skills install. Invoke with /kalti-setup — for 'set up', 'first-time setup', or 'connect my vault' requests, or when kalti-journal/kalti-ontology are blocked because KALTI_VAULT/KALTI_AUTHOR aren't set. Re-run it to fix a wrong value or change the vault/author folder; it shows the current values and reconfigures. Global plugin: works regardless of the current working directory."
 ---
 
-# kalti 셋업 (1회)
+# kalti setup (one-time)
 
-하는 일은 단순하다 — 볼트 루트(`KALTI_VAULT`)와 본인 일지 폴더(`KALTI_AUTHOR`) 두 값을 알아내 `~/.config/kalti/notes.env`에 적어두는 것. 그러면 `/kalti-journal`·`/kalti-ontology`가 어느 폴더에서 불려도 이 파일을 읽어 볼트와 본인 폴더를 안다.
+The job is small: find two values — the vault root (`KALTI_VAULT`) and the user's own journal folder (`KALTI_AUTHOR`) — and write them to `~/.config/kalti/notes.env`. After that, `/kalti-journal` and `/kalti-ontology` read this file from any directory and know the vault and the user's folder.
 
-이건 연구 작업 자체가 아니라 그 **전에 한 번 하는 준비**라, 유저는 빨리 끝나길 바란다. 그러니 확실한 건 합리적 기본값으로 그냥 처리하고, 정말 사람만 아는 것(새 폴더 이름 등)만 물은 뒤, 끝에 한 일과 확정값을 짧게 요약하면 충분하다. 단계마다 이유를 늘어놓을수록 준비가 길어져 본 작업이 밀린다.
+This is preparation, not research work, so the user wants it over quickly. Settle the obvious things with sensible defaults, ask only for what genuinely needs a human (a new folder name, say), and end with a short summary of what was done and the final values. Spelling out a rationale at every step only drags the prep out.
 
-## 호출되면 맨 먼저: 신규냐, 이미 설정돼 있냐
+## First, on every call: new setup or reconfigure?
 
-`/kalti-setup`은 유저가 일부러 친다. 이미 설정된 상태에서 또 불렀다면 보통 **뭔가 고치려는** 신호다. 그래서 `. ~/.config/kalti/notes.env 2>/dev/null`로 현재 값을 먼저 읽고 상황에 맞춰 간다:
+`/kalti-setup` is typed deliberately. If it's run when things are already set up, it usually means the user wants to fix something. So read the current values first with `. ~/.config/kalti/notes.env 2>/dev/null` and branch:
 
-- **파일이 없거나 비었으면** — 신규다. 아래 "볼트" → "본인 폴더" → "영구화" 순서로.
-- **값이 있는데 가리키는 곳이 깨졌으면**(`$KALTI_VAULT`에 `journals/`가 없거나 `$VAULT/journals/$KALTI_AUTHOR/`가 사라짐) — 뭐가 어긋났는지 한 줄로 알리고 그 항목만 해당 섹션으로 다시 잡는다. 유저가 고치러 온 거니, 여기서 "이미 설정됨"이라며 끝내면 헛걸음이 된다.
-- **값이 멀쩡하면** — 현재 `KALTI_VAULT`·`KALTI_AUTHOR`를 보여주고 무엇을 할지 고르게 한다(AskUserQuestion): ① 그대로 둔다 ② 본인 폴더 바꾸기 ③ 볼트 바꾸기 ④ 처음부터. 바꾸기를 골랐다면 그 값이 지금 유효하더라도 새로 고르게 한다 — 바꾸러 온 사람에게 기존 값을 다시 들이밀면 목적과 어긋난다. 고른 뒤 "영구화"로 `notes.env`를 덮어쓴다.
+- **File missing or empty** — new setup. Go through "Vault" → "Author folder" → "Persist" below.
+- **Values present but pointing at something broken** (`$KALTI_VAULT` has no `journals/`, or `$VAULT/journals/$KALTI_AUTHOR/` is gone) — say what's broken and re-resolve just that item via its section. The user came to fix it; declaring "already set up" and stopping would waste the trip.
+- **Values present and valid** — show the current `KALTI_VAULT`/`KALTI_AUTHOR` and let the user choose what to do (AskUserQuestion): keep as-is / change the author folder / change the vault / start over. If they pick a change, have them re-pick that value even though it's currently valid — re-offering the existing value defeats the point of coming to change it. Then overwrite `notes.env` via "Persist".
 
-## 볼트 (`KALTI_VAULT`)
+## Vault (`KALTI_VAULT`)
 
-볼트는 아래 세 단계로 충분히 찾는다 — 순서대로 내려가다 처음 걸리는 데서 멈춘다. 파일시스템을 넓게 뒤지는 길(예: `find ~/dev`)은 피하는 게 좋다. 유저가 예상 못 한 곳을 긁으면 느리고 놀라운 데다, 같은 답을 사람한테 물으면 1초면 나오기 때문이다.
+Resolve the vault in these steps, stopping at the first hit. Avoid wide filesystem sweeps (e.g. `find ~/dev`): they're slow, they surprise the user by scanning places they didn't expect, and the same answer takes a human one second.
 
-1. `notes.env`의 `$KALTI_VAULT`가 유효하면(그 안에 `journals/`) 그걸로 끝.
-2. 아니면 **현재 폴더나 바로 위 한두 단계**에 `journals/`+`ontology/`가 같이 있나 본다 — 있으면 클론 안에서 부른 것이니 그게 볼트다. 그대로 쓴다.
-3. 그래도 못 찾으면, 이 시점엔 유저가 제일 빠른 답이다. AskUserQuestion으로 두 갈래를 준다:
-   1. **현재 폴더에 셋팅** — 여기(`<pwd>`)에 `git clone https://github.com/kalti-lab/lab-notes.git`로 받아 쓴다
-   2. **지정 경로 있어?** — "기타(직접 입력)"로 경로를 받는다(이미 볼트가 있으면 그 경로, 없으면 거기에 clone)
+1. If `notes.env`'s `$KALTI_VAULT` is valid (has `journals/` inside), use it. Done.
+2. Otherwise, check whether the current folder or one or two levels up holds both `journals/` and `ontology/` — if so, the skill was called from inside a clone, and that's the vault. Use it.
+3. Still nothing: the user is the fastest source now. Ask (AskUserQuestion) with two choices:
+   1. **Set up in the current folder** — clone into here (`<pwd>`) with `git clone https://github.com/kalti-lab/lab-notes.git`.
+   2. **Have a specific path?** — take the path via "Other (type it in)" (an existing vault's path, or a location to clone into).
 
-## 본인 폴더 (`KALTI_AUTHOR`)
+## Author folder (`KALTI_AUTHOR`)
 
-볼트를 잡았으면 본인 일지 폴더를 정한다. 이름은 **실재하는 폴더에서 고르게** 하는 게 안전하다 — 추측해서 만들면 오타 하나로 엉뚱한 폴더(`journals/Aram/` 같은)가 생겨 일지가 둘로 흩어진다.
+With the vault set, pick the user's own journal folder. Pick from folders that actually exist rather than guessing — a guessed name with one typo creates a stray folder (`journals/Aram/`) and splits journals in two.
 
-1. `$KALTI_AUTHOR`가 이미 `$VAULT/journals/`에 실재하면 그걸로.
-2. 아니면 `journals/`의 폴더 목록을 AskUserQuestion으로 고르게 한다.
-3. "새로 만들기"를 고르면 폴더 이름 하나만 받아(`폴더 이름 뭘로 할까?`) `mkdir -p "$VAULT/journals/<이름>"`로 만든다.
+1. If `$KALTI_AUTHOR` already exists under `$VAULT/journals/`, use it.
+2. Otherwise list the folders in `journals/` and let the user pick (AskUserQuestion).
+3. If they pick "create new", take a single folder name and `mkdir -p "$VAULT/journals/<name>"`.
 
-## 영구화
+## Persist
 
-확정한 두 값을 `~/.config/kalti/notes.env`에 적는다. 셸 설정(`~/.zshrc`·`~/.zshenv`)은 손대지 않는다 — 스킬이 호출 때마다 이 파일을 직접 읽으니 셸 환경에 기댈 필요가 없고, 덕분에 비대화형 셸이 rc를 안 읽어 생기던 문제도 사라진다. 파일은 통째로 새로 쓰면 된다(기존 값이 있으면 그대로 갈음):
+Write the two settled values to `~/.config/kalti/notes.env`. Leave the shell config (`~/.zshrc`/`~/.zshenv`) alone — the skills read this file directly on every call, so there's no need to lean on the shell environment, and that also sidesteps the old problem of non-interactive shells not reading rc files. Just rewrite the file whole:
+
 ```
 mkdir -p ~/.config/kalti
 cat > ~/.config/kalti/notes.env <<EOF
-KALTI_VAULT=<경로>
-KALTI_AUTHOR=<이름>
+KALTI_VAULT=<path>
+KALTI_AUTHOR=<name>
 EOF
 ```
-(인프라 시크릿이 든 `~/.kalti/`와는 다른 경로다.)
+(This is a different path from `~/.kalti/`, which holds infrastructure secrets.)
 
-## Obsidian에 볼트 등록
+## Register the vault in Obsidian
 
-`notes.env`를 써도 그건 kalti 쪽 설정일 뿐, **Obsidian 앱은 그 폴더가 볼트인 줄 모른다.** 등록 단계가 없으면 유저가 Obsidian을 열어도 lab-notes가 안 보인다. 사람이 그래프를 보고 정제 때 CLI도 동작하려면, 클론했거나 Obsidian이 아직 모르는 볼트는 앱의 볼트 목록(`obsidian.json`)에 넣어줘야 한다.
+Writing `notes.env` only configures the kalti side — Obsidian itself doesn't know that folder is a vault. Without this step, the user opens Obsidian and lab-notes isn't there. For the graph view, and for the CLI to work during refinement, a freshly cloned (or otherwise unknown) vault has to be added to the app's vault list (`obsidian.json`).
 
-까다로운 건 타이밍이다 — Obsidian은 실행 중에 `obsidian.json`을 고쳐도 종료할 때 제 상태로 다시 써서 추가분을 지운다. 그래서 떠 있으면 **곱게 닫고 → 등록 → 다시 여는** 순서가 안전하다. 이 전부(상태 확인·멱등 등록·원자적 쓰기·맥에서의 종료/재실행)를 번들 스크립트가 처리한다.
+The tricky part is timing: if Obsidian is running, edits to `obsidian.json` get overwritten with its in-memory state on quit. So when it's running, the safe order is quit gracefully → register → relaunch. A bundled script handles all of this (state check, idempotent registration, atomic write, and the quit/relaunch on macOS).
 
-Obsidian이 떠 있을 땐 유저의 실행 중인 앱을 잠깐 닫는 일이므로, **먼저 한 줄로 알리거나 AskUserQuestion으로 확인하고** 돌린다("등록하려면 Obsidian을 잠깐 닫았다 다시 열게 — 진행할까?"). 확인되면:
+Since quitting a running app interrupts the user, confirm first (a one-line heads-up or AskUserQuestion) before running it. Once confirmed:
 ```
-python3 <이 스킬 경로>/scripts/register_obsidian_vault.py "$VAULT" --restart
+python3 <this skill's path>/scripts/register_obsidian_vault.py "$VAULT" --restart
 ```
-스크립트가 찍는 상태로 분기한다:
+Branch on the status the script prints:
 
-- `REGISTERED`(꺼져 있어 바로 등록) · `REGISTERED_WITH_RESTART`(맥에서 곱게 닫고 등록 후 다시 엶) · `ALREADY_REGISTERED` → 됐다. 직전에 열려 있던 볼트는 그대로 복원되고, lab-notes가 볼트 목록에 새로 떠 있다.
-- `NEEDS_GUI`(맥이 아니거나 앱이 안 닫힘 등 자동 불가) → 밀어붙이지 말고 GUI 등록을 안내한다: Obsidian 좌하단 볼트 아이콘 → '다른 볼트 열기' → '폴더를 볼트로 열기'에서 `$VAULT` 선택.
+- `REGISTERED` (was closed, registered directly) / `REGISTERED_WITH_RESTART` (macOS: quit gracefully, registered, relaunched) / `ALREADY_REGISTERED` — done. Any vault that was open is restored, and lab-notes now shows in the vault list.
+- `NEEDS_GUI` (not macOS, or the app wouldn't close, etc.) — don't force it; guide the user through GUI registration: Obsidian's vault icon (bottom-left) → "Open another vault" → "Open folder as vault" → pick `$VAULT`.
 
-종료는 강제 kill이 아니라 정상 quit이라 작업이 저장된 뒤 닫히고, 닫힌 걸 확인한 다음에야 등록한다 — 데이터가 날아갈 일은 없다. (앱을 건드리지 않는 보수 모드가 필요하면 `--restart` 없이 부른다 — 떠 있으면 그냥 `NEEDS_GUI`를 돌려준다.)
+The quit is graceful, not a force-kill, so work is saved before it closes, and registration only happens after the close is confirmed — no data loss. (If a conservative mode that never touches the app is needed, call the script without `--restart`; it returns `NEEDS_GUI` when the app is running.)
 
-요약에 "Obsidian 볼트 목록에 lab-notes 등록됨 — 거기서 열면 그래프가 보인다"를 한 줄 남긴다.
+Note in the summary that lab-notes is now in Obsidian's vault list.
 
 ## Obsidian CLI
 
-`which obsidian`으로 있는지만 본다. 있으면 그냥 넘어가고, 없으면 요약에 한 줄 곁들인다: "설정 → General → Command line interface를 켜면 온톨로지 정제 때 그래프 탐색이 빨라진다(없어도 파일 읽기로 동작)."
+Just check `which obsidian`. If present, move on; if not, note in the summary that enabling Settings → General → Command line interface speeds up graph queries during ontology refinement (it still works without it, via file reads).
 
-## kepano obsidian-skills (필수)
+## kepano obsidian-skills (required)
 
-Obsidian 문법과 CLI 사용법을 모델에 가르치는 공식 스킬 묶음이라, 이게 깔려 있어야 정제 단계가 제대로 돈다 — 셋업의 필수 구성요소다. 아직 없으면 유저에게 다음 두 줄을 직접 실행해 달라고 분명히 청한다(`/plugin`은 모델이 칠 수 없다):
+This is the official skill bundle that teaches the model Obsidian syntax and CLI usage, so the refinement step relies on it — it's a required part of setup. If it's not installed yet, ask the user to run these two lines themselves (the model can't type `/plugin`):
 ```
 /plugin marketplace add kepano/obsidian-skills
 /plugin install obsidian@obsidian-skills
 ```
-요약에서도 "kepano까지 깔아야 셋업 완료"임을 분명히 남겨, 유저가 빠뜨리지 않게 한다.
+Make clear in the summary that setup isn't complete until kepano is installed, so the user doesn't skip it.
 
-## 끝나면
+## When done
 
-확정값(`KALTI_VAULT`·`KALTI_AUTHOR`)과 한 일(폴더 생성 / `notes.env` 작성 / Obsidian 볼트 등록 / kepano 설치 여부)을 짧게 보여준다.
+Show the final values (`KALTI_VAULT`/`KALTI_AUTHOR`) and what was done (folder created / `notes.env` written / Obsidian vault registered / kepano installed or not).
 
-그리고 이제 쓸 수 있게 된 두 스킬이 각각 뭔지 **한 줄씩 쉬운 말로** 알려준다 — 유저는 방금 셋업만 끝낸 참이라 이게 뭘 하는 건지 모르는 경우가 많고, 이름만 던지면 결국 안 쓰게 되기 때문이다:
+Then tell the user about the two skills they can now use — the user just finished setup, often doesn't know what these do, and a bare name goes unused. Two points matter and are easy to get wrong:
 
-- **`/kalti-journal`** — 연구하다 한 일을 **연구일지로 남기는** 스킬. "방금 한 거 일지로 남겨줘" 하면 본인 폴더(`journals/<본인>/`)에 형식 맞춰 기록한다(증거 남기기).
-- **`/kalti-ontology`** — 쌓인 일지에서 **가설·발견을 뽑아 지식 그래프로 정제**하는 스킬(주로 모아서 정리할 때). 일지가 "증거"라면 이건 그걸 "지식"으로 끌어올리는 쪽이다.
+- **They don't fire on their own.** Both are slash-only (`disable-model-invocation`), so they never trigger from ordinary conversation — the user has to type `/kalti-journal` or `/kalti-ontology`. This is deliberate: it keeps a journal from being created when nobody asked. Saying "log what I just did" in chat won't start the journal skill; typing the command does.
+- **What each is for:** `/kalti-journal` records work the user just did as a research-journal entry, in their own folder (`journals/<name>/`). `/kalti-ontology` pulls hypotheses and findings out of accumulated journals and curates them into the knowledge graph (usually in batches).
 
-둘 다 어느 폴더에서 불러도 방금 저장한 설정을 읽어 동작한다는 점을 한마디 곁들여 닫는다.
+Phrase this however reads naturally — there's no fixed wording.
 
-(이 셋업은 시크릿을 다룰 일이 없다 — 토큰이나 `~/.kalti/`의 인프라 키를 혹시 마주쳐도 화면에 찍거나 옮기지 않고 그대로 둔다.)
+(This setup never handles secrets — if a token or an infra key under `~/.kalti/` happens to surface, leave it untouched and don't print it.)

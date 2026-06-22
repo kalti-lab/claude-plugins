@@ -1,139 +1,139 @@
 ---
 name: kalti-journal
 disable-model-invocation: true
-description: "kalti 연구 모임의 연구일지(lab note)를 작성·수정할 때 쓰는 규약. lab-notes 볼트의 journals/<본인이름>/ 에 한글 제목 파일로, 고정 7칸 프론트매터(id·title·date·author·type·tags·project)와 정해진 본문 7섹션·5원칙에 맞춰 일지를 쓴다. 전역 플러그인이라 작업 디렉터리와 무관하게 /kalti-journal로 호출한다 — 실험기록·조사·구현·자료정리·회의·결정·회고 일지를 쓰거나 고칠 때, 'kalti 형식으로 일지 써줘'·'연구일지 작성'·'오늘 한 거 일지로 남겨줘' 같은 요청에 반드시 사용. 볼트를 직접 뒤져 형식을 추론하지 말고 이 스킬의 스키마를 따른다. (온톨로지 객체 작성·정제는 이 스킬이 아니라 kalti-ontology 스킬 소관.)"
+description: "Convention for writing and editing kalti research-group lab notes. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 7-field frontmatter (id, title, date, author, type, tags, project) and the prescribed 7 body sections and 5 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
 ---
 
-# kalti 연구일지 작성
+# Writing kalti research journals
 
-kalti는 연구 모임이다. 멤버는 한 일을 **연구일지**로 남기고, 운영자가 그 일지들을 모아 지식(온톨로지)으로 정제한다. 이 스킬은 **일지를 쓰는 쪽**의 규약이다.
+kalti is a research group. Members record what they did as **research journals**, and the operator collects those entries and refines them into knowledge (the ontology). This skill is the convention for the **writing** side.
 
-멤버는 **일지만 쓰면 된다.** 가설·발견을 지식 그래프로 엮는 일은 운영자 몫이다. 그러니 "나중에 내가 없어도 이 글만 보고 똑같이 재현할 수 있게" 한 일을 그대로 남기는 데 집중한다. 형식을 지키는 이유는 깔끔함이 아니라 — 일지가 정제 단계에서 기계적으로 읽히고 볼트 그래프에 정확히 연결되기 때문이다.
+Members only need to write journals — weaving hypotheses and findings into the knowledge graph is the operator's job. So focus on capturing what was done well enough that someone could reproduce it exactly from the note alone, even without you. The format isn't about tidiness: entries get read mechanically during refinement and linked into the vault graph, so the fields have to be where the refinement step expects them.
 
-## 언제·무엇을 근거로 쓰나
+## When to write, and what to base it on
 
-이 스킬은 보통 모든 작업이 끝난 뒤가 아니라, **세션 중 큰 작업 하나가 끝났을 때 수동으로(`/kalti-journal`) 호출**된다. 그 작업은 보통 볼트가 아니라 **실제 연구 폴더(코드·실험 환경)**에서 일어나므로, 이 스킬은 전역 플러그인으로 깔려 어디서든 호출된다. 일지의 1차 근거는 **방금 이 세션에서 실제로 일어난 일**이다. **세션에 그런 작업이 실제로 있을 때는** 사용자가 다시 풀어 설명해 주길 기다리지 말고, 지금까지의 대화·작업 맥락에서 직접 끌어온다(없을 때는 아래 "쓸 거리가 없으면" 게이트로):
+This skill is usually invoked manually (`/kalti-journal`) right after one sizable piece of work, not at the very end of everything. That work usually happens in an actual research folder (code, experiment environment), not in the vault — which is why this is a global plugin callable from anywhere. The primary source for an entry is **what actually just happened in this session**. When the session does contain such work, don't wait for the user to re-explain it — pull it from the conversation and work context directly (when there's nothing, use the gate below):
 
-- 실제로 실행한 명령·코드와 그 출력·결과
-- 만난 에러와 해결 과정 — 성공만이 아니라 막힌 것·되돌린 것(예: 시도했다 뺀 설정)도
-- 사용한 값·버전·경로·설정을 **본 그대로** — 기억으로 반올림하면 나중에 재현이 안 된다
-- 내린 결정과 그 이유
+- the commands/code actually run and their output/results
+- errors hit and how they were resolved — not just successes, but dead ends and things rolled back (e.g. a setting tried and removed)
+- values, versions, paths, and settings **as seen** — rounding them from memory breaks later reproduction
+- decisions made and why
 
-사용자가 프롬프트에 별도 설명을 주면 그 내용을 우선하고, 없으면 세션 맥락에서 재구성한다.
+If the user gives a separate explanation in the prompt, prefer that; otherwise reconstruct from session context.
 
-### 쓸 거리가 없으면 — 멈추고 먼저 묻는다
+### Nothing to write about — stop and ask first
 
-일지는 **증거**다 — 실제로 한 일을 적은 기록이라야 나중에 그래프와 정제가 신뢰를 갖는다. 그래서 이번 세션에 일지로 남길 실제 작업이 있을 때만 쓴다. 빈 세션이거나 직전 대화가 일지거리가 아니라면, 작성을 멈추고 먼저 묻는 게 맞다: **"이번에 무슨 작업을 일지로 남길까? 한 일·실행한 명령·결과를 알려줘."** 답을 받은 뒤에 쓴다.
+A journal is **evidence**: only a record of work actually done lets the later graph and refinement be trusted. So write only when this session has real work to record. If the session is empty, or the recent conversation isn't journal material, stop and ask before writing — ask the user what work to record this time, with what they did, the commands run, and the results — and write only after getting an answer.
 
-이때 `journals/`의 다른 일지(특히 남의 폴더)를 읽어 소재로 글을 지어내고 싶을 수 있는데, 그건 그럴듯해 보여도 증거가 아니라 허구라 시스템 전체의 신뢰를 깬다. 기존 일지를 읽는 게 쓸모 있는 경우는 두 가지뿐이다 — ① 이어쓸 후보 파일을 **찾기**(제목·`project`·날짜 같은 **메타데이터만**), ② 형식 참고(`assets/journal-template.md`·`references/example-experiment.md`). 둘 다 *내용*을 베껴오는 일이 아니다.
+It's tempting to read other journals in `journals/` (especially other people's folders) and spin a plausible entry from them, but that's fiction, not evidence, and it breaks trust in the whole system. Reading existing journals is useful in exactly two cases: (1) **finding** a candidate file to continue (metadata only — title, `project`, date), and (2) format reference (`assets/journal-template.md`, `references/example-experiment.md`). Neither copies *content*.
 
-근거가 세션이나 사용자 설명에 있을 때 그것만 적는다. 정말 빠진 메타데이터(어느 `project`인지, 검증한 가설 노트, `author` 이름)는 추론으로 메우기보다 짧게 한 번 물어 채운다.
+When the basis is in the session or the user's explanation, write only that. For metadata that's genuinely missing (which `project`, the hypothesis note tested, the `author` name), ask once briefly rather than filling it by inference.
 
-## 어디에 쓰나 — 볼트·본인 폴더부터 잡기
+## Where to write — resolve the vault and author folder first
 
-이 스킬은 전역으로 깔려 **어느 디렉터리에서 호출되든** 동작한다. 그래서 일지를 쓸 곳 — lab-notes 볼트(클론)의 루트(이하 `$VAULT`)와 본인 폴더(`$AUTHOR`) — 를 **맨 먼저 확정**한다. 작업 폴더 기준 상대경로(`journals/...`)로 쓰면 엉뚱한 데 떨어진다. 순서:
+This skill is installed globally and runs **from whatever directory it's called in**, so pin down where the entry goes — the lab-notes vault (clone) root (`$VAULT`) and the author folder (`$AUTHOR`) — **first**. Writing to a path relative to the working directory (`journals/...`) would drop the file in the wrong place. Order:
 
-1. **설정 파일**: `. ~/.config/kalti/notes.env 2>/dev/null` 로 읽으면 셋업이 박아둔 `$KALTI_VAULT`·`$KALTI_AUTHOR`가 잡힌다. `$KALTI_VAULT` 안에 `journals/`가 있으면 그걸 `$VAULT`로, `$VAULT/journals/$KALTI_AUTHOR/`가 실재하면 그걸 `$AUTHOR`로 쓴다.
-2. 파일이 없거나 값이 비면 **기본 경로** `~/dev/lab-notes`를 `$VAULT`로 시도한다(`journals/`가 있으면). 본인 폴더는 추측하지 말고 — 오타로 엉뚱한 새 폴더(`journals/Aram/` 등)를 파버린다 — `$VAULT/journals/`의 **기존 폴더 목록**을 **AskUserQuestion으로 고르게** 한다. 새 멤버면 "기타(직접 입력)"로 폴더 이름(영문 소문자 권장)을 받아 `mkdir -p`로 만든다.
-3. 어느 쪽도 안 잡히면 `/kalti-setup`을 한 번 돌리라고 안내한다 — 볼트·본인 폴더를 잡아 `~/.config/kalti/notes.env`에 박아주므로 다음부턴 안 묻는다.
+1. **Config file**: `. ~/.config/kalti/notes.env 2>/dev/null` loads the `$KALTI_VAULT`/`$KALTI_AUTHOR` that setup wrote. If `$KALTI_VAULT` contains `journals/`, use it as `$VAULT`; if `$VAULT/journals/$KALTI_AUTHOR/` exists, use it as `$AUTHOR`.
+2. If the file is missing or the values are empty, try the **default path** `~/dev/lab-notes` as `$VAULT` (if it has `journals/`). Don't guess the author folder — a typo carves out a stray new folder (`journals/Aram/`) — instead list the **existing folders** in `$VAULT/journals/` and let the user pick (AskUserQuestion). For a new member, take a folder name via "Other (type it in)" (lowercase latin recommended) and `mkdir -p`.
+3. If neither resolves, point the user to run `/kalti-setup` once — it pins the vault and author folder into `~/.config/kalti/notes.env` so there are no more questions next time.
 
-이후 **모든 경로는 `$VAULT` 기준 절대경로**다 — 일지는 `$VAULT/journals/$AUTHOR/`에 **파일 직접 쓰기**로 만들고(Obsidian 앱과 무관·헤드리스 OK), 후보 탐색도 거기서 한다. (볼트가 git 저장소다 — 일지를 쓴 뒤엔 아래 "작성·수정 후: git으로 동기화"로 본인 폴더를 커밋·push 해 공유한다.)
+From there **every path is absolute under `$VAULT`** — write the entry by **direct file write** into `$VAULT/journals/$AUTHOR/` (independent of the Obsidian app, headless OK), and do candidate searches there too. (The vault is a git repo — after writing, sync the author folder via "After writing/editing: sync with git" below.)
 
-## 호출되면 맨 먼저: 새 일지 vs 기존 일지
+## First, on every call: new entry vs existing entry
 
-새 작업인지 이어지는 작업인지는 모델이 추측하지 말고 **사용자에게 묻는다.** 볼트 위치를 잡고 위 "쓸 거리가 없으면" 게이트를 통과한 뒤(= 남길 작업이 확정된 뒤) 이 결정을 받는다. 묻는 건 **AskUserQuestion 도구**로 — 선택형이라 UX가 편하다. (단, 사용자가 호출할 때 이미 "새 일지로"·"거기에 이어서" 등을 밝혔으면 그 말을 따르고 이 질문은 건너뛴다.)
+Don't guess whether this is new work or a continuation — ask the user. Make this decision after pinning the vault location and passing the "nothing to write about" gate above (i.e. once the work to record is settled). Ask via the **AskUserQuestion** tool — the choice UI is smoother. (If the user already said "as a new entry" / "continue that one" when invoking, follow that and skip the question.)
 
-**1) 새로 vs 기존** (AskUserQuestion, 선택지 둘):
-- **새 일지로 작성** → 바로 아래 "새 일지 쓰는 절차"로 간다.
-- **기존 일지에 이어쓰기/수정** → 아래 후보 탐색으로 간다.
+**1) New vs existing** (AskUserQuestion, two choices):
+- **Write a new entry** → go to "Writing a new entry" below.
+- **Continue/edit an existing entry** → go to candidate search.
 
-**2) 기존 선택 시 — 탐색 후 고르게 한다:**
-- `$VAULT/journals/$AUTHOR/`을 훑어 관련 일지 후보를 **관련도 순**으로 추린다(제목·`project`·열린 "다음 액션"·주제로).
-- 후보가 **딱 1개면** 묻지 말고 바로 그 파일로 병합한다.
-- 후보가 **2개 이상이면** AskUserQuestion으로 **관련도 상위 4개**만 선택지로 제시한다(이 도구는 선택지가 최대 4개). 원하는 일지가 목록에 없으면 사용자가 **"기타(직접 입력)"**에 파일명을 적게 한다 — AskUserQuestion은 늘 자유입력을 제공하므로 후보가 아무리 많아도 이 한계 안에서 처리된다.
-- 관련 후보가 **하나도 없으면** — 자동 탐색이 놓쳤을 수 있으니 말없이 새 일지로 넘어가기보다 한 번 확인한다. AskUserQuestion으로 **새 일지로 쓰기 / 취소**를 묻고, **"기타(직접 입력)"로 합칠 일지 파일명을 직접 지정**할 수 있게 안내한다(유저는 후보에 안 뜬 파일을 알 수도 있다).
+**2) If existing — search, then let them pick:**
+- Scan `$VAULT/journals/$AUTHOR/` and shortlist relevant candidates by relevance (title, `project`, open "next actions", topic).
+- If there's **exactly one** candidate, merge into it without asking.
+- If there are **two or more**, offer the **top 4 by relevance** as choices (this tool allows at most 4). If the wanted entry isn't listed, have the user type the filename in **"Other (type it in)"** — AskUserQuestion always offers free input, so any number of candidates fits within this limit.
+- If there are **no** relevant candidates — the auto-search may have missed it, so confirm rather than silently starting a new entry. Ask (AskUserQuestion) "write a new entry / cancel", and let the user **name a file to merge into via "Other (type it in)"** (they may know a file the shortlist missed).
 
-**3) 병합(이어쓰기/수정)** 은 5원칙의 "지우지 말고 고치기"를 따른다: 기존 내용을 지우거나 덮어쓰지 않는다. 새로 안 건 날짜와 함께 덧붙이고(`## 추가 기록 (2026-06-20)` 또는 해당 섹션에 `(2026-06-20 추가) ...`), 틀린 건 취소선 `~~...~~`로 두고 이유를 적는다.
+**3) Merging (continue/edit)** follows the "don't delete, revise" principle: don't erase or overwrite existing content. Append what's newly known with the date (`## 추가 기록 (2026-06-20)`, or `(2026-06-20 추가) ...` in the relevant section), and leave wrong content struck through (`~~...~~`) with the reason.
 
-(완전히 새 작업이라도 관련된 이전 일지가 있으면, 새 노트의 `배경`에서 `[[이전 일지]]`로 잇는다.)
+(Even for entirely new work, if there's a related earlier entry, link it from the new note's `배경` section with `[[earlier entry]]`.)
 
-## 새 일지 쓰는 절차
+## Writing a new entry
 
-1. **위치·파일명을 정한다.** 본인 폴더 `$VAULT/journals/$AUTHOR/` 아래에 노트를 만든다. 파일명은 **"무엇을 했는지" 드러나는 한글 제목** (예: `$VAULT/journals/aram/샘플러별-디테일-비교.md`). 날짜를 파일명으로 쓰지 않는다 — 날짜는 프론트매터 `date`로 들어간다. 제목 파일명이라야 사람도 그래프도 한눈에 찾는다.
-2. **템플릿을 복사해 채운다.** 이 스킬의 `assets/journal-template.md`를 그대로 복사해 값만 채운다. 형식을 기억으로 재구성하기보다 이 파일에서 시작한다 — 칸·순서·섹션 제목이 정제 단계의 전제라, 어긋나면 자동 연결이 깨진다. 해당 없는 섹션은 비워도 되지만 순서·제목은 유지한다.
-3. 어떻게 채울지 막히면 채워진 예시 `references/example-experiment.md`를 본다.
+1. **Decide the location and filename.** Create the note under the author folder `$VAULT/journals/$AUTHOR/`. The filename is a **descriptive title that says what was done** — the team works in Korean, so these are Korean titles (e.g. `$VAULT/journals/aram/샘플러별-디테일-비교.md`). Don't put the date in the filename — the date goes in the `date` frontmatter field. A title filename is what lets both people and the graph find it at a glance.
+2. **Copy the template and fill it in.** Copy this skill's `assets/journal-template.md` verbatim and fill only the values. Start from the file rather than reconstructing the format from memory — the fields, order, and section titles are assumptions the refinement step depends on, and any drift breaks the automatic linking. Sections that don't apply can be left empty, but keep the order and titles.
+3. If you're stuck on how to fill it, look at the worked example `references/example-experiment.md`.
 
-## 프론트매터 값 고르기
+## Choosing frontmatter values
 
-템플릿 7칸 중 정해진 값에서 골라야 하는 칸:
+Of the 7 template fields, these must be chosen from fixed sets:
 
-**`type` (하나만)** — 일지 종류:
+**`type` (one)** — entry kind:
 
-| 값 | 뜻 |
+| value | meaning |
 |---|---|
-| `experiment` | 실험: 조건 정해 결과 측정 |
-| `investigation` | 조사: 원인·현황 파악 |
-| `build` | 구현: 코드·환경·도구 만들기·설정 |
-| `reading` | 자료정리: 논문·문서 읽고 정리 |
-| `meeting` | 회의 기록 |
-| `decision` | 결정 기록 |
-| `retro` | 회고 |
+| `experiment` | experiment: set conditions, measure results |
+| `investigation` | investigation: find a cause or current state |
+| `build` | build: make/configure code, environment, tools |
+| `reading` | reading: read and summarize papers/docs |
+| `meeting` | meeting record |
+| `decision` | decision record |
+| `retro` | retrospective |
 
-**`id` = 타입약어-슬러그** — 약어는 type별로 `exp- / invest- / build- / read- / meet- / decide- / retro-` (예: `exp-sampler-detail`). id는 글마다 하나씩 고유하게 둔다(날짜·순번 없이) — 재사용하면 어느 글을 가리키는 표지인지 흐려진다.
+**`id` = type-abbrev + slug** — the abbreviation per type is `exp- / invest- / build- / read- / meet- / decide- / retro-` (e.g. `exp-sampler-detail`). Keep each id unique per entry (no date or sequence number) — reusing one blurs which entry the marker points to.
 
-**`tags`** — 정해 둔 단어만: `infra · security · storage · network · ai · data · tooling · report · diffusion · sdxl · sampling · image · prompt`. 목록에 없는 태그는 팀과 합의 후 추가한다. 제각각이면 정제·검색이 깨진다.
+**`tags`** — only the agreed words: `infra · security · storage · network · ai · data · tooling · report · diffusion · sdxl · sampling · image · prompt`. Add a tag outside this list only after agreeing with the team; scattered tags break refinement and search.
 
-**`tests`** — 가설을 검증하는 `experiment`일 때만 템플릿의 `# tests:` 줄을 살려 검증 대상 가설 노트를 건다. 그 외 type은 이 줄을 뺀다.
+**`tests`** — only for an `experiment` that tests a hypothesis: keep the template's `# tests:` line and point it at the hypothesis note under test. Drop that line for other types.
 
-## 채우기 vs 묻기 — 애매할 때만
+## Fill vs ask — only when genuinely ambiguous
 
-위 프론트매터 값(type·tags·project·tests)은 **규약이 이 스킬에 다 있으니** 기본적으로 세션 맥락 + `ontology/`를 읽어 **모델이 알아서 채운다.** 이미 정해진 걸 유저에게 다시 묻지 않는다(일지 스킬의 "다시 설명시키지 마라" 원칙).
+The frontmatter values above (type, tags, project, tests) — the convention is all in this skill, so by default **fill them yourself** from session context plus a read of `ontology/`. Don't re-ask the user for something already decided (the "don't make me re-explain" principle).
 
-**확신이 안 설 때만** AskUserQuestion으로 한 번 — 가능하면 묶어서 — 확인한다. "애매하다"의 기준:
+**Only when unsure**, confirm once via AskUserQuestion — batched if possible. "Ambiguous" means:
 
-- **project**: 들어맞는 후보가 **2개 이상**이거나, `ontology/`에 맞는 게 없어 **새로 만들어야** 할 때. 후보들 + "새 project" + "보류(안 검)"를 선택지로 준다. 딱 하나로 분명하면 묻지 말고 건다. (후보는 `obsidian files folder=ontology` 또는 `$VAULT/ontology/` 파일에서 본다.)
-- **type**: 한 작업이 두 type에 걸쳐(예: build인지 investigation인지) 어느 쪽인지 분명치 않을 때. 추론값을 **첫 옵션 "(추천)"**으로 두고 확인받는다.
-- **범위/경계**: 세션에 굵직한 작업이 **여러 개**라 한 일지로 묶을지 쪼갤지 모호할 때. 어디까지를 한 건으로 볼지 묻는다.
+- **project**: two or more candidates fit, or none in `ontology/` fits and a **new one** is needed. Offer the candidates + "new project" + "hold (skip)". If exactly one is clear, link it without asking. (Find candidates via `obsidian files folder=ontology` or the files in `$VAULT/ontology/`.)
+- **type**: one piece of work straddles two types (e.g. build vs investigation) and it's unclear which. Put the inferred value as the first option marked "(recommended)" and confirm.
+- **scope/boundary**: the session has **several** chunky pieces of work and it's unclear whether to combine them into one entry or split them. Ask how much counts as one entry.
 
-기준선: **확신 있으면 채우고, 없을 때만 묻는다.** 유저가 호출할 때 이미 밝힌 값(예: "X 프로젝트 build 일지로")은 묻지 않는다.
+Baseline: **fill when confident, ask only when not.** Don't ask about values the user already stated when invoking (e.g. "as a build entry for project X").
 
-## 링크는 파일 이름으로 (id 아님)
+## Links by filename (not id)
 
-위키링크 `[[ ]]`는 항상 그 노트의 **파일 이름**으로 건다. Obsidian이 링크를 파일 이름(basename)으로 해석하기 때문이다. `id`는 글의 고정 표지일 뿐, 링크 식별자로 쓰지 않는다.
-예: `project: "[[이미지생성-파이프라인]]"` (O), `"[[proj-image-pipeline]]"` (X).
+Always write wikilinks `[[ ]]` with the note's **filename**, because Obsidian resolves links by filename (basename). `id` is just the entry's fixed marker, not a link identifier.
+Example: `project: "[[이미지생성-파이프라인]]"` (good), `"[[proj-image-pipeline]]"` (bad).
 
-## 작성·수정 후: git으로 동기화
+## After writing/editing: sync with git
 
-일지는 본인 폴더에 **파일로 직접** 써진다 — Obsidian이 없어도, 에이전트가 헤드리스로 돌려도 남는다. 그러니 동기화도 그 순간에 끝내는 게 자연스럽다(멤버끼리 일지를 공유하는 게 이 시스템의 핵심이라, 쓰고 안 올리면 남들은 못 본다). 일지를 새로 쓰거나 이어쓴 **직후**, 본인 폴더만 커밋해 공유 레포에 올린다:
+Entries are written **directly as files** in the author folder — they persist with no Obsidian, and even when an agent runs headless. So syncing at that same moment is natural; sharing entries between members is the point of this system, and if you write but don't push, nobody else sees it. Right **after** writing or extending an entry, commit just the author folder and push to the shared repo:
 
 ```
 cd "$VAULT"
-git add "journals/$AUTHOR/"          # 본인 폴더만 — 남의 변경·잡파일은 안 건드린다
-git commit -m "journal: <노트 제목 또는 한 줄 요약>"
-git pull --rebase --autostash        # 남이 올린 걸 먼저 합치고
-git push                             # 내 일지를 공유
+git add "journals/$AUTHOR/"          # author folder only — don't touch others' changes or stray files
+git commit -m "journal: <note title or one-line summary>"
+git pull --rebase --autostash        # integrate others' pushes first
+git push                             # share the entry
 ```
 
-상황별로:
-- **볼트가 git 레포가 아니거나 원격이 없으면** — 파일은 이미 저장됐으니 그대로 두고, 요약에 "git 동기화는 건너뜀(원격 없음)" 한 줄이면 된다.
-- **push가 권한으로 막히면**(SSH 키·토큰 미설정) — 커밋은 이미 로컬에 남았으니 증거는 안전하다. 권한을 잡은 뒤 `git push`만 하면 된다고 안내한다(시크릿이라 셋업·스킬이 대신 못 넣는다).
-- **rebase 충돌**(드물다 — 보통 본인 폴더라 안 겹친다) — 자동 병합하면 위험하니 `git rebase --abort`로 되돌리고 유저에게 알린다. 충돌은 사람이 봐야 한다.
+Cases:
+- **Vault isn't a git repo, or has no remote** — the file is already saved, so leave it and note in the summary that git sync was skipped (no remote).
+- **push blocked by permissions** (no SSH key/token set) — the commit is already local, so the evidence is safe. Tell the user to run `git push` once they've set up access (it's a secret, so setup/skill can't supply it).
+- **rebase conflict** (rare — usually the author folder doesn't collide) — auto-merging is risky, so revert with `git rebase --abort` and tell the user. A human needs to look at conflicts.
 
-요약에 커밋·push 결과를 한 줄로 남긴다(예: "journals/aram/샘플러비교.md 커밋·push 완료").
+Put the commit/push result in the summary in one line.
 
-## 다섯 가지 원칙
+## The five principles
 
-- **재현 가능성**: 내가 없어도 이 글만 보고 똑같이 따라 할 수 있게. "적당히" ❌ → "값 12로" ⭕
-- **추적성**: 어떤 결론이든 근거를 이 글 안에서 짚을 수 있게.
-- **하면서 바로 적기**: 끝나고 몰아 쓰면 수치·과정이 빠진다.
-- **실패도 빠짐없이**: 안 된 것·이상한 것도 남겨야 같은 삽질을 반복하지 않는다.
-- **지우지 말고 고치기**: 틀린 내용은 지우지 말고 취소선(`~~...~~`)이나 덧붙임으로, 이유와 함께.
+- **Reproducibility**: someone could follow this exactly without you. "roughly" ❌ → "with value 12" ⭕
+- **Traceability**: any conclusion can be backed to its basis within this note.
+- **Write as you go**: writing it all up afterward loses numbers and steps.
+- **Capture failures too**: record what didn't work and what was odd, so the same dead ends aren't repeated.
+- **Don't delete, revise**: don't erase wrong content — strike it through (`~~...~~`) or append a correction, with the reason.
 
-## 이 스킬이 손대는 곳 (그리고 맡겨도 되는 곳)
+## What this skill touches (and what it can leave to others)
 
-이 스킬은 **본인 폴더에 일지 한 편**을 쓰는 데 집중하면 된다. 나머지는 다른 데서 처리되니 안 건드려도 된다:
+This skill only needs to focus on writing one entry in the author folder. The rest is handled elsewhere:
 
-- **가설·발견**은 일지 본문에 적어두면 충분하다. 그걸 온톨로지 객체로 끌어올리는 건 `kalti-ontology` 스킬 몫이라, 여기선 `ontology/`를 손대지 않아도 된다.
-- 일지는 **본인 폴더(`journals/<본인>/`)에** 쓴다 — 남의 폴더는 그 사람의 증거이니 그대로 둔다.
+- **Hypotheses and findings** recorded in the entry body are enough. Promoting them into ontology objects is the `kalti-ontology` skill's job, so there's no need to touch `ontology/` here.
+- Entries go **in the author folder (`journals/<name>/`)** — leave other folders alone; they're that person's evidence.
 
-(파일명·태그·링크 규칙은 위 각 섹션에 있다.)
+(Filename, tag, and link rules are in their sections above.)

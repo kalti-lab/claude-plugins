@@ -1,159 +1,163 @@
 ---
 name: kalti-ontology
 disable-model-invocation: true
-description: "kalti 연구일지를 온톨로지(지식 그래프)로 정제하는 규약. journals/의 일지에서 가설·발견을 뽑아 ontology/에 6가지 객체(project·hypothesis·finding·concept·source·person)와 타입드 링크로 큐레이션한다. kalti 온톨로지 객체를 새로 만들거나, 일지를 정제·승격하거나, '온톨로지 정제'·'지식그래프 갱신'·'이번 주 일지 정제해줘'·'발견/가설 카드로 올려줘' 같은 요청 시 반드시 사용. 일지 작성(kalti-journal 스킬)이 증거를 남기는 쪽이라면 이건 그 증거를 지식으로 끌어올리는 쪽이다(다같이 관리). 근거 없는 객체를 만들지 않도록 일지 원문 인용으로 검증하는 게 핵심."
+description: "Convention for refining kalti research journals into an ontology (knowledge graph). Pulls hypotheses and findings from the entries in journals/ and curates them into ontology/ as 6 object types (project, hypothesis, finding, concept, source, person) with typed links. Invoke with /kalti-ontology to create ontology objects, refine/promote journals, or update the knowledge graph. Where kalti-journal records evidence, this turns that evidence into curated knowledge (managed together by the group). The core discipline: don't create an object without grounding — verify each against a quoted sentence from the source journal."
 ---
 
-# kalti 온톨로지 정제
+# kalti ontology refinement
 
-연구일지 시스템은 두 층이다.
+The journal system has two layers.
 
-- **일지 층 `journals/<이름>/`** — 각자 쓰는 작업 기록 = **증거**.
-- **온톨로지 층 `ontology/`** — 일지에서 정제해 뽑은 "계속 살아있는 지식"을 객체로 만든 층. 그래프에 뜨는 의미 노드. **다같이 관리한다.**
+- **Journal layer `journals/<name>/`** — each member's record of work = **evidence**.
+- **Ontology layer `ontology/`** — the living knowledge refined out of journals, as objects: the meaning nodes that show up in the graph. **Managed by the group together.**
 
-이 스킬은 일지를 **온톨로지로 정제(큐레이션)**하는 쪽이다. 정제의 핵심은 "일지에 실제로 근거가 있는 결론만, 중복 없이" 객체로 끌어올리는 것 — 없는 사실을 만들면 그래프 전체의 신뢰가 깨진다.
+This skill is the **refinement (curation)** side. The core of refinement is promoting into objects only conclusions actually grounded in the journals, without duplication — inventing facts that aren't there breaks trust in the whole graph.
 
-## 어디서 작업하나 — 볼트 위치부터 잡기
+## Where to work — resolve the vault first
 
-전역 플러그인이라 **어느 디렉터리에서 호출되든** 동작하므로, 볼트(일지+온톨로지가 함께 있는 lab-notes 클론)의 루트를 **맨 먼저 확정**한다. 아래 `journals/`·`ontology/` 경로는 모두 이 루트(이하 `$VAULT`) 기준 절대경로다. 정하는 순서:
+As a global plugin this runs **from whatever directory it's called in**, so pin down the vault root (the lab-notes clone, where journals and ontology live together) **first**. The `journals/`·`ontology/` paths below are all absolute under this root (`$VAULT`). Order:
 
-1. **설정 파일**: `. ~/.config/kalti/notes.env 2>/dev/null` 로 셋업이 박아둔 `$KALTI_VAULT`를 읽는다. 그 안에 `journals/`·`ontology/`가 있으면 그걸 `$VAULT`로.
-2. 파일이 없거나 값이 비면 **기본 경로** `~/dev/lab-notes`를 시도한다.
-3. 둘 다 아니면 `/kalti-setup`을 먼저 돌리라고 안내한다 — 볼트를 잡아 `~/.config/kalti/notes.env`에 박아준다.
+1. **Config file**: `. ~/.config/kalti/notes.env 2>/dev/null` reads the `$KALTI_VAULT` that setup wrote. If it contains `journals/`·`ontology/`, use it as `$VAULT`.
+2. If the file is missing or the value is empty, try the **default path** `~/dev/lab-notes`.
+3. If neither, point the user to run `/kalti-setup` first — it pins the vault into `~/.config/kalti/notes.env`.
 
-(`ontology/`는 lab-notes 볼트에 `journals/`와 함께 있다 — clone하면 다같이 받는다.) 셋업이 안 돼 있으면 `/kalti-setup`을 먼저 돌린다.
+(`ontology/` lives in the lab-notes vault alongside `journals/` — cloning gets both.)
 
-## 그래프 탐색·검증은 `obsidian` CLI로
+## Query and verify the graph via the `obsidian` CLI
 
-온톨로지는 타입드 링크 그래프다. "이 가설을 뒷받침하는 발견이 뭐냐", "고아 객체는?", "깨진 위키링크는?" 같은 질문을 grep으로 긁으면 부정확하고(별칭·임베드·헤딩참조를 놓침) 토큰만 많이 든다. **Obsidian 공식 CLI**는 앱이 이미 만들어 둔 링크 인덱스에 물어보므로 한 호출로 정확·압축된 답을 준다. **탐색·검증은 이걸 우선 쓴다.** (객체 *생성*은 CLI가 아니라 파일 직접 쓰기로 한다 — 아래 "정제" 참고.)
+The ontology is a typed-link graph. Questions like "which findings support this hypothesis", "what's orphaned", "which wikilinks are broken" are inaccurate to scrape with grep (it misses aliases, embeds, heading refs) and burn tokens. The **official Obsidian CLI** asks the link index the app already built, giving an accurate, compact answer in one call. **Prefer it for queries and verification.** (Object *creation* is done by direct file write, not the CLI — see "Refinement".)
 
-전제: Obsidian 앱이 떠 있어야 하고(닫혀 있으면 첫 명령이 자동으로 띄움), **볼트 디렉터리 안에서** 실행하거나 `vault=<이름>`을 준다. `which obsidian`이 없으면(헤드리스 등) CLI를 건너뛰고 `$VAULT/ontology/`·`$VAULT/journals/` 파일을 직접 읽어 같은 일을 한다(graceful fallback).
+Prerequisites: Obsidian must be running (if closed, the first command launches it), and run **inside the vault directory** or pass `vault=<name>`. If `which obsidian` finds nothing (headless, etc.), skip the CLI and read `$VAULT/ontology/`·`$VAULT/journals/` files directly to do the same (graceful fallback).
 
-`file=`는 위키링크처럼 **이름**으로, `path=`는 정확한 경로로 해석한다. 출력 기본 포맷이 명령마다 다르므로 파싱할 땐 **`format=json`**을 붙인다.
+`file=` resolves by **name** (like a wikilink), `path=` by exact path. The default output format varies per command, so add **`format=json`** when parsing.
 
-| 하고 싶은 것 | 명령 |
+| want | command |
 |---|---|
-| 객체 목록 | `obsidian files folder=ontology` |
-| 이 노트를 **가리키는** 것들(supports·derivedFrom 등 역방향) | `obsidian backlinks file="가설-..." counts format=json` |
-| 이 노트가 **가리키는** 것들(정방향) | `obsidian links file="발견-..."` |
-| 프론트매터 읽기(status·partOf·supersedes…) | `obsidian properties file="가설-..." format=json` |
-| **깨진 위키링크**(아직 안 만든 객체) | `obsidian unresolved verbose` |
-| **고아**(들어오는 링크 없음) / **막다른**(나가는 링크 없음) | `obsidian orphans` / `obsidian deadends` |
-| 본문 검색 | `obsidian search query="..." format=json limit=10` (줄 컨텍스트는 `search:context`) |
-| 태그 분포 | `obsidian tags sort=count counts` |
-| 본문 읽기 | `obsidian read file="..."` |
+| list objects | `obsidian files folder=ontology` |
+| things **pointing at** this note (supports, derivedFrom, etc. — reverse) | `obsidian backlinks file="가설-..." counts format=json` |
+| things this note **points to** (forward) | `obsidian links file="발견-..."` |
+| read frontmatter (status, partOf, supersedes…) | `obsidian properties file="가설-..." format=json` |
+| **broken wikilinks** (objects not yet created) | `obsidian unresolved verbose` |
+| **orphans** (no incoming links) / **dead ends** (no outgoing links) | `obsidian orphans` / `obsidian deadends` |
+| body search | `obsidian search query="..." format=json limit=10` (line context via `search:context`) |
+| tag distribution | `obsidian tags sort=count counts` |
+| read body | `obsidian read file="..."` |
 
-정제에서 특히 유용: `unresolved`로 "일지가 거는데 아직 객체가 없는 것"을, `orphans`로 "만들어 두고 아무도 안 잇는 것"을, `backlinks`로 "이미 있는 객체와 중복인지"를 한 번에 본다 — 정제 후보 발굴과 중복 점검이 곧 이 명령들이다.
+Especially useful in refinement: `unresolved` shows what journals link to but has no object yet, `orphans` shows what was created but nobody links to, `backlinks` shows whether an object already exists (a duplicate). Candidate discovery and duplicate checks are exactly these commands.
 
-(kepano `obsidian-skills` 플러그인을 깔았다면 더 폭넓은 Obsidian 작업까지 모델이 다룬다 — 설치는 `/kalti-setup` 참고. 핵심 그래프 명령은 위 표로 충분하다.)
+(With the kepano `obsidian-skills` plugin installed, the model can handle broader Obsidian work too — install via `/kalti-setup`. The table above is enough for the core graph commands.)
 
-## 객체 타입 (6종)
+## Object types (6)
 
-| 타입 | 뜻 |
+| type | meaning |
 |---|---|
-| `project` | 종목: 큰 연구 주제 |
-| `hypothesis` | 가설: 검증 대상인 주장 |
-| `finding` | 발견: 실험·조사에서 확인된 결론 |
-| `concept` | 개념: 반복 등장하는 용어·기법 |
-| `source` | 자료: 논문·문서·링크 |
-| `person` | 사람: 참여자 |
+| `project` | a large research topic |
+| `hypothesis` | a claim under test |
+| `finding` | a conclusion confirmed by experiment/investigation |
+| `concept` | a recurring term or technique |
+| `source` | a paper, doc, or link |
+| `person` | a participant |
 
-## status (타입별)
+## status (per type)
 
-- **project**: 진행 / 보류 / 완료 / 보관
-- **hypothesis**: 제안 / 채택 / 기각 / 대체됨
-- **finding · concept · source · person**: status 없음
+Status values are written into the notes in Korean (the team's working language):
 
-가설은 살아 움직인다. 새 가설이 옛 가설을 갈음하면, 옛 가설 status를 `대체됨`으로 바꾸고 새 가설에서 `supersedes`로 옛 것을 가리킨다(지우지 않는다 — 이력이 곧 연구 서사다).
+- **project**: `진행` / `보류` / `완료` / `보관` (active / on-hold / done / archived)
+- **hypothesis**: `제안` / `채택` / `기각` / `대체됨` (proposed / accepted / rejected / superseded)
+- **finding · concept · source · person**: no status
 
-## id 규약
+Hypotheses are alive. When a new hypothesis replaces an old one, set the old one's status to `대체됨` and have the new one point at the old one with `supersedes` (don't delete — the history is the research narrative).
 
-`타입약어-슬러그` (날짜·순번 없이 — id는 고정 표지라 안 흔들려야 한다): `proj-` / `hyp-` / `find-` / `con-` / `src-` / `per-`
-예: `proj-image-pipeline`, `hyp-sampler`, `find-karras`, `con-nodes2`, `src-nodes2-doc`, `per-aram`
+## id convention
 
-**링크는 파일 이름으로 건다(id 아님).** id는 frontmatter 안 고정 표지일 뿐, 위키링크 `[[ ]]`엔 노트의 파일 이름을 쓴다.
+`type-abbrev + slug` (no date or sequence — an id is a fixed marker and shouldn't shift): `proj-` / `hyp-` / `find-` / `con-` / `src-` / `per-`
+e.g. `proj-image-pipeline`, `hyp-sampler`, `find-karras`, `con-nodes2`, `src-nodes2-doc`, `per-aram`
 
-## 관계 링크 (타입드)
+**Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename.
 
-한 방향만 1번 적고, 반대 방향은 Obsidian 백링크로 본다(공통 허브 보일러플레이트를 피한다).
+## Relationship links (typed)
 
-| 키 | 뜻 | 어느 글에 (출발) | 가리키는 대상 (도착) |
+Write each direction once, and read the reverse via Obsidian backlinks (avoids common-hub boilerplate).
+
+| key | meaning | on which note (from) | points to (to) |
 |---|---|---|---|
-| `project` | ~에 속함 | 일지 | 종목 |
-| `partOf` | ~에 속함 | 가설·발견 | 종목 |
-| `tests` | ~를 검증함 | 실험 일지 | 가설 |
-| `supersedes` | ~를 대체함 | 가설 | 가설 |
-| `supports` / `refutes` | 뒷받침 / 반박 | 발견 | 가설 |
-| `derivedFrom` | ~에서 나옴 | 발견 | 실험 일지 |
-| `worksOn` | 참여함 | 사람 | 종목 |
+| `project` | belongs to | journal | project |
+| `partOf` | belongs to | hypothesis, finding | project |
+| `tests` | tests | experiment journal | hypothesis |
+| `supersedes` | replaces | hypothesis | hypothesis |
+| `supports` / `refutes` | supports / refutes | finding | hypothesis |
+| `derivedFrom` | derived from | finding | experiment journal |
+| `worksOn` | works on | person | project |
 
-## 타입별 필수칸
+## Required fields per type
 
-| 타입 | 필수칸 |
+| type | required |
 |---|---|
 | project | id, title, type, status, tags |
-| hypothesis | id, title, type, status, partOf (대체 시 supersedes) |
+| hypothesis | id, title, type, status, partOf (supersedes when replacing) |
 | finding | id, title, type, date, partOf, derivedFrom, (supports / refutes) |
 | concept | id, title, type, tags |
 | source | id, title, type, url |
 | person | id, title, type, worksOn |
 
-## 타입별 본문 틀 (요약)
+## Body shape per type (summary)
 
-- **project**: 목표 한 문단 + `## 현재 가설` + `## 실험` + `## 발견` + `## 참여`
-- **hypothesis**: 가설 한 문장 + `## 상태`(값과 날짜) + `## 근거`
-- **finding**: 결론 한 문장 + 메커니즘·근거 문단
-- **concept**: 개념을 쉽게 3~5문장
-- **source**: 무엇 · URL · 우리 연구에 쓸모
-- **person**: 한 줄 소개 + `## 주로 보는 것`
+Section headings are written in Korean in the notes:
 
-각 객체를 실제로 만들 때 복사할 수 있는 전체 프론트매터+본문 블록은 **`references/object-templates.md`**에 있다. 객체를 생성하기 직전에 그 파일을 읽어 해당 타입 블록을 그대로 쓴다.
+- **project**: one paragraph of goal + `## 현재 가설` + `## 실험` + `## 발견` + `## 참여`
+- **hypothesis**: one-sentence hypothesis + `## 상태` (value and date) + `## 근거`
+- **finding**: one-sentence conclusion + a mechanism/grounds paragraph
+- **concept**: the concept in 3–5 plain sentences
+- **source**: what · URL · use to our research
+- **person**: one-line intro + `## 주로 보는 것`
 
-## 정제 (큐레이션) — 이 시스템의 심장
+The full frontmatter+body block to copy when actually creating each object is in **`references/object-templates.md`**. Read that file right before creating an object and use the block for that type verbatim.
 
-일지를 온톨로지로 끌어올리는 작업. **누구나** 할 수 있다 — 일지를 쓴 사람이 바로 객체로 올려도 되고, 정기적으로 모아서 해도 된다. 강제 게이트가 없는 만큼 **규율로 품질을 지킨다**: 근거 있는 것만, 중복 없이, 지우지 말고 고치기.
+## Refinement (curation) — the heart of the system
 
-1. **입력**: 새로 쌓인 일지(+ 메모).
-2. **AI 정제**: 일지에서 "아직 온톨로지에 없는 가설/발견 후보 + 링크"를 뽑게 한다(아래 프롬프트).
-3. **반영**: 후보가 실제 일지에 근거하는지·중복 아닌지 확인하고 `ontology/`에 반영한다. 근거 없는 건 버린다.
-4. **주기**: 정해진 건 없지만, 주 1회 몰아서 정제하면(주간 보고서 만들 때 같이) 빠짐없이 챙긴다.
+Promoting journals into the ontology. **Anyone** can do it — the person who wrote a journal can promote it straight to objects, or it can be done in periodic batches. With no forced gate, **discipline keeps quality**: only what's grounded, no duplicates, revise rather than delete.
 
-### 재사용 정제 프롬프트
+1. **Input**: newly accumulated journals (+ notes).
+2. **AI refinement**: have the AI extract hypothesis/finding candidates not yet in the ontology, plus their links, from the journals (prompt below).
+3. **Apply**: check each candidate is grounded in an actual journal and isn't a duplicate, then apply to `ontology/`. Discard the ungrounded.
+4. **Cadence**: nothing fixed, but a weekly batch (alongside the weekly report) catches everything.
 
-일지 → 온톨로지 후보를 뽑을 때 AI(서브에이전트 등)에 이렇게 시킨다:
+### Reusable refinement prompt
+
+To extract journal → ontology candidates, instruct the AI (a subagent, etc.) like this:
 
 ```
-journals/ 아래 각 멤버 폴더의 모든 일지와 ontology/의 기존 객체를 읽어라.
-일지에는 결론·인사이트가 있는데 아직 온톨로지에 '발견(finding)'이나 '가설(hypothesis)'로
-올라가지 않은 것을 찾아 후보로 제안하라.
-- 이미 온톨로지에 있는 건 빼고, 새 것만 제안하라.
-- 각 후보는 근거가 된 일지 원문 문장을 그대로 인용하고(groundingQuote),
-  derivedFrom으로 그 일지를 가리켜라.
-- 일지에 실제로 적힌 결론만 쓰라 — 원문 인용으로 뒷받침되는 것만 올린다.
-그다음 각 후보가 실제 그 일지에 근거하는지·중복 아닌지 검증해, 통과한 것만 남겨라.
+Read every journal in each member folder under journals/ and the existing objects in ontology/.
+Journals contain conclusions and insights that haven't yet been promoted to a
+'finding' or 'hypothesis' object — find those and propose them as candidates.
+- Exclude anything already in the ontology; propose only new ones.
+- For each candidate, quote the source journal sentence verbatim (groundingQuote),
+  and point at that journal with derivedFrom.
+- Write only conclusions actually stated in the journal — promote only what a verbatim quote supports.
+Then verify each candidate is genuinely grounded in that journal and isn't a duplicate; keep only those that pass.
 ```
 
-통과한 후보만 `ontology/`에 파일로 만든다(`references/object-templates.md`의 블록 사용).
+Create only the candidates that pass, as files in `ontology/` (using the blocks in `references/object-templates.md`).
 
-## 반영 후: git으로 동기화
+## After applying: sync with git
 
-온톨로지는 **다같이 관리하는 공유 지식**이라, 객체를 만들거나 고친 **직후** git으로 올려야 다른 사람 그래프에도 반영된다(`ontology/`도 같은 lab-notes 레포 안이다):
+The ontology is **shared knowledge managed by the group**, so right **after** creating or editing an object, push with git so it reaches everyone else's graph too (`ontology/` is in the same lab-notes repo):
 
 ```
 cd "$VAULT"
 git add "ontology/"
-git commit -m "ontology: <무엇을 정제·추가했는지 한 줄>"
-git pull --rebase --autostash        # 남이 올린 걸 먼저 합치고
+git commit -m "ontology: <one line on what was refined/added>"
+git pull --rebase --autostash        # integrate others' pushes first
 git push
 ```
 
-원격 없음·권한 막힘·rebase 충돌 처리는 일지 쪽과 같다 — 파일은 이미 저장됐고, push만 권한(SSH 키·토큰) 잡은 뒤 다시 하면 되며, 충돌은 자동 병합하지 말고 `git rebase --abort` 후 사람에게 알린다. 요약에 커밋·push 결과를 한 줄 남긴다.
+Handle no-remote / blocked-push / rebase-conflict the same as the journal side — the files are already saved; push again once access (SSH key/token) is set; and for conflicts don't auto-merge — `git rebase --abort` and tell the user. Put the commit/push result in the summary in one line.
 
-## 왜 두 층인가
+## Why two layers
 
-일지는 증거, 온톨로지는 지식이다. 둘을 나눠 두면 — 최소한 일지만 써도 기여가 되고(부담 낮음), 정제를 거친 지식은 신뢰할 수 있으며, 그래프에서 관련된 것만 링크를 따라 정밀하게 뽑아낼 수 있어 AI에 줄 컨텍스트가 작고 정확해진다.
+Journals are evidence, the ontology is knowledge. Splitting them means: writing only a journal is already a contribution (low burden), refined knowledge can be trusted, and the graph lets you pull exactly the related pieces via links — so the context handed to an AI is small and accurate.
 
-## 출처 (사람용 가이드의 근거)
+## Sources (basis for the human-facing guide)
 
 - NIH — Best Practices for Keeping a Lab Notebook (2024)
 - Harvard Medical School — Electronic Lab Notebooks
