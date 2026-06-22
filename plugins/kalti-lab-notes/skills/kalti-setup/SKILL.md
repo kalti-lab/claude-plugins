@@ -30,11 +30,11 @@ Resolve the vault in these steps, stopping at the first hit. Avoid wide filesyst
 
 ## Author folder (`KALTI_AUTHOR`)
 
-With the vault set, pick the user's own journal folder. Pick from folders that actually exist rather than guessing — a guessed name with one typo creates a stray folder (`journals/Aram/`) and splits journals in two.
+With the vault set, settle the user's own journal folder. This folder *is* the user's identity in the shared vault, so confirm it — don't infer it. A freshly cloned vault already holds other members' folders (and seed/sample folders), so a folder merely existing doesn't make it *this* user's, and a stale `$KALTI_AUTHOR` carried over from a previous config may not be them either.
 
-1. If `$KALTI_AUTHOR` already exists under `$VAULT/journals/`, use it.
-2. Otherwise list the folders in `journals/` and let the user pick (AskUserQuestion).
-3. If they pick "create new", take a single folder name and `mkdir -p "$VAULT/journals/<name>"`.
+- **Skip the question only when the author is already settled for this run** — either `notes.env` had a valid `$KALTI_AUTHOR` and the user chose "keep as-is", or they named their folder when invoking. Then use that.
+- **Otherwise — new setup, a repair/re-clone, or "change author"** — list the folders under `$VAULT/journals/` and have the user pick (AskUserQuestion). Don't silently adopt an existing folder just because it matches a stale value or happens to exist. A returning member picks their own; a new member uses "Other (type it in)" to name a new one (lowercase latin recommended). Guessing a name risks a typo that carves a stray folder (`journals/Aram/`) and splits journals in two.
+- On "create new", `mkdir -p "$VAULT/journals/<name>"`.
 
 ## Git sync mode (`KALTI_GIT_SYNC`)
 
