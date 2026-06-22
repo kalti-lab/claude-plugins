@@ -73,7 +73,11 @@ python3 <this skill's path>/scripts/register_obsidian_vault.py "$VAULT" --restar
 Branch on the status the script prints:
 
 - `REGISTERED` (was closed, registered directly) / `REGISTERED_WITH_RESTART` (macOS: quit gracefully, registered, relaunched) / `ALREADY_REGISTERED` — done. Any vault that was open is restored, and lab-notes now shows in the vault list.
-- `NOT_INSTALLED` — the Obsidian app isn't on this machine (the script checks for the app, not just the CLI, and won't write a phantom config). This isn't a failure: journaling works without Obsidian, since entries are written directly as files (headless OK). Skip registration and mention that Obsidian is recommended for the graph view and the refinement CLI — install it from obsidian.md, then re-run `/kalti-setup` (or add the folder via the GUI) to register the vault.
+- `NOT_INSTALLED` — the Obsidian app isn't on this machine (the script checks for the app, not just the CLI, and won't write a phantom config). This isn't a failure: journaling works without Obsidian, since entries are written directly as files (headless OK). But Obsidian gives the graph view and the refinement CLI, so be helpful — offer to install it rather than just pointing the user off-screen:
+  - **macOS with Homebrew** (`which brew` succeeds) — offer to install it for them, and on a yes run `brew install --cask obsidian`. Installing software is a real change, so confirm first (a quick yes/no or AskUserQuestion); don't run it unprompted.
+  - **No Homebrew, or another OS** — give the official download link (https://obsidian.md/download). Don't download and run an installer blind — point them to the official page.
+
+  After it's installed, re-run registration (`register_obsidian_vault.py "$VAULT" --restart`) so the vault gets added. If the user would rather skip Obsidian for now, that's fine — journaling already works; they can install later and re-run `/kalti-setup`.
 - `NEEDS_GUI` (the app is installed but can't be driven automatically — not macOS, or it wouldn't close, etc.) — don't force it; guide the user through GUI registration: Obsidian's vault icon (bottom-left) → "Open another vault" → "Open folder as vault" → pick `$VAULT`.
 
 The quit is graceful, not a force-kill, so work is saved before it closes, and registration only happens after the close is confirmed — no data loss. (If a conservative mode that never touches the app is needed, call the script without `--restart`; it returns `NEEDS_GUI` when the app is running.)
@@ -91,7 +95,7 @@ This is the official skill bundle that teaches the model Obsidian syntax and CLI
 grep -q '"obsidian@obsidian-skills"' ~/.claude/plugins/installed_plugins.json 2>/dev/null && echo INSTALLED || echo MISSING
 ```
 - `INSTALLED` — note it in the summary and move on.
-- `MISSING` — ask the user to run these two lines themselves (the model can't type `/plugin`), and make clear in the summary that setup isn't complete until they do:
+- `MISSING` — ask the user to run these two lines themselves (the model can't type `/plugin`), and make clear in the summary that setup isn't complete until they do. Present them as a fenced code block, each on its own line, so they're easy to copy — not run together in a sentence:
   ```
   /plugin marketplace add kepano/obsidian-skills
   /plugin install obsidian@obsidian-skills
