@@ -86,12 +86,16 @@ Just check `which obsidian`. If present, move on; if not, note in the summary th
 
 ## kepano obsidian-skills (required)
 
-This is the official skill bundle that teaches the model Obsidian syntax and CLI usage, so the refinement step relies on it — it's a required part of setup. If it's not installed yet, ask the user to run these two lines themselves (the model can't type `/plugin`):
+This is the official skill bundle that teaches the model Obsidian syntax and CLI usage, so the refinement step relies on it — it's a required part of setup. Check whether it's already installed before asking — Claude Code records installed plugins in `~/.claude/plugins/installed_plugins.json` keyed by `<plugin>@<marketplace>`, so the kepano bundle appears as `obsidian@obsidian-skills`:
 ```
-/plugin marketplace add kepano/obsidian-skills
-/plugin install obsidian@obsidian-skills
+grep -q '"obsidian@obsidian-skills"' ~/.claude/plugins/installed_plugins.json 2>/dev/null && echo INSTALLED || echo MISSING
 ```
-Make clear in the summary that setup isn't complete until kepano is installed, so the user doesn't skip it.
+- `INSTALLED` — note it in the summary and move on.
+- `MISSING` — ask the user to run these two lines themselves (the model can't type `/plugin`), and make clear in the summary that setup isn't complete until they do:
+  ```
+  /plugin marketplace add kepano/obsidian-skills
+  /plugin install obsidian@obsidian-skills
+  ```
 
 ## When done
 
