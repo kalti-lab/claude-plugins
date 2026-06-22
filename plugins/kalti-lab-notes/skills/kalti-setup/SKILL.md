@@ -12,11 +12,10 @@ This is preparation, not research work, so the user wants it over quickly. Settl
 
 ## First, on every call: new setup or reconfigure?
 
-`/kalti-setup` is typed deliberately. If it's run when things are already set up, it usually means the user wants to fix something. So read the current values first with `. ~/.config/kalti/notes.env 2>/dev/null` and branch:
+`/kalti-setup` is typed deliberately. Read the current values first with `. ~/.config/kalti/notes.env 2>/dev/null` and branch:
 
-- **File missing or empty** — new setup. Go through "Vault" → "Author folder" → "Git sync mode" → "Persist" below.
-- **Values present but pointing at something broken** (`$KALTI_VAULT` has no `journals/`, or `$VAULT/journals/$KALTI_AUTHOR/` is gone) — say what's broken and re-resolve just that item via its section. The user came to fix it; declaring "already set up" and stopping would waste the trip.
-- **Values present and valid** — show the current settings (`KALTI_VAULT`/`KALTI_AUTHOR`/`KALTI_GIT_SYNC`) and let the user choose what to do (AskUserQuestion): keep as-is / change a setting / start over. If they pick "change a setting", ask which one (author folder / vault / git-sync mode) and re-resolve just that — re-offering the current value defeats the point of coming to change it. Then overwrite `notes.env` via "Persist".
+- **File missing or empty** — new setup. Walk "Vault" → "Author folder" → "Git sync mode" → "Persist" below.
+- **Values present** — this is a reconfigure. Show all three current settings (`KALTI_VAULT`/`KALTI_AUTHOR`/`KALTI_GIT_SYNC`), and flag any that are broken (`$KALTI_VAULT` has no `journals/`, or `$VAULT/journals/$KALTI_AUTHOR/` is gone). Then ask with a **multi-select** AskUserQuestion which settings to (re)configure — vault / author folder / git-sync mode — noting any broken one as needing a fix. Re-resolve each selected item via its section, re-picking even if the current value is valid (that's the point of changing it); leave unselected items as they are. If nothing is selected, keep everything (but if a broken item was left unselected, point out that it'll stay broken). Then overwrite `notes.env` via "Persist".
 
 ## Vault (`KALTI_VAULT`)
 
@@ -32,8 +31,8 @@ Resolve the vault in these steps, stopping at the first hit. Avoid wide filesyst
 
 With the vault set, settle the user's own journal folder. This folder *is* the user's identity in the shared vault, so confirm it — don't infer it. A freshly cloned vault already holds other members' folders (and seed/sample folders), so a folder merely existing doesn't make it *this* user's, and a stale `$KALTI_AUTHOR` carried over from a previous config may not be them either.
 
-- **Skip the question only when the author is already settled for this run** — either `notes.env` had a valid `$KALTI_AUTHOR` and the user chose "keep as-is", or they named their folder when invoking. Then use that.
-- **Otherwise — new setup, a repair/re-clone, or "change author"** — list the folders under `$VAULT/journals/` and have the user pick (AskUserQuestion). Don't silently adopt an existing folder just because it matches a stale value or happens to exist. A returning member picks their own; a new member uses "Other (type it in)" to name a new one (lowercase latin recommended). Guessing a name risks a typo that carves a stray folder (`journals/Aram/`) and splits journals in two.
+- **Skip the question only when the author is already settled for this run** — either it's a reconfigure and the user didn't select the author folder to change (its valid value stands), or they named their folder when invoking. Then use that.
+- **Otherwise — new setup, or the user chose to (re)configure the author folder** — list the folders under `$VAULT/journals/` and have the user pick (AskUserQuestion). Don't silently adopt an existing folder just because it matches a stale value or happens to exist. A returning member picks their own; a new member uses "Other (type it in)" to name a new one (lowercase latin recommended). Guessing a name risks a typo that carves a stray folder (`journals/Aram/`) and splits journals in two.
 - On "create new", `mkdir -p "$VAULT/journals/<name>"`.
 
 ## Git sync mode (`KALTI_GIT_SYNC`)
