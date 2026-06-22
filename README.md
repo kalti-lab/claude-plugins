@@ -5,7 +5,7 @@ kalti 연구실의 Claude Code 플러그인 마켓플레이스.
 ## kalti-lab-notes
 
 연구일지 작성·온톨로지 정제 규약을 LLM에 주입하는 스킬 묶음.
-- `kalti-setup` — 1회 셋업(볼트·본인 폴더를 `~/.config/kalti/notes.env`에 자동 기록, Obsidian CLI·kepano 스킬 안내)
+- `kalti-setup` — 1회 셋업(볼트·본인 폴더·git 동기화 모드를 `~/.config/kalti/notes.env`에 기록, 볼트를 Obsidian 앱에 등록, Obsidian CLI·kepano 스킬 안내)
 - `kalti-journal` — 일지 작성 규약(증거 남기기, **파일 직접 쓰기**)
 - `kalti-ontology` — 온톨로지 정제 규약(증거를 지식 객체로, 다같이; **그래프 탐색은 Obsidian CLI**)
 
@@ -21,13 +21,15 @@ kalti 연구실의 Claude Code 플러그인 마켓플레이스.
 
 - **`KALTI_VAULT`** — lab-notes 볼트(클론) 루트. 없으면 기본 `~/dev/lab-notes` → 그래도 없으면 물어봄.
 - **`KALTI_AUTHOR`** — 본인 일지 폴더 이름(예: `aram`). 없으면 `journals/`의 기존 폴더 중 고르게 함(추측 안 함).
+- **`KALTI_GIT_SYNC`** — 작성·정제 후 git 동기화를 어디까지 할지. `ask`(기본, 쓸 때마다 푸시할지 물어봄) / `push`(자동 commit→pull rebase→push) / `commit`(로컬 커밋만) / `off`(git 안 건드림). 미설정은 `ask`로 취급. (이건 *스킬이 어디까지 시도하나*만 정함 — git 명령 실행 허가 자체는 Claude Code 권한 설정이 따로 관장한다.)
 
-`/kalti-setup`이 이 둘을 파일에 박는다. 수동으로 한다면:
+`/kalti-setup`이 이 값들을 파일에 박는다. 수동으로 한다면:
 ```
 mkdir -p ~/.config/kalti
 cat > ~/.config/kalti/notes.env <<EOF
 KALTI_VAULT=$HOME/dev/lab-notes
 KALTI_AUTHOR=aram
+KALTI_GIT_SYNC=ask
 EOF
 ```
 (시크릿이 든 `~/.kalti/`와는 다른 경로다.) 볼트가 없으면 먼저 클론(또는 `/kalti-setup`이 대신 해줌):
