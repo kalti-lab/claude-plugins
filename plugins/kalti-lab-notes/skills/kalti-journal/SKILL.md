@@ -193,9 +193,19 @@ Whatever the mode, handle these gracefully:
 
 Put the sync result in the summary in one line.
 
+## What belongs in a journal — and what doesn't
+
+A journal records **what was investigated or built, what was found, and what was decided** — research evidence — not a transcript of how the work got typed out. A few things look like detail but are noise here. Keep them out of every entry, regardless of how long the entry is:
+
+- **Git commit hashes / SHAs / "commit number" references.** Reverting and auditing is git's job, and a note that hangs on `d615c6d` ages into something meaningless. When a commit genuinely matters, name it by **what it did or its version and date** — "눌림목 도입은 v1.1.0 (2026-06-05)" — never by the hash.
+- **Procedural step numbering / build checklists** ("1) 전체 검토  2) 방식 결정  3) 재배치 …"). That's a log of operator keystrokes, not a finding. Write the method as **what was done and why that was the approach**, in prose.
+- **CI / diff / build mechanics**: line-diff counts (`480 ++++----`), insertion/deletion, link or substitution counts, `assert` counts, and throwaway script paths (`/tmp/reorder.mjs`). These verify a build; they are not research observations.
+
+The test for any line: would a teammate reading this in three months learn **what you found and decided**, or **which keys you pressed**? Keep the former. `references/example-experiment.md` sits at the right altitude — it carries fixed values, observations, and a decision, but no hashes, no numbered steps, no diff counts.
+
 ## The five principles
 
-- **Reproducibility**: someone could follow this exactly without you. "roughly" ❌ → "with value 12" ⭕
+- **Reproducibility**: someone could reach the same result without you — so keep the values that determine it ("roughly" ❌ → "with value 12" ⭕). That means the result-determining values and the approach, not a keystroke or build transcript (see "What belongs in a journal").
 - **Traceability**: any conclusion can be backed to its basis within this note.
 - **Write as you go**: writing it all up afterward loses numbers and steps.
 - **Capture failures too**: record what didn't work and what was odd, so the same dead ends aren't repeated.
