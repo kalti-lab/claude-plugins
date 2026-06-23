@@ -1,7 +1,7 @@
 ---
 name: kalti-journal
 disable-model-invocation: true
-description: "Convention for writing and editing kalti research-group lab notes. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 7-field frontmatter (id, title, date, author, type, tags, project) and the prescribed 7 body sections and 5 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
+description: "Convention for writing and editing kalti research-group lab notes. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 7-field frontmatter (id, title, date, author, type, tags, project) and the prescribed 7 body sections and 6 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
 ---
 
 # Writing kalti research journals
@@ -203,10 +203,11 @@ A journal records **what was investigated or built, what was found, and what was
 
 The test for any line: would a teammate reading this in three months learn **what you found and decided**, or **which keys you pressed**? Keep the former. `references/example-experiment.md` sits at the right altitude — it carries fixed values, observations, and a decision, but no hashes, no numbered steps, no diff counts.
 
-## The five principles
+## The six principles
 
 - **Reproducibility**: someone could reach the same result without you — so keep the values that determine it ("roughly" ❌ → "with value 12" ⭕). That means the result-determining values and the approach, not a keystroke or build transcript (see "What belongs in a journal").
 - **Traceability**: any conclusion can be backed to its basis within this note.
+- **Readable to others (남이 읽게)**: a journal is read by the group, not just you. Write the finding in plain language and translate code-internal names (function / field / flag names) into what they *mean*; keep a raw identifier only when it's a value someone must reproduce, and gloss it on first use ("`raw 0` — 하드코딩 값 없음"). One idea per line — don't chain many clauses with `·` `/` `→`, and split a dense 배경 into digestible points. Test: could a teammate outside this codebase follow it?
 - **Write as you go**: writing it all up afterward loses numbers and steps.
 - **Capture failures too**: record what didn't work and what was odd, so the same dead ends aren't repeated.
 - **Don't delete, revise**: don't erase wrong content — strike it through (`~~...~~`) or append a correction, with the reason.
