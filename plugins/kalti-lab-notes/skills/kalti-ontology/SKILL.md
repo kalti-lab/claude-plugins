@@ -8,7 +8,7 @@ description: "Convention for refining kalti research journals into an ontology (
 
 The journal system has two layers.
 
-- **Journal layer `journals/<name>/`** — each member's record of work = **evidence**.
+- **Journal layer `journals/<name>/`** — each member's record of work = **evidence**. Within a member folder, entries are filed under per-project subfolders (`_inbox/` when no project), with `YYYYMMDD-`prefixed filenames — so read it recursively.
 - **Ontology layer `ontology/`** — the living knowledge refined out of journals, as objects: the meaning nodes that show up in the graph. **Managed by the group together.**
 
 This skill is the **refinement (curation)** side. The core of refinement is promoting into objects only conclusions actually grounded in the journals, without duplication — inventing facts that aren't there breaks trust in the whole graph.
@@ -73,7 +73,7 @@ Hypotheses are alive. When a new hypothesis replaces an old one, set the old one
 `type-abbrev + slug` (no date or sequence — an id is a fixed marker and shouldn't shift): `proj-` / `hyp-` / `find-` / `con-` / `src-` / `per-`
 e.g. `proj-image-pipeline`, `hyp-sampler`, `find-karras`, `con-nodes2`, `src-nodes2-doc`, `per-aram`
 
-**Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename.
+**Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename. Ontology object names are bare (no date), but **journal** filenames carry a `YYYYMMDD-` prefix, so links *to a journal* — `tests` and especially `derivedFrom` — include it: `derivedFrom: "[[20260615-샘플러별-디테일-비교]]"`, not `"[[샘플러별-디테일-비교]]"`.
 
 ## Relationship links (typed)
 
@@ -127,7 +127,7 @@ Promoting journals into the ontology. **Anyone** can do it — the person who wr
 To extract journal → ontology candidates, instruct the AI (a subagent, etc.) like this:
 
 ```
-Read every journal in each member folder under journals/ and the existing objects in ontology/.
+Read every journal in each member folder under journals/ (recurse into the per-project subfolders and _inbox/ inside each member folder) and the existing objects in ontology/.
 Journals contain conclusions and insights that haven't yet been promoted to a
 'finding' or 'hypothesis' object — find those and propose them as candidates.
 - Exclude anything already in the ontology; propose only new ones.

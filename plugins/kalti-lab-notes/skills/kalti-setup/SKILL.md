@@ -108,7 +108,7 @@ Show the final values (`KALTI_VAULT`/`KALTI_AUTHOR`/`KALTI_GIT_SYNC`) and what w
 Then tell the user about the two skills they can now use — the user just finished setup, often doesn't know what these do, and a bare name goes unused. Two points matter and are easy to get wrong:
 
 - **They don't fire on their own.** Both are slash-only (`disable-model-invocation`), so they never trigger from ordinary conversation — the user has to type `/kalti-journal` or `/kalti-ontology`. This is deliberate: it keeps a journal from being created when nobody asked. Saying "log what I just did" in chat won't start the journal skill; typing the command does.
-- **What each is for:** `/kalti-journal` records work the user just did as a research-journal entry, in their own folder (`journals/<name>/`). `/kalti-ontology` pulls hypotheses and findings out of accumulated journals and curates them into the knowledge graph (usually in batches).
+- **What each is for:** `/kalti-journal` records work the user just did as a research-journal entry, in their own folder (`journals/<name>/`, filed under per-project subfolders with a `YYYYMMDD-` dated filename). `/kalti-ontology` pulls hypotheses and findings out of accumulated journals and curates them into the knowledge graph (usually in batches).
 
 Phrase this however reads naturally — there's no fixed wording.
 

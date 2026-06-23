@@ -37,7 +37,71 @@ This skill is installed globally and runs **from whatever directory it's called 
 2. If the file is missing or the values are empty, try the **default path** `~/dev/lab-notes` as `$VAULT` (if it has `journals/`). Don't guess the author folder — a typo carves out a stray new folder (`journals/Aram/`) — instead list the **existing folders** in `$VAULT/journals/` and let the user pick (AskUserQuestion). For a new member, take a folder name via "Other (type it in)" (lowercase latin recommended) and `mkdir -p`.
 3. If neither resolves, point the user to run `/kalti-setup` once — it pins the vault and author folder into `~/.config/kalti/notes.env` so there are no more questions next time.
 
-From there **every path is absolute under `$VAULT`** — write the entry by **direct file write** into `$VAULT/journals/$AUTHOR/` (independent of the Obsidian app, headless OK), and do candidate searches there too. (The vault is a git repo — after writing, sync the author folder via "After writing/editing: sync with git" below.)
+From there **every path is absolute under `$VAULT`** — write the entry by **direct file write** into the author folder `$VAULT/journals/$AUTHOR/` (independent of the Obsidian app, headless OK), and do candidate searches there too (**recursively** — see the layout below). (The vault is a git repo — after writing, sync the author folder via "After writing/editing: sync with git" below.)
+
+### Author-folder layout — per-project subfolders + dated filenames
+
+The author folder isn't flat. Entries are filed under a **per-project subfolder**, and filenames carry a **date prefix**:
+
+```
+$VAULT/journals/$AUTHOR/
+├─ _inbox/                       # entries with no project (or a held one)
+│  └─ 20260623-메모-아이디어.md
+└─ <project-note-basename>/      # e.g. 이미지생성-파이프라인/
+   ├─ 20260615-샘플러별-디테일-비교.md
+   └─ 20260623-업스케일-검증.md
+```
+
+- **Subfolder** = the `project` note's filename (the wikilink basename, `[[ ]]` and any `|alias` stripped — e.g. `project: "[[이미지생성-파이프라인]]"` → folder `이미지생성-파이프라인`). No project, or a held/skipped one → `_inbox/`. Create the target folder with `mkdir -p` on demand.
+- **Filename** = `YYYYMMDD-<title>.md` (details under "Writing a new entry").
+
+Because the folder is nested, candidate searches and the refinement step read it **recursively** (project subfolders + `_inbox`).
+
+## Keep the author folder tidy (auto-organize + migration)
+
+Right after the vault and author folder are pinned, bring the author folder into the layout above before doing anything else. Older entries written under the flat scheme (loose in `journals/$AUTHOR/`, no date prefix) get filed into their project subfolder and renamed; entries already in place are left alone. This is **idempotent** — on a tidy folder it moves nothing.
+
+For each `*.md` under `$VAULT/journals/$AUTHOR/` (recursive):
+
+1. Read the `project` and `date` frontmatter.
+2. **Target folder** = the `project` note basename (`[[ ]]`/`|alias` stripped); no project or a held one → `_inbox`.
+3. **Target filename**:
+   - already prefixed (`^\d{8}-`) → keep the name as-is.
+   - otherwise → `<YYYYMMDD>-<current title>.md`, where `YYYYMMDD` is the `date` frontmatter with the dashes removed. If `date` is missing, fall back to the first git-commit date, then to mtime, and flag it in the report:
+     ```
+     git -C "$VAULT" log --diff-filter=A --date=format:%Y%m%d --format=%ad -- "<path>" | tail -1
+     ```
+4. If the current path already equals the target path, it's canonical — skip.
+5. Otherwise move it with `git mv "<old>" "<target-dir>/<new>"` (`mkdir -p` the target dir first). **If the basename changed** (a rename, not just a move), rewrite the links pointing at it — next.
+
+### Rewrite links on rename (`oldbase` → `newbase`)
+
+A move alone is link-safe (Obsidian resolves by basename, which is unchanged). A **rename** changes the basename, so every `[[ ]]` pointing at the old name must be updated, **across the whole vault** (other members' journals, and `ontology/` `derivedFrom`/links):
+
+```
+# find the referencing notes
+obsidian backlinks file="<oldbase>" format=json     # CLI present
+grep -rl "[[<oldbase>" "$VAULT"                      # fallback when no CLI
+```
+
+In each referencing note, swap only the basename token, preserving any suffix — match `[[oldbase` only when the next char is `]`, `|`, `#`, or `^` (and the embed form `![[oldbase…]]`) so a longer name isn't partially clobbered:
+
+```
+[[oldbase]]  [[oldbase|alias]]  [[oldbase#heading]]  [[oldbase^block]]  ![[oldbase…]]
+        → newbase (suffix kept)
+```
+
+### Scope, confirmation, and committing the migration
+
+- **Write scope exception.** This routine is the one place the journal skill writes **outside the author folder** — it edits other members' notes and `ontology/` *solely to repair `[[ ]]` links* to renamed files, nothing else. (Everywhere else, leave other folders alone.)
+- **Confirm a bulk transition once.** If the routine would move/rename more than a few files (the first transition off the flat scheme), give **one** heads-up first via AskUserQuestion — summarize "N files moved/renamed, M links rewritten" → proceed / skip. After that, incidental stragglers are filed without asking.
+- **Commit the migration on its own**, so it's easy to review and revert, separate from the entry you're about to write:
+  ```
+  cd "$VAULT"
+  git add journals/ ontology/        # migration touches links across both
+  git commit -m "journal: migrate to project folders + dated filenames"
+  ```
+  (Honor `KALTI_GIT_SYNC` for whether to push — same modes as below. The normal entry commit stays scoped to `journals/$AUTHOR/`.)
 
 ## First, on every call: new entry vs existing entry
 
@@ -53,13 +117,13 @@ Don't guess whether this is new work or a continuation — ask the user. Make th
 - If there are **two or more**, offer the **top 4 by relevance** as choices (this tool allows at most 4). If the wanted entry isn't listed, have the user type the filename in **"Other (type it in)"** — AskUserQuestion always offers free input, so any number of candidates fits within this limit.
 - If there are **no** relevant candidates — the auto-search may have missed it, so confirm rather than silently starting a new entry. Ask (AskUserQuestion) "write a new entry / cancel", and let the user **name a file to merge into via "Other (type it in)"** (they may know a file the shortlist missed).
 
-**3) Merging (continue/edit)** follows the "don't delete, revise" principle: don't erase or overwrite existing content. Append what's newly known with the date (`## 추가 기록 (2026-06-20)`, or `(2026-06-20 추가) ...` in the relevant section), and leave wrong content struck through (`~~...~~`) with the reason.
+**3) Merging (continue/edit)** follows the "don't delete, revise" principle: don't erase or overwrite existing content. Append what's newly known with the date (`## 추가 기록 (2026-06-20)`, or `(2026-06-20 추가) ...` in the relevant section), and leave wrong content struck through (`~~...~~`) with the reason. Keep the existing filename — its date prefix marks the original creation date, so don't re-date it on edit.
 
 (Even for entirely new work, if there's a related earlier entry, link it from the new note's `배경` section with `[[earlier entry]]`.)
 
 ## Writing a new entry
 
-1. **Decide the location and filename.** Create the note under the author folder `$VAULT/journals/$AUTHOR/`. The filename is a **descriptive title that says what was done** — the team works in Korean, so these are Korean titles (e.g. `$VAULT/journals/aram/샘플러별-디테일-비교.md`). Don't put the date in the filename — the date goes in the `date` frontmatter field. A title filename is what lets both people and the graph find it at a glance.
+1. **Decide the location and filename.** File the note under its project subfolder `$VAULT/journals/$AUTHOR/<project-or-_inbox>/` (folder = the `project` note basename, or `_inbox` when there's no project; `mkdir -p` it). The filename is `YYYYMMDD-<title>.md`: a **date prefix** then a **descriptive title that says what was done** — the team works in Korean, so the titles are Korean (e.g. `$VAULT/journals/aram/이미지생성-파이프라인/20260615-샘플러별-디테일-비교.md`). The `YYYYMMDD` is the entry's `date` with the dashes removed (the `date` frontmatter still stays `YYYY-MM-DD`); the `id` field stays date-free. The date prefix sorts entries chronologically and the title keeps them recognizable at a glance — but it means **wikilinks to the entry include the prefix** (`[[20260615-샘플러별-디테일-비교]]`), so link by the full dated filename.
 2. **Copy the template and fill it in.** Copy this skill's `assets/journal-template.md` verbatim and fill only the values. Start from the file rather than reconstructing the format from memory — the fields, order, and section titles are assumptions the refinement step depends on, and any drift breaks the automatic linking. Sections that don't apply can be left empty, but keep the order and titles.
 3. If you're stuck on how to fill it, look at the worked example `references/example-experiment.md`.
 
@@ -101,6 +165,7 @@ Baseline: **fill when confident, ask only when not.** Don't ask about values the
 
 Always write wikilinks `[[ ]]` with the note's **filename**, because Obsidian resolves links by filename (basename). `id` is just the entry's fixed marker, not a link identifier.
 Example: `project: "[[이미지생성-파이프라인]]"` (good), `"[[proj-image-pipeline]]"` (bad).
+Journal filenames carry the `YYYYMMDD-` date prefix, so links **to a journal** include it — `[[20260615-샘플러별-디테일-비교]]`, not `[[샘플러별-디테일-비교]]` (the same goes for the `배경` section's links to earlier entries). Ontology object names have no such prefix, so links to them stay bare.
 
 ## After writing/editing: sync with git
 
@@ -141,6 +206,6 @@ Put the sync result in the summary in one line.
 This skill only needs to focus on writing one entry in the author folder. The rest is handled elsewhere:
 
 - **Hypotheses and findings** recorded in the entry body are enough. Promoting them into ontology objects is the `kalti-ontology` skill's job, so there's no need to touch `ontology/` here.
-- Entries go **in the author folder (`journals/<name>/`)** — leave other folders alone; they're that person's evidence.
+- Entries go **in the author folder (`journals/<name>/`)**, filed under per-project subfolders (`_inbox/` when no project) — leave other folders alone; they're that person's evidence. The single exception is the tidy/migration routine, which may edit other folders and `ontology/` *only to repair `[[ ]]` links* when it renames a file.
 
 (Filename, tag, and link rules are in their sections above.)

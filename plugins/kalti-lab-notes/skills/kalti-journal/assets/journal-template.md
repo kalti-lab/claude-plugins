@@ -2,7 +2,7 @@
 id:        # 타입약어-슬러그 (예: exp-sampler-detail). 재사용 금지. 약어: exp/invest/build/read/meet/decide/retro
 title:     # 무슨 작업인지 한 줄
 date:      # YYYY-MM-DD
-author:    # 본인 (폴더 이름과 동일)
+author:    # 본인 (journals/ 바로 아래 작성자 폴더 이름. 그 아래 프로젝트 하위폴더 이름이 아님)
 type:      # experiment | investigation | build | reading | meeting | decision | retro
 tags: []   # 허용 목록에서만 (SKILL.md 참고)
 project: "[[종목 노트 이름]]"   # 예: "[[이미지생성-파이프라인]]"
