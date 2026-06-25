@@ -125,7 +125,19 @@ Don't guess whether this is new work or a continuation — ask the user. Make th
 
 1. **Decide the location and filename.** File the note under its project subfolder `$VAULT/journals/$AUTHOR/<project-or-_inbox>/` (folder = the `project` note basename, or `_inbox` when there's no project; `mkdir -p` it). The filename is `YYYYMMDD-<title>.md`: a **date prefix** then a **descriptive title that says what was done** — the team works in Korean, so the titles are Korean (e.g. `$VAULT/journals/aram/이미지생성-파이프라인/20260615-샘플러별-디테일-비교.md`). The `YYYYMMDD` is the entry's `date` with the dashes removed (the `date` frontmatter still stays `YYYY-MM-DD`); the `id` field stays date-free. The date prefix sorts entries chronologically and the title keeps them recognizable at a glance — but it means **wikilinks to the entry include the prefix** (`[[20260615-샘플러별-디테일-비교]]`), so link by the full dated filename.
 2. **Copy the template and fill it in.** Copy this skill's `assets/journal-template.md` verbatim and fill only the values. Start from the file rather than reconstructing the format from memory — the fields, order, and section titles are assumptions the refinement step depends on, and any drift breaks the automatic linking. Sections that don't apply can be left empty, but keep the order and titles.
-3. If you're stuck on how to fill it, look at the worked example `references/example-experiment.md`.
+3. If you're stuck on how to fill it, look at a worked example — `references/example-experiment.md` for a measurement experiment, `references/example-code-build.md` for a code-tuning investigation (it shows a noisy draft beside the cleaned version).
+
+### Before you save — an altitude pass
+
+Right before writing the file out, reread the draft once and strip the noise the entry doesn't need. This pass is what keeps code-heavy work at the right altitude — the prohibitions in "What belongs in a journal" only help if you actually apply them at write time. Remove or rewrite:
+
+- **commit hashes / SHAs and push ranges** (`13bb677`, `2822c32..13bb677`) → name the change by what it did, or drop it (git holds this).
+- **lists of modified files** (`rsi_tracker.py`, …) and **function / method / class names**, especially with line numbers (`(~169)`) → describe what the code now does, in words.
+- **DB table/column dumps**, **env-var / flag / setting key names** (keep the value `1.0`, drop the key `RSI_VOLUME_MAX`), **PIDs / process ids**, and **internal variable names** (`snap`, `bidx`, `vth`) → gloss to meaning or cut.
+- **temp / scratchpad / throwaway script paths** → cut.
+- **lines that chain many clauses with `·` `/` `→`** → split into one idea per line.
+
+What stays: the result-determining **values** (thresholds, parameters, versions), the **observations** as seen, and the **decisions** — each readable by a teammate outside this codebase.
 
 ## Choosing frontmatter values
 
@@ -199,15 +211,18 @@ A journal records **what was investigated or built, what was found, and what was
 
 - **Git commit hashes / SHAs / "commit number" references.** Reverting and auditing is git's job, and a note that hangs on `d615c6d` ages into something meaningless. When a commit genuinely matters, name it by **what it did or its version and date** — "눌림목 도입은 v1.1.0 (2026-06-05)" — never by the hash.
 - **Procedural step numbering / build checklists** ("1) 전체 검토  2) 방식 결정  3) 재배치 …"). That's a log of operator keystrokes, not a finding. Write the method as **what was done and why that was the approach**, in prose.
-- **CI / diff / build mechanics**: line-diff counts (`480 ++++----`), insertion/deletion, link or substitution counts, `assert` counts, and throwaway script paths (`/tmp/reorder.mjs`). These verify a build; they are not research observations.
+- **CI / diff / build mechanics**: line-diff counts (`480 ++++----`), insertion/deletion, link or substitution counts, `assert` counts, and throwaway script paths (`/tmp/reorder.mjs`, scratchpad files). These verify a build; they are not research observations.
+- **Code plumbing — which files and symbols you touched.** The list of modified files (`rsi_tracker.py`, `chart_bot.py`, …), function / method / class names — *especially* with line numbers (`check_oversold_buy`(~169)) — DB table/column dumps (`status, sell_price, days_to_5pct, …`), environment-variable / flag / setting **key names** (the name `RSI_VOLUME_MAX`, as opposed to the value `1.0`), and process ids (`PID 41530→63091`). The codebase already holds the file-and-symbol layout and git holds who-changed-what-where; re-listing them in a note is logging keystrokes, and the names mean nothing to a teammate outside this repo. This is the single biggest source of noise in code-work entries.
 
-The test for any line: would a teammate reading this in three months learn **what you found and decided**, or **which keys you pressed**? Keep the former. `references/example-experiment.md` sits at the right altitude — it carries fixed values, observations, and a decision, but no hashes, no numbered steps, no diff counts.
+For code work specifically, the rule of thumb is: a journal keeps the **finding, the decision, and the result-determining values** (an entry-filter threshold of 1.0, a 10-trading-day stop, -12%, a version), each said in plain language — **not the wiring of which file, function, or commit you changed to get there.** Keep a raw identifier only when it is a *value* someone must reproduce, and gloss it on first use.
+
+The test for any line: would a teammate reading this in three months learn **what you found and decided**, or **which keys you pressed**? Keep the former. `references/example-experiment.md` (a measurement experiment) and `references/example-code-build.md` (a code-tuning investigation, shown as a noisy draft beside its cleaned version) both sit at the right altitude — fixed values, observations, and a decision, but no hashes, no numbered steps, no diff counts, no file/symbol lists.
 
 ## The six principles
 
 - **Reproducibility**: someone could reach the same result without you — so keep the values that determine it ("roughly" ❌ → "with value 12" ⭕). That means the result-determining values and the approach, not a keystroke or build transcript (see "What belongs in a journal").
 - **Traceability**: any conclusion can be backed to its basis within this note.
-- **Readable to others (남이 읽게)**: a journal is read by the group, not just you. Write the finding in plain language and translate code-internal names (function / field / flag names) into what they *mean*; keep a raw identifier only when it's a value someone must reproduce, and gloss it on first use ("`raw 0` — 하드코딩 값 없음"). One idea per line — don't chain many clauses with `·` `/` `→`, and split a dense 배경 into digestible points. Test: could a teammate outside this codebase follow it?
+- **Readable to others (남이 읽게)**: a journal is read by the group, not just you. Write the finding in plain language and translate code-internal names (function / field / flag names) into what they *mean*; keep a raw identifier only when it's a value someone must reproduce, and gloss it on first use ("`raw 0` — 하드코딩 값 없음"). A file name, function name, or env-var key is almost never that value — see "What belongs in a journal" for why code plumbing stays out. One idea per line — don't chain many clauses with `·` `/` `→`, and split a dense 배경 into digestible points. Test: could a teammate outside this codebase follow it?
 - **Write as you go**: writing it all up afterward loses numbers and steps.
 - **Capture failures too**: record what didn't work and what was odd, so the same dead ends aren't repeated.
 - **Don't delete, revise**: don't erase wrong content — strike it through (`~~...~~`) or append a correction, with the reason.
