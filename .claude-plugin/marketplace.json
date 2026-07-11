@@ -12,7 +12,8 @@
       "skills": [
         "./skills/kalti-setup",
         "./skills/kalti-journal",
-        "./skills/kalti-ontology"
+        "./skills/kalti-ontology",
+        "./skills/kalti-weekly"
       ]
     }
   ]
