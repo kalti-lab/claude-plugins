@@ -72,7 +72,7 @@ Copy `assets/weekly-template.md` and fill it. The report has a fixed shape:
 - **Header** — title with week + period.
 - **한 화면 TL;DR** — 3 highlight lines (the week's most important results/decisions, synthesized) + a member×count table with each member's active projects. This is the only part you *summarize*; the buckets are *extracted*.
 - **Body** — the domain → project → bucket structure above.
-- **Tail sections** — 열린 다음 액션 (carry-over) and 지식화 후보, then the operator-notes area, then prev/next + index footer.
+- **Tail sections** — 열린 다음 액션 (carry-over), 지식화 후보, then the prev/next + index footer. The footer sits **inside** the auto region so it regenerates: when a neighboring week's report appears later, re-running updates the link automatically. The `## 운영자 코멘트 / 메모` area comes **after** the auto region (last in the file) so hand-written notes are preserved.
 
 **Idempotency is the core requirement — running the same week repeatedly must not duplicate or clobber:**
 
@@ -80,6 +80,7 @@ Copy `assets/weekly-template.md` and fill it. The report has a fixed shape:
 2. **Auto region markers** — everything generated sits between `<!-- kalti-weekly:auto:start -->` and `<!-- kalti-weekly:auto:end -->`. On re-run, **replace only that region**; leave everything outside it (the `## 운영자 코멘트 / 메모` area) untouched. If the file doesn't exist yet, create it from the template.
 3. **Deterministic ordering** — sort entries `date → project → author` so the same journals always produce byte-identical output. With no new/changed journals, a re-run yields no diff.
 4. **Index upsert** — update the row for this week in `reports/weekly/README.md` if present, else add it (newest first). Never append a duplicate row.
+5. **Neighbor link refresh** — after writing this week, if an adjacent week's report already exists, update *its* footer link to point back here (the newly-created week is that neighbor's prev/next). This keeps the chain consistent without needing to re-run the neighbors.
 
 Because the auto region is regenerated from source, edits made to a journal after a report was built are picked up on the next run automatically. Mid-week runs are partial and fill in as the week progresses — that is expected.
 

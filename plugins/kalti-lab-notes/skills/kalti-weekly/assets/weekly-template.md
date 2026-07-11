@@ -7,7 +7,7 @@ tags: [weekly, report]
 
 # 주간 보고 YYYY-Www (MM-DD ~ MM-DD)
 
-<!-- kalti-weekly:auto:start — 이 영역은 /kalti-weekly 재실행 시 통째로 교체됩니다. 손으로 쓴 내용은 아래 '운영자 코멘트'에 남기세요. -->
+<!-- kalti-weekly:auto:start — 이 영역은 /kalti-weekly 재실행 시 통째로 교체됩니다. 손으로 쓴 내용은 맨 아래 '운영자 코멘트'에 남기세요. -->
 
 ## 📌 이번 주 하이라이트
 1. (가장 중요한 결과·결정 한 줄)
@@ -40,11 +40,11 @@ tags: [weekly, report]
 ## 🧩 지식화(ontology) 후보
 - (프로젝트) "…" — 가설/발견 후보
 
+---
+◀ [[YYYY-Www-1]] · [주간 인덱스](README) · [[YYYY-Www+1]] ▶
+<!-- 이전/다음 주 링크는 자동 영역 안에 있어 새 주차가 생기면 갱신됩니다. 이웃 보고서가 없으면 (없음). -->
+
 <!-- kalti-weekly:auto:end -->
 
 ## 📝 운영자 코멘트 / 메모
 <!-- 이 아래는 재실행해도 보존됩니다. 손으로 강조·코멘트를 남기세요. -->
-
-
----
-◀ [[YYYY-Www-1]] · [주간 인덱스](README) · [[YYYY-Www+1]] ▶
