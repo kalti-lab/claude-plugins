@@ -1,7 +1,7 @@
 ---
 name: kalti-weekly
 disable-model-invocation: true
-description: "Convention for rolling up a kalti member's research journals into a weekly report. By default it builds the invoking member's OWN report: gathers that author's entries in journals/<author>/ whose date falls in a given ISO week, groups them reader-first (domain → project) into six buckets (progress, findings, decisions, blockers, next actions, ontology candidates), and writes reports/weekly/<author>/YYYY-Www.md with a one-line summary + link per item. Invoke with /kalti-weekly (my current week), /kalti-weekly 2026-W28 (my week 28), /kalti-weekly 2026-W28 jinsik (another member), /kalti-weekly --backfill 2026-W22..2026-W28 (past weeks), or /kalti-weekly --all (optional whole-lab combined report). Re-running is idempotent: only the auto-generated region is rewritten, hand-written operator notes are preserved."
+description: "Convention for rolling up a kalti member's research journals into a weekly report. By default it builds the invoking member's OWN report: gathers that author's entries in journals/<author>/ whose date falls in a given ISO week, groups them reader-first (domain → project) into six buckets (progress, findings, decisions, blockers, next actions, ontology candidates), and writes reports/weekly/<author>/YYYY-Www.md with a one-line summary + link per item. Invoke with /kalti-weekly (my current week), /kalti-weekly 2026-W28 (my week 28), /kalti-weekly 2026-W28 jinsik (another member), /kalti-weekly --backfill 2026-W22..2026-W28 (past weeks), or /kalti-weekly --all (optional whole-lab combined report). Re-running is idempotent: everything above the `## 📝 운영자 코멘트 / 메모` heading is regenerated, that section and below is preserved. The report contains no HTML comments."
 ---
 
 # kalti weekly report
@@ -12,7 +12,7 @@ The journal system has three layers.
 - **Ontology layer `ontology/`** — the curated knowledge (managed by the group).
 - **Report layer `reports/weekly/<author>/`** — each member's periodic roll-up: one file per ISO week, per member, plus an index. **This skill writes here.**
 
-This skill is the **weekly roll-up** side. A weekly report defaults to **one member's own work** (the invoking author) — it is not a lab-wide report unless explicitly asked with `--all`. A report is a **navigation map, not a copy**: each item is a one-line summary plus a link back to the source journal, so a reader scans fast and clicks through for detail. It is a **derived view** — the auto-generated region is regenerated from the journals on every run (unlike a journal, which is append-only evidence).
+This skill is the **weekly roll-up** side. A weekly report defaults to **one member's own work** (the invoking author) — it is not a lab-wide report unless explicitly asked with `--all`. A report is a **navigation map, not a copy**: each item is a one-line summary plus a link back to the source journal, so a reader scans fast and clicks through for detail. It is a **derived view** — everything above the operator-notes heading is regenerated from the journals on every run (unlike a journal, which is append-only evidence).
 
 The two principles behind every choice here: **stay faithful to the journals** (one-liners must be backed by the entry — never invent progress that isn't recorded), and **be easy to reference** (lead with project, not with category).
 
@@ -77,19 +77,21 @@ Copy `assets/weekly-template.md` and fill it. **The report body is written in Ko
 - **Header** — title with week + author + period (e.g. `주간 보고 2026-W28 · sunghyun (07-06 ~ 07-12)`).
 - **한 화면 TL;DR** — up to 3 highlight lines (the week's most important results/decisions, synthesized) + a per-project count table for this member. This is the only part you *summarize*; the buckets are *extracted*.
 - **Body** — the domain → project → bucket structure above.
-- **Tail** — 열린 다음 액션 (carry-over), 지식화 후보, then the prev/next + index footer. The footer sits **inside** the auto region so it regenerates. The `## 운영자 코멘트 / 메모` area comes **after** the auto region (last in the file) so hand-written notes are preserved.
+- **Tail** — 열린 다음 액션 (carry-over), 지식화 후보, then the prev/next + index footer (the footer regenerates too, so neighbor links stay current). The `## 📝 운영자 코멘트 / 메모` heading comes **last** and marks the preserve boundary: it and everything below it are hand-written and kept verbatim across runs.
+
+**No HTML comments in the report.** Do not emit `<!-- … -->` anywhere — not as region markers, not as instructions. Authoring guidance lives in this SKILL, not in the output. The preserve boundary is the `## 📝 운영자 코멘트 / 메모` heading itself, not a comment marker.
 
 **Links between weekly reports use relative markdown paths, NOT wikilinks.** Per-member folders mean several files share the basename `2026-W28.md`, so a `[[2026-W28]]` wikilink would be ambiguous. Use `[2026-W27](2026-W27.md)` for same-folder prev/next, and `[2026-W28](sunghyun/2026-W28.md)` from the index. (Journal links stay wikilinks — those basenames are unique.)
 
 **Idempotency — running the same week repeatedly must not duplicate or clobber:**
 
 1. **Deterministic path** — `reports/weekly/<author>/YYYY-Www.md`. Same author+week → same file, updated in place, never a `2026-W28 (1).md`. A personal run never touches another member's file or the `all/` report.
-2. **Auto region markers** — everything generated sits between `<!-- kalti-weekly:auto:start -->` and `<!-- kalti-weekly:auto:end -->`. On re-run, **replace only that region**; leave the `## 운영자 코멘트 / 메모` area untouched. Create from the template if the file doesn't exist.
+2. **Heading boundary (no markers, no comments)** — on re-run, regenerate everything from the top of the file down to — but **not** including — the `## 📝 운영자 코멘트 / 메모` heading, and preserve that heading and everything below it verbatim. If the heading is absent (new file), build the full template with an empty 운영자 코멘트 section at the end. The report never contains HTML comments.
 3. **Deterministic ordering** — sort entries `date → project` (add `author` for `--all`) so the same journals produce byte-identical output. No new/changed journals → no diff.
 4. **Index upsert** — update this report's row in `reports/weekly/README.md` (keyed by member+week) if present, else add it (newest first). Never append a duplicate row.
 5. **Neighbor link refresh** — after writing, if the same member's adjacent-week report exists, update *its* footer link to point back here, so the per-member chain stays consistent.
 
-Because the auto region is regenerated from source, journal edits are picked up on the next run. Mid-week runs are partial and fill in as the week progresses — expected.
+Because the regenerated part is rebuilt from source each run, journal edits are picked up on the next run. Mid-week runs are partial and fill in as the week progresses — expected.
 
 ## After writing: sync with git
 
