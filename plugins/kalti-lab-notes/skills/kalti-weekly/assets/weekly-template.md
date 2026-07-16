@@ -38,6 +38,6 @@ tags: [weekly, report]
 - (프로젝트) "…" — 가설/발견 후보
 
 ---
-◀ [이전 주](YYYY-Www-1.md) · [주간 인덱스](../README.md) · [다음 주](YYYY-Www+1.md) ▶
+◀ [YYYY-Www-1](YYYY-Www-1.md) · [주간 인덱스](../README.md) · [YYYY-Www+1](YYYY-Www+1.md) ▶
 
 ## 📝 운영자 코멘트 / 메모
