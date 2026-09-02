@@ -152,12 +152,20 @@ Count **every** link from `ontology/`, not just `derivedFrom`. Only `finding` ca
 obsidian backlinks file="<journal name>" format=json    # no ontology/ backlink = not yet refined
 ```
 
+A journal with no incoming link is **not automatically remaining work**. Most journals record what was built, renamed, deployed or set up, and honestly yield nothing to promote — reading one and finding nothing is a correct, common outcome, not a failure. If the cursor counts those forever it never reaches zero and stops meaning anything.
+
+So a run that reads a journal and finds nothing records that fact in `reports/정제-검토기록.md`, and the cursor subtracts it. Never edit the journal itself to mark it — journals are evidence and belong to their author; the record layer is where operational state goes.
+
 ```
-# fallback with no CLI — journals that no ontology object links to
+# journals neither cited by ontology/ nor already reviewed
 cd "$VAULT"
 grep -oh '\[\[[0-9]\{8\}-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
-find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/cited
+grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
+cat /tmp/cited /tmp/checked | sort -u > /tmp/done
+find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done
 ```
+
+Append to the record under a dated heading, in three groups, and say in one line per entry why nothing came out: **뽑을 결론 없음** (nothing to promote), **결론은 있으나 보류** (a conclusion exists but no single project owns it, so `partOf` cannot be chosen), **링크를 걸 수 없음** (the filename collides with others, so no wikilink can address it). The second and third are held work, not finished work — keep them visible.
 
 Both resolve by **filename**, the way a wikilink does. If two journals share a basename, no link can tell them apart — fix that on the journal side first (the `kalti-journal` tidy routine gives every entry a `YYYYMMDD-` prefix), then refine them.
 

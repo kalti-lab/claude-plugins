@@ -83,8 +83,12 @@ That bucket exists so `/kalti-ontology` has somewhere to pick up from — but a 
 ```
 cd "$VAULT"
 grep -oh '\[\[[0-9]\{8\}-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
-find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/cited | wc -l
+grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
+cat /tmp/cited /tmp/checked | sort -u > /tmp/done
+find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done | wc -l
 ```
+
+`M` counts journals **nobody has looked at yet** — journals already read and found to hold nothing are recorded in `reports/정제-검토기록.md` and subtracted. Counting those forever would keep the number above zero permanently and drain it of meaning.
 
 If any concept card has **drift** — members declaring `concept:` that the card's body never names — add a second line, because a stale hub is worse than a missing one (a reader trusts it as complete):
 
