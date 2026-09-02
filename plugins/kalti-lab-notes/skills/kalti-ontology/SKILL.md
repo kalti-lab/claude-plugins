@@ -117,17 +117,57 @@ The full frontmatter+body block to copy when actually creating each object is in
 
 Promoting journals into the ontology. **Anyone** can do it — the person who wrote a journal can promote it straight to objects, or it can be done in periodic batches. With no forced gate, **discipline keeps quality**: only what's grounded, no duplicates, revise rather than delete.
 
-1. **Input**: newly accumulated journals (+ notes).
-2. **AI refinement**: have the AI extract hypothesis/finding candidates not yet in the ontology, plus their links, from the journals (prompt below).
-3. **Apply**: check each candidate is grounded in an actual journal and isn't a duplicate, then apply to `ontology/`. Discard the ungrounded.
-4. **Cadence**: nothing fixed, but a weekly batch (alongside the weekly report) catches everything.
+1. **Scope one run**: pick the journals this run covers — one project folder, not the whole backlog (see below).
+2. **Project objects first**: every project those journals belong to must already have a `project` object (see below).
+3. **AI refinement**: have the AI extract hypothesis/finding candidates not yet in the ontology, plus their links, from the scoped journals (prompt below).
+4. **Apply**: check each candidate is grounded in an actual journal and isn't a duplicate, then apply to `ontology/`. Discard the ungrounded.
+5. **Cadence**: nothing fixed, but a weekly batch (alongside the weekly report) catches everything.
+
+### Scope one run — never the whole backlog at once
+
+The prompt below reads journals in full, so one run has to fit in one context. Scope it by **project folder** — the unit the ontology is already organized by (`partOf`):
+
+```
+$VAULT/journals/<author>/<project>/
+```
+
+A member folder, let alone all of `journals/`, stops fitting as soon as a backlog builds up — a vault three months in can hold well over 1.5MB of journals, and a run that exhausts its context part-way leaves the ontology half-applied. **One project per run, committed on its own**, is the safe unit; several small projects can share a run if their journals together stay in the same range.
+
+**Which journals are still unrefined** — a refined journal is pointed at by some object's `derivedFrom`, so a journal with no such backlink is remaining work. That backlink *is* the progress cursor; nothing else needs tracking.
+
+```
+obsidian backlinks file="<journal name>" format=json    # empty result = not yet refined
+```
+
+```
+# fallback with no CLI — journals named by no derivedFrom anywhere
+cd "$VAULT"
+grep -oh 'derivedFrom: "\[\[[^]]*' ontology/*.md | sed 's/.*\[\[//' | sort -u > /tmp/refined
+find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/refined
+```
+
+Both resolve by **filename**, the way a wikilink does. If two journals share a basename, `derivedFrom` cannot tell them apart — fix that on the journal side first (the `kalti-journal` tidy routine gives every entry a `YYYYMMDD-` prefix), then refine them.
+
+### Project objects come first
+
+`hypothesis` and `finding` both **require** `partOf: "[[<project note>]]"`. So the project object has to exist before any of them can be created — otherwise a required field points at nothing and the graph fills with broken links. Journals already carry the answer in their `project:` frontmatter.
+
+```
+grep -h "^project:" <the scoped journals> | sort -u     # projects these journals name
+ls "$VAULT/ontology/"                                   # which already have an object
+```
+
+For each project with no object, create it from the `project` block in `references/object-templates.md`. Take the goal paragraph and `status` from the journals themselves — read enough of them to say what the project is after, and don't invent a goal they don't state. Leave `## 현재 가설`·`## 실험`·`## 발견` empty for now; they fill in as this run produces objects. `## 참여` takes the `person` note of whoever wrote the journals.
+
+A `person` object's `worksOn` points at project notes too, so people are easiest to create or update **after** their projects exist.
 
 ### Reusable refinement prompt
 
 To extract journal → ontology candidates, instruct the AI (a subagent, etc.) like this:
 
 ```
-Read every journal in each member folder under journals/ (recurse into the per-project subfolders and _inbox/ inside each member folder) and the existing objects in ontology/.
+Read the journals in the scope given below, and the existing objects in ontology/.
+Scope: <one project folder, e.g. $VAULT/journals/aram/이미지생성-파이프라인/>
 Journals contain conclusions and insights that haven't yet been promoted to a
 'finding' or 'hypothesis' object — find those and propose them as candidates.
 - Exclude anything already in the ontology; propose only new ones.
