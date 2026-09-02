@@ -87,6 +87,7 @@ Write each direction once, and read the reverse via Obsidian backlinks (avoids c
 | `supersedes` | replaces | hypothesis | hypothesis |
 | `supports` / `refutes` | supports / refutes | finding | hypothesis |
 | `derivedFrom` | derived from | finding | experiment journal |
+| `concept` | is an instance of | finding, hypothesis | concept |
 | `worksOn` | works on | person | project |
 
 ## Required fields per type
@@ -107,7 +108,17 @@ Section headings are written in Korean in the notes:
 - **project**: one paragraph of goal + `## 현재 가설` + `## 실험` + `## 발견` + `## 참여`
 - **hypothesis**: one-sentence hypothesis + `## 상태` (value and date) + `## 근거`
 - **finding**: one-sentence conclusion + a mechanism/grounds paragraph
-- **concept**: the concept in 3–5 plain sentences
+- **concept**: the concept in 3–5 plain sentences, then the curation — see below
+
+### The concept layer is the cross-project index
+
+`partOf` files an object under one project, so a graph built only from it is a set of islands: to find what *another* project already concluded about your topic you would have to know which project to look in. The `concept` link is the only edge that crosses those boundaries, and a concept card is the hub it points at.
+
+So a concept card carries two things. The **prose** (3–5 sentences) says what the term is and why it matters here. Below it, a **curated grouping** names the distinct forms the concept takes and cites a finding for each — that grouping is the knowledge no single finding holds, and it is what makes the card usable as a review checklist.
+
+**The authoritative membership list is the backlinks, not the card.** Each finding or hypothesis declares its own `concept:`, so nothing can be silently missing; read the full set with `obsidian backlinks file="개념-…"`. Never regenerate a concept card's body from that list — the grouping is hand-curated and a machine rewrite destroys it. Instead, when refining, check for **drift**: members that point at the card but are not mentioned in it, and add the ones worth naming.
+
+A concept may legitimately sit inside one project (a tool-specific term), but a concept that never gains a second project is a glossary entry, not an index — worth keeping, not worth curating.
 - **source**: what · URL · use to our research
 - **person**: one-line intro + `## 주로 보는 것`
 
