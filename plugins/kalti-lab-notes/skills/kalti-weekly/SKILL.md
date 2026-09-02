@@ -70,6 +70,24 @@ Every rendered item ends with a `[[YYYYMMDD-…]]` wikilink to the source journa
 
 Domains are the recurring topic clusters (e.g. 메모리 시스템 / AI 에이전트 도구 / 금융·트레이딩 ML / ML 평가·검증 하네스 / 콘텐츠 생성 / 이미지 생성 / 연구방법론). Infer each project's domain from its work; when unsure, group by project alone.
 
+### End the 지식화 후보 bucket with a refinement nudge
+
+That bucket exists so `/kalti-ontology` has somewhere to pick up from — but a bucket nobody acts on is just a list, and refinement is the step that goes quiet for months while journals keep piling up. So close the bucket with **one line stating where refinement actually stands**:
+
+```
+> 지식화 후보 N건 · 온톨로지에 아직 인용되지 않은 일지 M편 → `/kalti-ontology` 실행 권장
+```
+
+`N` is this week's candidate count. `M` is the vault-wide count of journals that no `ontology/` object links to — the same progress cursor `kalti-ontology` uses, so the two skills always agree:
+
+```
+cd "$VAULT"
+grep -oh '\[\[[0-9]\{8\}-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
+find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/cited | wc -l
+```
+
+`M` is lab-wide, not per-member — the same number appears in everyone's report, and that is the point: the backlog stays in view every week instead of going unnoticed. Report it as a plain count with no editorializing, and **never run `/kalti-ontology` from this skill** — this skill only surfaces the number, it never writes to `ontology/`.
+
 ## Write the report (idempotent)
 
 Copy `assets/weekly-template.md` and fill it. **The report body is written in Korean** (the team's working language) — title, highlights, bucket items, and tables all in Korean. Shape:
