@@ -133,20 +133,22 @@ $VAULT/journals/<author>/<project>/
 
 A member folder, let alone all of `journals/`, stops fitting as soon as a backlog builds up — a vault three months in can hold well over 1.5MB of journals, and a run that exhausts its context part-way leaves the ontology half-applied. **One project per run, committed on its own**, is the safe unit; several small projects can share a run if their journals together stay in the same range.
 
-**Which journals are still unrefined** — a refined journal is pointed at by some object's `derivedFrom`, so a journal with no such backlink is remaining work. That backlink *is* the progress cursor; nothing else needs tracking.
+**Which journals are still unrefined** — a refined journal is one that some object in `ontology/` links to, so a journal with **no incoming link from `ontology/`** is remaining work. Those incoming links *are* the progress cursor; nothing else needs tracking.
+
+Count **every** link from `ontology/`, not just `derivedFrom`. Only `finding` carries a `derivedFrom` field; a `hypothesis` cites its source journal in its `## 근거` body and a `project` lists journals under `## 실험`, both as plain wikilinks. Refinement never edits journals either, so it can never add the journal-side `tests` link. Counting `derivedFrom` alone therefore reports journals you have **already fully refined** as untouched — measured on kalti's vault, it mis-flagged 78 of 264 journals, and a run that promoted only hypotheses from a journal left it looking unrefined forever.
 
 ```
-obsidian backlinks file="<journal name>" format=json    # empty result = not yet refined
+obsidian backlinks file="<journal name>" format=json    # no ontology/ backlink = not yet refined
 ```
 
 ```
-# fallback with no CLI — journals named by no derivedFrom anywhere
+# fallback with no CLI — journals that no ontology object links to
 cd "$VAULT"
-grep -oh 'derivedFrom: "\[\[[^]]*' ontology/*.md | sed 's/.*\[\[//' | sort -u > /tmp/refined
-find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/refined
+grep -oh '\[\[[0-9]\{8\}-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
+find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/cited
 ```
 
-Both resolve by **filename**, the way a wikilink does. If two journals share a basename, `derivedFrom` cannot tell them apart — fix that on the journal side first (the `kalti-journal` tidy routine gives every entry a `YYYYMMDD-` prefix), then refine them.
+Both resolve by **filename**, the way a wikilink does. If two journals share a basename, no link can tell them apart — fix that on the journal side first (the `kalti-journal` tidy routine gives every entry a `YYYYMMDD-` prefix), then refine them.
 
 ### Project objects come first
 
