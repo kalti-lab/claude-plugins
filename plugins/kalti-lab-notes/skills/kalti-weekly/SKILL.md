@@ -102,6 +102,24 @@ for c in $(grep -l "^type: concept$" ontology/*.md); do
 done
 ```
 
+And if any **dropped hypothesis has lost its reason-chain** — `status: 기각` or `대체됨` with no successor hypothesis pointing at it via `supersedes` and no finding pointing at it via `refutes` — add a third line. A rejection with no recorded reason is the exact condition that lets a dead premise come back to work, and this lab has already been caught by it once — a measurement approach it had discarded turned up ten days later as the justification for the next move:
+
+```
+> 버린 가설 31건 · 왜 버렸는지 안 이어진 것 1건 → `/kalti-ontology`에서 근거 보완
+```
+
+```
+cd "$VAULT"
+for f in $(grep -l '^status: 기각$\|^status: 대체됨$' ontology/가설-*.md); do
+  b=$(basename "$f" .md)
+  s=$(grep -l "supersedes: \"\[\[$b\]\]\"" ontology/가설-*.md 2>/dev/null | wc -l)
+  r=$(grep -l "refutes: \"\[\[$b\]\]\"" ontology/발견-*.md 2>/dev/null | wc -l)
+  [ $((s+r)) -eq 0 ] && echo "$b"
+done
+```
+
+Report the count even when it is zero — a standing zero is the evidence that recording rejections is actually working, and the number only earns attention when it moves.
+
 `M` is lab-wide, not per-member — the same number appears in everyone's report, and that is the point: the backlog stays in view every week instead of going unnoticed. Report it as a plain count with no editorializing, and **never run `/kalti-ontology` from this skill** — this skill only surfaces the number, it never writes to `ontology/`.
 
 ## Write the report (idempotent)
