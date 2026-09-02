@@ -65,7 +65,18 @@ Rejected (`기각`) and superseded (`대체됨`) hypotheses are the highest-valu
 
 So for those two statuses hand over the **body**, not just the title — the `## 근거` section is where the reason lives, and the reason is the whole value. For live hypotheses and findings the title plus one-sentence conclusion is enough.
 
-Where a hypothesis was superseded, follow the `supersedes` chain and present it as a sequence so the reader sees the path rather than a pile: "first X, dropped because …, replaced by Y".
+Strip the frontmatter with this exact form. A naive `sed '1,/^---$/d'` looks right and **silently eats the body too**, because the opening `---` is line 1 and the range then runs to the *second* delimiter; chaining two of them deletes everything.
+
+```
+awk '/^---$/{n++;next} n>=2' "ontology/<note>.md"                        # whole body
+awk '/^---$/{n++;next} n==2 && NF && !/^#/ {print; exit}' "ontology/…"   # first paragraph only
+```
+
+Where a hypothesis was superseded, follow the `supersedes` chain and present it as a sequence so the reader sees the path rather than a pile: "first X, dropped because …, replaced by Y". **Scope that search to the project**, not the whole vault — every chain is local to one project, so a vault-wide grep hands back every chain in the lab (20-odd on kalti's) for you to filter by hand:
+
+```
+grep -l 'partOf: "\[\[<project>\]\]"' ontology/가설-*.md | xargs grep -h "^supersedes:"
+```
 
 ## Output shape
 
