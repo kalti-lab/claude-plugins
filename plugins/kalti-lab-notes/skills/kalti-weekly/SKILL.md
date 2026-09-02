@@ -86,6 +86,22 @@ grep -oh '\[\[[0-9]\{8\}-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /t
 find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/cited | wc -l
 ```
 
+If any concept card has **drift** — members declaring `concept:` that the card's body never names — add a second line, because a stale hub is worse than a missing one (a reader trusts it as complete):
+
+```
+> 개념 카드 드리프트: 개념-조용한-실패 2건 미언급 → `/kalti-ontology`에서 반영
+```
+
+```
+cd "$VAULT"
+for c in $(grep -l "^type: concept$" ontology/*.md); do
+  b=$(basename "$c" .md)
+  n=$(grep -l "concept: \"\[\[$b\]\]\"" ontology/*.md 2>/dev/null | while read f; do
+        grep -q "\[\[$(basename "$f" .md)\]\]" "$c" || echo x; done | wc -l)
+  [ "$n" -gt 0 ] && echo "$b $n건 미언급"
+done
+```
+
 `M` is lab-wide, not per-member — the same number appears in everyone's report, and that is the point: the backlog stays in view every week instead of going unnoticed. Report it as a plain count with no editorializing, and **never run `/kalti-ontology` from this skill** — this skill only surfaces the number, it never writes to `ontology/`.
 
 ## Write the report (idempotent)
