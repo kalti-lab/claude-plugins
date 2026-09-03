@@ -47,7 +47,7 @@ Output paths:
 
 ## Gather the week's entries
 
-Walk the journals **recursively** and select entries whose `date` frontmatter falls within the week's bounds (inclusive). **For the default/personal run, restrict to `journals/<author>/` only** — other members' folders are not read. For `--all`, read every author folder. Skip project-history files (`00-*.md`) — they are retrospectives, not week-dated work.
+Walk the journals **recursively** and select entries whose `date` frontmatter falls within the week's bounds (inclusive). **For the default/personal run, restrict to `journals/<author>/` only** — other members' folders are not read. For `--all`, read every author folder. Skip project-history files (`00-*.md`) — they are retrospectives, not week-dated work — and skip pre-registrations (`type: prereg`, named `…-사전등록-….md`): they carry no results, and the measurement they precede is reported by its own `experiment` entry.
 
 Prefer the **obsidian CLI** when present for accurate frontmatter reads; if `which obsidian` finds nothing (headless), read the files directly (graceful fallback — same result). For each selected entry, read: `project`, `type`, `title`, and the section bodies used below.
 
@@ -85,7 +85,7 @@ cd "$VAULT"
 grep -ohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u > /tmp/done
-find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done | wc -l
+find journals -name '*.md' ! -name '*사전등록*' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done | wc -l
 ```
 
 `M` counts journals **nobody has looked at yet** — journals already read and found to hold nothing are recorded in `reports/정제-검토기록.md` and subtracted. Counting those forever would keep the number above zero permanently and drain it of meaning.

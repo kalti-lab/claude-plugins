@@ -149,6 +149,7 @@ Of the 7 template fields, these must be chosen from fixed sets:
 
 | value | meaning |
 |---|---|
+| `prereg` | pre-registration: what counts as correct, before measuring (see below) |
 | `experiment` | experiment: set conditions, measure results |
 | `investigation` | investigation: find a cause or current state |
 | `build` | build: make/configure code, environment, tools |
@@ -157,7 +158,49 @@ Of the 7 template fields, these must be chosen from fixed sets:
 | `decision` | decision record |
 | `retro` | retrospective |
 
-**`id` = type-abbrev + slug** — the abbreviation per type is `exp- / invest- / build- / read- / meet- / decide- / retro-` (e.g. `exp-sampler-detail`). Keep each id unique per entry (no date or sequence number) — reusing one blurs which entry the marker points to.
+**`id` = type-abbrev + slug** — the abbreviation per type is `prereg- / exp- / invest- / build- / read- / meet- / decide- / retro-` (e.g. `exp-sampler-detail`). Keep each id unique per entry (no date or sequence number) — reusing one blurs which entry the marker points to.
+
+### Measuring something? Write the pre-registration first
+
+A measurement that decides a value needs a **`prereg` entry committed before the measuring
+starts**. Copy `assets/prereg-template.md`, fill the four questions, commit it, *then* measure.
+The commit order is the point — it is what makes the answer un-negotiable after the fact.
+
+Four questions, and they are short:
+
+```
+무엇을 정하려고 재나     — the value or judgement this will change; "curiosity" is not one
+정답으로 볼 것          — what counts as a hit, in one sentence
+표본과 그게 충분한 이유  — the number, and whether it can move that decision
+어떤 결과면 무엇을 정하나 — written before seeing the result
+```
+
+The template closes with a short **재기 전 점검** list — the traps this lab has already been
+caught by, one line each (a gate whose input set is empty, a model scoring its own total,
+a split that only separates ids). Delete the lines that do not apply.
+
+**Why this exists.** Two failures in one day, both from skipping it:
+
+- A retrieval measurement ran three times with three different notions of "correct answer"
+  and gave 98.5% / 16.4% / 60.2%. The first definition let any of ~25 chunks of the right
+  document count as a hit — 25 lottery tickets. Reporting that number would have concluded
+  "this value is fine" and shipped the wrong default.
+- A default was flipped on the strength of a three-sentence check that pointed the *opposite*
+  way from the real measurement (which was worse at all six settings tested).
+
+Writing the line down is what catches it. "Any chunk of the right document" sitting directly
+above "this decides the candidate-count default" reads as absurd on the page; held in the
+head it reads as fine.
+
+**When it is required** — a measurement whose result changes a default, a threshold, or a
+go/no-go judgement, and any comparison between systems or models. **When it is not** — reading
+a value to understand the current state, or a check that only asks whether the code runs.
+
+**Naming and placement.** Same as any entry: `YYYYMMDD-사전등록-<무엇을>.md` under the project
+folder, so it sorts next to the work it precedes. The `experiment` journal that follows links
+back to it from `## 배경`, and if the measurement contradicts the pre-registration — a
+definition had to change mid-way, the sample turned out too small — **say so in the journal
+rather than editing the pre-registration.** The gap between the two is the finding.
 
 **`tags`** — only the agreed words: `infra · security · storage · network · ai · data · tooling · report · diffusion · sdxl · sampling · image · prompt`. Add a tag outside this list only after agreeing with the team; scattered tags break refinement and search.
 
