@@ -73,7 +73,7 @@ Hypotheses are alive. When a new hypothesis replaces an old one, set the old one
 `type-abbrev + slug` (no date or sequence — an id is a fixed marker and shouldn't shift): `proj-` / `hyp-` / `find-` / `con-` / `src-` / `per-`
 e.g. `proj-image-pipeline`, `hyp-sampler`, `find-karras`, `con-nodes2`, `src-nodes2-doc`, `per-aram`
 
-**Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename. Ontology object names are bare (no date), but **journal** filenames carry a `YYYYMMDD-` prefix, so links *to a journal* — `tests` and especially `derivedFrom` — include it: `derivedFrom: "[[20260615-샘플러별-디테일-비교]]"`, not `"[[샘플러별-디테일-비교]]"`.
+**Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename. Ontology object names are bare (no date), but **journal** filenames carry a `YYYYMMDD-` prefix, so links *to a journal* — `tests` and especially `derivedFrom` — include it: `derivedFrom: "[[20260615-샘플러별-디테일-비교]]"`, not `"[[샘플러별-디테일-비교]]"`. The exception is a **project overview note**, which is date-free by design and linked as `"[[00-프로젝트-히스토리-agrune]]"` — see the `kalti-journal` layout section. Those notes are worth citing: they hold the across-the-months reasoning (why a line was abandoned, what a pivot cost) that no single dated entry contains.
 
 ## Relationship links (typed)
 
@@ -159,7 +159,7 @@ So a run that reads a journal and finds nothing records that fact in `reports/�
 ```
 # journals neither cited by ontology/ nor already reviewed
 cd "$VAULT"
-grep -oh '\[\[[0-9]\{8\}-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
+grep -ohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u > /tmp/done
 find journals -name '*.md' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done

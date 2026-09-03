@@ -54,6 +54,7 @@ $VAULT/journals/$AUTHOR/
 
 - **Subfolder** = the `project` note's filename (the wikilink basename, `[[ ]]` and any `|alias` stripped — e.g. `project: "[[이미지생성-파이프라인]]"` → folder `이미지생성-파이프라인`). No project, or a held/skipped one → `_inbox/`. Create the target folder with `mkdir -p` on demand.
 - **Filename** = `YYYYMMDD-<title>.md` (details under "Writing a new entry").
+- **The one exception — a project overview note.** A note that surveys a whole project rather than one day's work is named `00-<title>-<project>.md` and carries **no date prefix**. The `00-` sorts it to the top of the folder so it is read first, and the trailing project name keeps the basename unique across folders — without it, twelve overview notes all called `00-프로젝트-히스토리.md` share one basename and **no wikilink can address any of them**, which is exactly what happened on kalti's vault until 2026-09-03. Use `type: retro`. There is at most one per project folder; everything else is a dated entry.
 
 Because the folder is nested, candidate searches and the refinement step read it **recursively** (project subfolders + `_inbox`).
 
@@ -67,6 +68,7 @@ For each `*.md` under `$VAULT/journals/$AUTHOR/` (recursive):
 2. **Target folder** = the `project` note basename (`[[ ]]`/`|alias` stripped); no project or a held one → `_inbox`.
 3. **Target filename**:
    - already prefixed (`^\d{8}-`) → keep the name as-is.
+   - a project overview note (`^00-`) → keep the date-free name, but if its basename is not unique across the vault, append `-<project>` so a wikilink can address it. Never give it a date prefix: twelve overview notes written on one day would still collide, and the prefix destroys the sort-to-top the `00-` exists for.
    - otherwise → `<YYYYMMDD>-<current title>.md`, where `YYYYMMDD` is the `date` frontmatter with the dashes removed. If `date` is missing, fall back to the first git-commit date, then to mtime, and flag it in the report:
      ```
      git -C "$VAULT" log --diff-filter=A --date=format:%Y%m%d --format=%ad -- "<path>" | tail -1
