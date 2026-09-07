@@ -14,6 +14,7 @@
         "./skills/kalti-journal",
         "./skills/kalti-ontology",
         "./skills/kalti-weekly",
+        "./skills/kalti-contrib",
         "./skills/kalti-context"
       ]
     }
