@@ -42,13 +42,26 @@ LINK_KEYS = ["partOf", "derivedFrom", "supports", "refutes", "concept",
              "supersedes", "worksOn", "project", "tests"]
 
 # 사람이 판단할 필요 없이 일지에서 빼야 하는 것들. 값이 아니라 배선(配線)이다.
+# 코드 파일 확장자만. json·yaml·toml은 뺐다 — package.json처럼 누구나 아는
+# 산출물 이름이라 뜻을 가리지 않는데 경고만 쏟아졌다.
+CODE_EXT = "py|js|mjs|cjs|ts|tsx|jsx|sh|bash|rs|go|java|rb|c|cpp|h|swift|kt"
+# 제품·라이브러리 이름은 파일 이름이 아니다. 사람이 읽는 고유명이라 그대로 둔다.
+PRODUCT_NAMES = {"Next.js", "Node.js", "Nuxt.js", "Vue.js", "React.js", "PDF.js",
+                 "Three.js", "D3.js", "xterm.js", "LiteGraph.js", "Chart.js",
+                 "Express.js", "Nest.js", "Socket.io", "whisper.cpp", "llama.cpp"}
+
 NOISE = [
-    (re.compile(r"(?<![\w/])[0-9a-f]{7,40}(?![\w/])"), "커밋 해시로 보이는 것"),
-    (re.compile(r"\(~\d+\)|\.\w{1,4}:\d+\b|\d+ ?번째 ?줄|줄 ?번호 ?\d+"), "줄 번호"),
+    # UUID 조각과 주소 안의 16진 덩어리는 뺀다 — 앞뒤로 붙임표가 오면 커밋 해시가 아니다.
+    (re.compile(r"(?<![\w/-])[0-9a-f]{7,40}(?![\w/-])"), "커밋 해시로 보이는 것"),
+    # 진짜 코드 위치(sampler.py:120)만. 127.0.0.1:8001 같은 포트와
+    # 4.5:1 같은 대비비는 확장자가 코드가 아니라서 안 걸린다.
+    (re.compile(r"\(~\d+\)|\.(?:" + CODE_EXT + r"):\d+\b|\d+ ?번째 ?줄|줄 ?번호 ?\d+"),
+     "줄 번호"),
     (re.compile(r"\bPID ?\d+"),                          "프로세스 번호"),
     (re.compile(r"/tmp/|/scratch/|scratchpad"),          "임시 경로"),
     (re.compile(r"\d+ ?[+]{3,}|\d+ ?insertions?|\d+ ?deletions?"), "diff 수치"),
-    (re.compile(r"[\w.-]*[\w-]\.(?:py|js|ts|tsx|jsx|sh|json|ya?ml|toml|rs|go|java)\b"), "소스 파일 이름"),
+    # 뒤에 점이 또 오면 도메인이다(case.ftc.go.kr) — 그건 파일 이름이 아니다.
+    (re.compile(r"[\w.-]*[\w-]\.(?:" + CODE_EXT + r")\b(?!\.)"), "소스 파일 이름"),
 ]
 FENCE = re.compile(r"```.*?```", re.S)
 WIKILINK = re.compile(r"\[\[([^\]|#^]+)")
@@ -199,6 +212,7 @@ def check_journals(vault, rep, only=None):
         for pat, label in NOISE:
             hits = {h if isinstance(h, str) else h[0] for h in pat.findall(prose)}
             hits = {h for h in hits if not re.fullmatch(r"\d+", str(h))}
+            hits -= PRODUCT_NAMES
             if hits:
                 rep.warn(rel, "%s %d건: %s" % (label, len(hits),
                                                ", ".join(sorted(map(str, hits))[:3])))
