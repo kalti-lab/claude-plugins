@@ -155,6 +155,27 @@ Right before writing the file out, reread the draft once and strip the noise the
 
 What stays: the result-determining **values** (thresholds, parameters, versions), the **observations** as seen, and the **decisions** — each readable by a teammate outside this codebase.
 
+### Then run the checker — the altitude pass is judgement, this part is not
+
+Right after the file is written, before the commit:
+
+```
+python3 "${CLAUDE_PLUGIN_ROOT}/shared/lint.py" "$VAULT" --journals
+```
+
+It reads the whole author tree in about a third of a second and exits 1 if anything is an **오류**.
+
+**Fix every 오류 before committing.** They are structural, and each one silently breaks a
+downstream skill instead of raising an error: a filename or `id` that collides with another entry
+(then no wikilink can address either — this is the guarantee the date prefix used to provide), a
+missing or misordered frontmatter field, a missing body section, a `date` that disagrees with the
+filename, an `author` that disagrees with the folder.
+
+**경고 are yours to judge.** A source filename, a commit hash, a temp path, a tag outside the
+agreed list. Usually the fix is to rewrite the line per "What belongs in a journal" — but a raw
+identifier that is genuinely a value someone must reproduce can stay. Fix what *this run* wrote;
+for warnings on entries other people wrote, say so in the summary and leave them alone.
+
 ## Choosing frontmatter values
 
 Of the 7 template fields, these must be chosen from fixed sets:

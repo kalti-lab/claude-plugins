@@ -202,6 +202,21 @@ Then verify each candidate is genuinely grounded in that journal and isn't a dup
 
 Create only the candidates that pass, as files in `ontology/` (using the blocks in `references/object-templates.md`).
 
+### Check the graph before committing
+
+```
+python3 "${CLAUDE_PLUGIN_ROOT}/shared/lint.py" "$VAULT" --ontology
+```
+
+**오류** are graph breakage: a `type` outside the six, a missing required field, a name prefix that
+disagrees with its `type`, a duplicate `id`, and above all **a typed link pointing at a note that
+does not exist** — the one mistake refinement makes most often, because a card is written before
+the note it cites. Fix them before the commit; a broken link is invisible until someone follows it.
+
+**경고** are the refinement backlog rather than defects: a `finding` with no `concept` (it can only
+be found from inside its own project), and an orphan card nobody points at. Work them down over
+time; do not let them block a run.
+
 ## After applying: sync with git
 
 The ontology is **shared knowledge managed by the group**, so changes should reach everyone else's graph. The four modes (`push` / `commit` / `ask` / `off`, unset = `ask`) and the failure handling are in **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — read it before running git. This skill's scope and message:
