@@ -22,7 +22,7 @@ TAGS = {"infra", "security", "storage", "network", "ai", "data", "tooling",
         "report", "diffusion", "sdxl", "sampling", "image", "prompt"}
 FM_ORDER = ["id", "title", "date", "author", "type", "tags", "project",
             "summary", "updated"]
-FM_REQUIRED = [k for k in FM_ORDER if k != "summary"]   # summary는 소급 중이라 아직 경고
+FM_REQUIRED = FM_ORDER   # 280편 소급 완료(2026-09-09) — summary도 이제 필수다
 SECTIONS = ["질문 / 목적", "배경", "한 일", "결과 / 관찰", "해석", "결정", "다음 액션"]
 PREREG_SECTIONS = ["무엇을 정하려고 재나", "정답으로 볼 것",
                    "표본과 그것으로 충분한 이유", "어떤 결과면 무엇을 정하나"]
@@ -122,10 +122,9 @@ def check_journals(vault, rep, only=None):
         for k in FM_REQUIRED:
             if k not in d:
                 rep.err(rel, "%s 칸이 없습니다" % k)
-        if "summary" not in d:
-            rep.warn(rel, "summary 칸이 없습니다 — 주간·기여·정제가 매번 본문을 다시 읽습니다")
-        elif not d["summary"].strip():
-            rep.warn(rel, "summary 칸이 비었습니다")
+        # 따옴표를 벗겨야 summary: "" 같은 빈 칸이 잡힌다
+        if "summary" in d and not d["summary"].strip().strip("\"'").strip():
+            rep.err(rel, "summary 칸이 비었습니다 — 이게 없으면 주간·기여·정제가 매번 본문을 다시 읽습니다")
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d.get("updated", "")):
             rep.err(rel, "updated가 YYYY-MM-DD가 아닙니다 (%r)" % d.get("updated", ""))
         present = [k for k in keys if k in FM_ORDER]

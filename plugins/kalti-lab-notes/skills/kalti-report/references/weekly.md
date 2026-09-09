@@ -31,7 +31,7 @@ Output paths:
 
 Walk the journals **recursively** and select entries whose `date` frontmatter falls within the week's bounds (inclusive). **For the default/personal run, restrict to `journals/<author>/` only** — other members' folders are not read. For `--all`, read every author folder. Skip project-history files (`00-*.md`) — they are retrospectives, not week-dated work — and skip pre-registrations by their **`type: prereg`**, never by their filename: a journal titled "…사전등록 재실험…" is an `experiment`, and a name filter drops it silently.
 
-Prefer the **obsidian CLI** when present for accurate frontmatter reads; if `which obsidian` finds nothing (headless), read the files directly (graceful fallback — same result). For each selected entry, read: `project`, `type`, `title`, and the section bodies used below.
+Prefer the **obsidian CLI** when present for accurate frontmatter reads; if `which obsidian` finds nothing (headless), read the files directly (graceful fallback — same result). For each selected entry, start from frontmatter: `project`, `type`, `title`, and **`summary`** — the note's own one-sentence answer to *what came out*, which every journal now carries (lint errors without it). That sentence is what the 발견·결과 bucket wants, so quote it rather than re-deriving one from the body. Open the section bodies only for what `summary` does not cover — 막힌 점, 다음 주 계획, and hypothesis/finding candidates — and for entries whose summary reads thin.
 
 If **no** entries fall in the week, don't write an empty report — tell the user the week is empty and stop (for `--backfill`, just skip it).
 
