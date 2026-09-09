@@ -92,14 +92,17 @@ Write each direction once, and read the reverse via Obsidian backlinks (avoids c
 
 ## Required fields per type
 
-| type | required |
+Every card also carries **`updated`** (`YYYY-MM-DD`) — set it on creation and on every edit.
+A card is a living document; without it a reader cannot tell a settled conclusion from a stale one.
+
+| type | required (besides `updated`) |
 |---|---|
 | project | id, title, type, status, tags |
 | hypothesis | id, title, type, status, partOf (supersedes when replacing) |
 | finding | id, title, type, date, partOf, derivedFrom, (supports / refutes) |
 | concept | id, title, type, tags |
 | source | id, title, type, url |
-| person | id, title, type, worksOn |
+| person | id, title, type, name, role, worksOn (a list) — **never a contact address** |
 
 ## Body shape per type (summary)
 

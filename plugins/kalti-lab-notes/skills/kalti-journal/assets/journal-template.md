@@ -6,6 +6,8 @@ author:    # 본인 (journals/ 바로 아래 작성자 폴더 이름. 그 아래
 type:      # experiment | investigation | build | reading | meeting | decision | retro
 tags: []   # 허용 목록에서만 (SKILL.md 참고)
 project: "[[종목 노트 이름]]"   # 예: "[[이미지생성-파이프라인]]"
+summary:   # 무엇이 나왔나 한 문장. 제목이 "무엇을 했나"를 말하니 그걸 되풀이하지 않는다
+updated:   # YYYY-MM-DD. 고쳐 쓸 때마다 갱신
 # tests: "[[가설 노트 이름]]"   # 가설을 검증하는 experiment일 때만 이 줄을 살린다
 ---
 

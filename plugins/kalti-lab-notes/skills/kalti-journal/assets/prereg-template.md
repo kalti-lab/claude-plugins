@@ -6,6 +6,8 @@ author:    # 본인 (journals/ 바로 아래 작성자 폴더 이름)
 type: prereg
 tags: []   # 허용 목록에서만
 project: "[[종목 노트 이름]]"
+summary:   # 무엇을 정하려고 재는지 한 문장
+updated:   # YYYY-MM-DD
 ---
 
 # (title과 같은 제목)

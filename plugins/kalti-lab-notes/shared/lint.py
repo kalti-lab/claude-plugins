@@ -20,7 +20,9 @@ TYPES = {"prereg", "experiment", "investigation", "build",
          "reading", "meeting", "decision", "retro"}
 TAGS = {"infra", "security", "storage", "network", "ai", "data", "tooling",
         "report", "diffusion", "sdxl", "sampling", "image", "prompt"}
-FM_ORDER = ["id", "title", "date", "author", "type", "tags", "project"]
+FM_ORDER = ["id", "title", "date", "author", "type", "tags", "project",
+            "summary", "updated"]
+FM_REQUIRED = [k for k in FM_ORDER if k != "summary"]   # summary는 소급 중이라 아직 경고
 SECTIONS = ["질문 / 목적", "배경", "한 일", "결과 / 관찰", "해석", "결정", "다음 액션"]
 PREREG_SECTIONS = ["무엇을 정하려고 재나", "정답으로 볼 것",
                    "표본과 그것으로 충분한 이유", "어떤 결과면 무엇을 정하나"]
@@ -30,7 +32,7 @@ ONTO_REQUIRED = {
     "finding":    ["id", "title", "type", "date", "partOf", "derivedFrom"],
     "concept":    ["id", "title", "type", "tags"],
     "source":     ["id", "title", "type", "url"],
-    "person":     ["id", "title", "type", "worksOn"],
+    "person":     ["id", "title", "type", "name", "role", "worksOn"],
 }
 ONTO_PREFIX = {"가설-": "hypothesis", "발견-": "finding", "개념-": "concept",
                "자료-": "source", "사람-": "person"}
@@ -117,9 +119,15 @@ def check_journals(vault, rep, only=None):
         else:
             seen_id[jid] = rel
 
-        for k in FM_ORDER:
+        for k in FM_REQUIRED:
             if k not in d:
                 rep.err(rel, "%s 칸이 없습니다" % k)
+        if "summary" not in d:
+            rep.warn(rel, "summary 칸이 없습니다 — 주간·기여·정제가 매번 본문을 다시 읽습니다")
+        elif not d["summary"].strip():
+            rep.warn(rel, "summary 칸이 비었습니다")
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d.get("updated", "")):
+            rep.err(rel, "updated가 YYYY-MM-DD가 아닙니다 (%r)" % d.get("updated", ""))
         present = [k for k in keys if k in FM_ORDER]
         if present != [k for k in FM_ORDER if k in d]:
             rep.warn(rel, "칸 순서가 규약과 다릅니다 (%s)" % " ".join(present))
@@ -214,9 +222,11 @@ def check_ontology(vault, rep, journal_names):
             rep.err(rel, "이름 접두(%s)와 type(%s)이 어긋납니다" % (pre, ty))
         if not pre and ty != "project":
             rep.warn(rel, "type이 %s인데 이름에 접두가 없습니다" % ty)
-        for k in ONTO_REQUIRED[ty]:
+        for k in ONTO_REQUIRED[ty] + ["updated"]:
             if k not in d:
                 rep.err(rel, "%s 칸이 없습니다 (%s의 필수 칸)" % (k, ty))
+        if ty == "person" and ({"email", "phone"} & set(d)):
+            rep.err(rel, "사람 카드에 연락처가 있습니다 — 위키로 나가면 되돌릴 수 없습니다")
         cid = d.get("id", "")
         if cid and cid in seen_id:
             rep.err(rel, "id가 %s와 겹칩니다" % seen_id[cid])

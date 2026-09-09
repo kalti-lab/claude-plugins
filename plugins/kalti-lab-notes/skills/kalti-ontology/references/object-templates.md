@@ -11,6 +11,7 @@ title:
 type: project
 status: 진행      # 진행 / 보류 / 완료 / 보관
 tags: []
+updated:          # YYYY-MM-DD. 카드를 고칠 때마다 갱신
 ---
 
 # (제목)
@@ -42,6 +43,7 @@ partOf: "[[(종목 노트 이름)]]"
 # supersedes: "[[(옛 가설 노트 이름)]]"   # 대체하면
 # concept: "[[(개념 노트 이름)]]"       # 종목을 넘나드는 개념에 속하면
 tags: []
+updated:          # YYYY-MM-DD
 ---
 
 # (제목)
@@ -69,6 +71,7 @@ derivedFrom: "[[(실험 일지 이름)]]"
 # refutes: "[[(가설 노트 이름)]]"    # 반박하면
 # concept: "[[(개념 노트 이름)]]"    # 종목을 넘나드는 개념에 속하면
 tags: []
+updated:          # YYYY-MM-DD
 ---
 
 # (제목)
@@ -86,6 +89,7 @@ id: con-
 title:
 type: concept
 tags: []
+updated:          # YYYY-MM-DD
 ---
 
 # (제목)
@@ -115,6 +119,7 @@ title:
 type: source
 url:
 tags: []
+updated:          # YYYY-MM-DD
 ---
 
 # (제목)
@@ -127,16 +132,24 @@ tags: []
 ```markdown
 ---
 id: per-
-title:
+title:            # 폴더 이름과 같게 (예: aram) — journals/<이 이름>/
 type: person
-worksOn: "[[(종목 노트 이름)]]"
+name:             # 사람 이름 (예: 김아람)
+role:             # 직책
+worksOn:          # 참여 종목 전부. 한 줄에 하나씩
+  - "[[(종목 노트 이름)]]"
 tags: []
+updated:          # YYYY-MM-DD
 ---
 
 # (제목)
 
-(한 줄 소개)
+(한 줄 소개 — 무엇을 하는 사람인지보다 **어떻게 일하는 사람인지**를 적는다.
+ "결과물 품질보다 재현 가능한 환경을 먼저 잡는 쪽" 같은 것)
 
 ## 주로 보는 것
--
+- (주제) — (그 주제에서 실제로 한 일) ([[종목]] · [[종목]])
 ```
+
+연락처(이메일·전화)는 넣지 않는다. 이 볼트는 위키 사이트로 나갈 수 있고, 한 번
+나가면 되돌릴 수 없다.
