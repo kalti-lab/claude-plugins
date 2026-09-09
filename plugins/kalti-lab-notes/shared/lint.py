@@ -274,10 +274,21 @@ def check_ontology(vault, rep, journal_names):
     for rel, key, tgt in links:
         if tgt not in cards and tgt not in journal_names:
             rep.err(rel, "%s가 없는 노트를 가리킵니다: [[%s]]" % (key, tgt))
+    # 가설·발견은 partOf로 종목에 매달려 있어 되짚는 링크와 표 뷰로 늘 닿는다.
+    # 예전에는 "아무도 안 가리킨다"를 경고했는데, 그건 종목 카드가 손으로 적은
+    # 목록을 이고 있을 때만 뜻이 있었다. 그 목록이 낡아서 없앴으므로 검사도 뺀다.
+    # 대신 정말로 매달릴 곳이 없는 쪽을 본다 — 발견이 하나도 안 붙은 개념(빈 허브)과
+    # 아무도 인용하지 않는 자료.
+    declared = collections.Counter()
+    for _, key, tgt in links:
+        if key == "concept":
+            declared[tgt] += 1
     for base, (rel, ty, d) in cards.items():
-        if ty in ("hypothesis", "finding") and not incoming[base] \
+        if ty == "concept" and d.get("role") != "glossary" and not declared[base]:
+            rep.warn(rel, "발견이 하나도 안 붙은 개념입니다 — 허브가 아니면 용어집(role: glossary)이거나 지울 것입니다")
+        if ty == "source" and not incoming[base] \
                 and not any(t == base for _, _, t in links):
-            rep.warn(rel, "아무도 가리키지 않는 고아 카드입니다")
+            rep.warn(rel, "아무도 인용하지 않는 자료입니다")
 
     # 용어 풀이(role: glossary)는 개념 수에서 따로 뺀다 — 종목을 잇는 허브가 아니라
     # 낱말 뜻을 적어둔 글이라, 섞어 세면 개념층이 실제보다 두터워 보인다.
