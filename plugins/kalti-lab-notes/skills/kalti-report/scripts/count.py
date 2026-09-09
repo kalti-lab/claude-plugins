@@ -24,10 +24,12 @@ TYPE_KO = {
     "reading": "읽기",
 }
 
-DATED = re.compile(r"^(\d{8})-")
+OVERVIEW = re.compile(r"^00-")
 # Tolerates the column-aligned frontmatter style (`type:      build`).
 KEY = lambda k: re.compile(r"^%s:[ \t]*(.+?)[ \t]*$" % k, re.M)
-WIKILINK = re.compile(r"\[\[(\d{8}-[^\]|#^]*)")
+# 링크 대상의 종류를 이름 무늬로 맞히지 않는다. 일지인지 아닌지는 journals/의
+# 실제 파일 집합에 있느냐로만 정한다.
+WIKILINK = re.compile(r"\[\[([^\]|#^]*)")
 BAR = 10
 
 
@@ -53,7 +55,11 @@ def field(text, key, default=""):
 
 def collect(vault):
     """basename -> {author, date, type, project}. Excludes project histories
-    (00-*.md, no date prefix) and pre-registrations (no results of their own)."""
+    (00-*.md — they summarize journals already counted) and pre-registrations
+    (type: prereg — they carry no results of their own).
+
+    Both exclusions read the file, never the filename: a journal titled
+    "…사전등록 재실험…" is an experiment, and a name filter drops it silently."""
     out = {}
     jroot = os.path.join(vault, "journals")
     for author in sorted(d for d in os.listdir(jroot)
@@ -63,16 +69,22 @@ def collect(vault):
                 if not fn.endswith(".md"):
                     continue
                 base = fn[:-3]
-                m = DATED.match(base)
-                if not m:
+                if OVERVIEW.match(base):
                     continue
                 head = read_head(os.path.join(dirpath, fn))
                 ty = field(head, "type", "?")
-                if ty == "prereg" or "사전등록" in base:
+                if ty == "prereg":
+                    continue
+                ds = field(head, "date")
+                try:
+                    d = datetime.date(int(ds[:4]), int(ds[5:7]), int(ds[8:10]))
+                except ValueError:
+                    sys.stderr.write("date를 읽을 수 없습니다: %s/%s (%r)\n"
+                                     % (author, fn, ds))
                     continue
                 out[base] = {
                     "author": author,
-                    "date": datetime.date(int(m[1][:4]), int(m[1][4:6]), int(m[1][6:])),
+                    "date": d,
                     "type": ty,
                     "project": (re.search(r'^project:[ \t]*"?\[\[([^\]]+)', head, re.M)
                                 or [None, "-"])[1],

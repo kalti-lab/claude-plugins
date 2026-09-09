@@ -64,10 +64,14 @@ That bucket exists so `/kalti-ontology` has somewhere to pick up from — but a 
 
 ```
 cd "$VAULT"
-grep -rohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//' | sort -u > /tmp/cited
+# 일지의 이름 집합. prereg는 type 칸으로 뺀다 — 파일 이름으로 거르면 제목에 "사전등록"이
+# 들어간 experiment 일지가 조용히 빠진다(볼트에 실제로 한 편 있었다).
+grep -rL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' | sort -u > /tmp/journals
+# 온톨로지가 가리키는 것 중 실제로 일지인 것 = 정제된 일지
+grep -roh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
+comm -12 /tmp/journals /tmp/linked > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
-cat /tmp/cited /tmp/checked | sort -u > /tmp/done
-find journals -name '*.md' ! -name '*사전등록*' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done | wc -l
+cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals - | wc -l
 ```
 
 `M` counts journals **nobody has looked at yet** — journals already read and found to hold nothing are recorded in `reports/정제-검토기록.md` and subtracted. Counting those forever would keep the number above zero permanently and drain it of meaning.

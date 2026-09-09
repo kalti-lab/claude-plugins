@@ -159,17 +159,21 @@ So a run that reads a journal and finds nothing records that fact in `reports/�
 ```
 # journals neither cited by ontology/ nor already reviewed
 cd "$VAULT"
-grep -rohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//' | sort -u > /tmp/cited
+# 일지의 이름 집합. prereg는 type 칸으로 뺀다 — 파일 이름으로 거르면 제목에 "사전등록"이
+# 들어간 experiment 일지가 조용히 빠진다(볼트에 실제로 한 편 있었다).
+grep -rL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' | sort -u > /tmp/journals
+# 온톨로지가 가리키는 것 중 실제로 일지인 것 = 정제된 일지
+grep -roh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
+comm -12 /tmp/journals /tmp/linked > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
-cat /tmp/cited /tmp/checked | sort -u > /tmp/done
-find journals -name '*.md' ! -name '*사전등록*' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done
+cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals -
 ```
 
 Append to the record under a dated heading, in three groups, and say in one line per entry why nothing came out: **뽑을 결론 없음** (nothing to promote), **결론은 있으나 보류** (a conclusion exists but no single project owns it, so `partOf` cannot be chosen), **링크를 걸 수 없음** (the filename collides with others, so no wikilink can address it). The second and third are held work, not finished work — keep them visible.
 
-**Pre-registrations are excluded from the cursor.** A `type: prereg` entry (`…-사전등록-….md`) states what will count as correct *before* a measurement; it holds no conclusion to promote, so counting it would keep the backlog above zero forever. Its findings arrive in the `experiment` journal that follows it.
+**Pre-registrations are excluded from the cursor — by their `type`, never by their filename.** A journal titled "…사전등록 재실험…" is an `experiment` whose subject is a pre-registration, and a name filter drops it silently; that is a real entry in this vault. A `type: prereg` entry states what will count as correct *before* a measurement; it holds no conclusion to promote, so counting it would keep the backlog above zero forever. Its findings arrive in the `experiment` journal that follows it.
 
-Both resolve by **filename**, the way a wikilink does. If two journals share a basename, no link can tell them apart — fix that on the journal side first (the `kalti-journal` tidy routine gives every entry a `YYYYMMDD-` prefix), then refine them.
+The cursor never guesses a link's kind from its shape. A journal name carries no reserved pattern — nothing in `[[샘플러별-디테일-비교]]` says "journal" rather than "card" — so the only correct test is membership in the set of files actually under `journals/`. Both resolve by **filename**, the way a wikilink does. If two journals share a basename, no link can tell them apart — fix that on the journal side first (the `kalti-journal` tidy routine gives every entry a `YYYYMMDD-` prefix), then refine them.
 
 ### Project objects come first
 
