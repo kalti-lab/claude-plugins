@@ -15,13 +15,13 @@ This skill is the **refinement (curation)** side. The core of refinement is prom
 
 ## Where to work — resolve the vault first
 
-As a global plugin this runs **from whatever directory it's called in**, so pin down the vault root (the lab-notes clone, where journals and ontology live together) **first**. The `journals/`·`ontology/` paths below are all absolute under this root (`$VAULT`). Order:
+Pin down the vault root (the lab-notes clone, where journals and ontology live together) **first**. Every `journals/`·`ontology/` path below is absolute under it (`$VAULT`).
 
-1. **Config file**: `. ~/.config/kalti/notes.env 2>/dev/null` reads the `$KALTI_VAULT` that setup wrote. If it contains `journals/`·`ontology/`, use it as `$VAULT`.
-2. If the file is missing or the value is empty, try the **default path** `~/dev/lab-notes`.
-3. If neither, point the user to run `/kalti-setup` first — it pins the vault into `~/.config/kalti/notes.env`.
+```
+. ~/.config/kalti/notes.env 2>/dev/null; VAULT="${KALTI_VAULT:-$HOME/dev/lab-notes}"
+```
 
-(`ontology/` lives in the lab-notes vault alongside `journals/` — cloning gets both.)
+If that directory has no `journals/`·`ontology/`, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** rather than guessing. That file also carries the rule this skill leans on hardest: **both layers are nested, so a flat glob returns a partial answer with no error.** Read them with `grep -r … --include='*.md'`, `find`, or `os.walk` — never `ontology/*.md`.
 
 ## Query and verify the graph via the `obsidian` CLI
 
@@ -159,7 +159,7 @@ So a run that reads a journal and finds nothing records that fact in `reports/�
 ```
 # journals neither cited by ontology/ nor already reviewed
 cd "$VAULT"
-grep -ohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
+grep -rohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//' | sort -u > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u > /tmp/done
 find journals -name '*.md' ! -name '*사전등록*' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done
@@ -177,7 +177,7 @@ Both resolve by **filename**, the way a wikilink does. If two journals share a b
 
 ```
 grep -h "^project:" <the scoped journals> | sort -u     # projects these journals name
-ls "$VAULT/ontology/"                                   # which already have an object
+find "$VAULT/ontology" -name '*.md'                     # which already have an object
 ```
 
 For each project with no object, create it from the `project` block in `references/object-templates.md`. Take the goal paragraph and `status` from the journals themselves — read enough of them to say what the project is after, and don't invent a goal they don't state. Leave `## 현재 가설`·`## 실험`·`## 발견` empty for now; they fill in as this run produces objects. `## 참여` takes the `person` note of whoever wrote the journals.
@@ -204,17 +204,15 @@ Create only the candidates that pass, as files in `ontology/` (using the blocks 
 
 ## After applying: sync with git
 
-The ontology is **shared knowledge managed by the group**, so changes should reach everyone else's graph (`ontology/` is in the same lab-notes repo). How far to go is the user's preference in `KALTI_GIT_SYNC` (from the `notes.env` already sourced when resolving the vault; unset = `ask`) — same modes as the journal skill: `push` (commit + push), `commit` (commit only), `ask` (ask via AskUserQuestion: push now / commit only / skip), `off` (don't run git). Scope the add to `ontology/`:
+The ontology is **shared knowledge managed by the group**, so changes should reach everyone else's graph. The four modes (`push` / `commit` / `ask` / `off`, unset = `ask`) and the failure handling are in **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — read it before running git. This skill's scope and message:
 
 ```
 cd "$VAULT"
-git add "ontology/"
+git add "ontology/"                  # the ontology layer only — never -A
 git commit -m "ontology: <one line on what was refined/added>"
-git pull --rebase --autostash        # integrate others' pushes first
-git push                             # only in push mode, or when the user chose push in ask mode
 ```
 
-Handle no-remote / blocked-push / rebase-conflict the same as the journal side — the files are already saved; push again once access (SSH key/token) is set; and for conflicts don't auto-merge — `git rebase --abort` and tell the user. Put the sync result in the summary in one line.
+A run that also appended to `reports/정제-검토기록.md` adds that file too. Put the sync result in the summary in one line.
 
 ## Why two layers
 

@@ -1,14 +1,17 @@
----
-name: kalti-contrib
-disable-model-invocation: true
-description: "Shows what each kalti member has put into the vault, as three plain numbers side by side: 연구노트 (journals written), 카드 (times those journals were drawn on by ontology cards), and 밀도 (카드 ÷ 연구노트). Invoke with /kalti-contrib for the whole lab over the whole period, or /kalti-contrib --write to also save a dated snapshot under reports/contrib/. A bar summary up top makes the three columns comparable at a glance; below it each member gets their period, work-type mix, projects, and a short paragraph written from actually reading their three most-drawn-on journals. It never computes a total score, never ranks, and never writes to journals/ or ontology/ — the three numbers order the members differently on purpose, and judging them is left to the reader."
----
+# kalti report — contrib mode
 
-# kalti contribution view
+Shows what each member has put into the vault, as three plain numbers side by side. The vault has
+two layers that hold work — `journals/` (evidence, one member's own record) and `ontology/`
+(curated knowledge, shared). A journal earns its keep when a card draws on it. This mode counts
+that crossing, per member.
 
-The vault has two layers that hold work — `journals/` (evidence, one member's own record) and `ontology/` (curated knowledge, shared). A journal earns its keep when a card draws on it. This skill counts that crossing, per member.
+It exists because the obvious number is misleading. On kalti's vault the journal counts run
+187 / 67 / 12 — a fifteen-fold spread — while the same members' 밀도 runs 2.0 / 2.5 / 3.5, in the
+opposite order. Either number alone tells a false story. Shown side by side they tell a true one:
+one member works broad, one works fast, one works deep.
 
-It exists because the obvious number is misleading. On kalti's vault the journal counts run 187 / 67 / 12 — a fifteen-fold spread — while the same members' 밀도 runs 2.0 / 2.5 / 3.5, in the opposite order. Either number alone tells a false story. Shown side by side they tell a true one: one member works broad, one works fast, one works deep.
+Members are the folders under `$VAULT/journals/` — do not hardcode names, and do not ask which member to run for. This view is always the whole lab,
+because a single member's three numbers mean nothing without the others beside them.
 
 ## This is a reference view, not a score
 
@@ -21,16 +24,6 @@ Two further limits, both of which belong in the output rather than in this file 
 - **밀도 responds to writing habits.** Cards are extracted by `/kalti-ontology`, which pulls best from journals whose conclusions land in one sentence and whose numbers sit in tables. So 밀도 measures how usably someone records, which is close to but not the same as how well they research. Say so.
 - **Numbers move when the ontology convention moves.** Card counts shift with `/kalti-ontology`'s rules, so a number from an old run is not comparable to a fresh one. Always recount everyone in one pass, and never quote a figure carried over from an earlier session.
 
-## Where to work — resolve the vault first
-
-As a global plugin this runs **from whatever directory it's called in**, so pin down the vault root first.
-
-1. **Config file**: `. ~/.config/kalti/notes.env 2>/dev/null` reads the `$KALTI_VAULT` that setup wrote. If it holds `journals/` and `ontology/`, use it as `$VAULT`.
-2. If missing or empty, try the **default path** `~/dev/lab-notes`.
-3. If neither resolves, point the user to `/kalti-setup`.
-
-Members are the folders under `$VAULT/journals/` — do not hardcode names, and do not ask which member to run for. This view is always the whole lab, because a single member's three numbers mean nothing without the others beside them.
-
 ## The three numbers
 
 | | what it counts |
@@ -42,7 +35,7 @@ Members are the folders under `$VAULT/journals/` — do not hardcode names, and 
 Counting rules, all of them settled deliberately:
 
 - **A card that draws on several journals counts once for each.** On kalti's vault 226 cards cite one journal, 94 cite two or more, and the largest cites sixteen. Being one ingredient among sixteen is still a contribution, and counting it whole keeps the arithmetic to a single division. (Splitting a card into fractions is the alternative; it makes every figure a decimal and buys nothing here, because 318 of 320 cards draw on a single member's journals — there is almost no shared card to apportion.)
-- **Project histories are excluded** — `00-프로젝트-히스토리-*.md`, `type: retro`, one per project. They summarize journals already counted, so counting them again counts the same work twice. `/kalti-weekly` excludes them too, for its own reason (no week to file them under); excluding them here keeps the two skills on one basis.
+- **Project histories are excluded** — `00-프로젝트-히스토리-*.md`, `type: retro`, one per project. They summarize journals already counted, so counting them again counts the same work twice. `/kalti-report --weekly` excludes them too, for its own reason (no week to file them under); excluding them here keeps the two skills on one basis.
 - **Pre-registrations are excluded** — `type: prereg`, named `…-사전등록-….md`. They carry no results; the measurement they precede is counted as its own journal.
 - **Frontmatter whitespace is ignored.** Some journals align their frontmatter into columns (`type:      build`). Match `^type:[ \t]*(.+)`, never `^type: (\S+)` — the strict form silently drops those files from the type mix.
 
@@ -51,7 +44,7 @@ Counting rules, all of them settled deliberately:
 Do not count by hand or by ad-hoc grep — the numbers must be reproducible run to run.
 
 ```
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/kalti-contrib/scripts/count.py" "$VAULT"
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/kalti-report/scripts/count.py" "$VAULT"
 ```
 
 Pass `$VAULT` as the argument rather than relying on the environment: `. ~/.config/kalti/notes.env` sets the variable in the shell without exporting it, so a child process does not see `$KALTI_VAULT` and the script falls through to its default path.
@@ -78,7 +71,7 @@ Rules for that paragraph:
 Print to screen. Korean throughout. Assemble in this order, with the script's blocks pasted unchanged and your paragraph slotted under each member's fact rows:
 
 ```
-kalti-contrib · 전체 기간 (…)
+kalti-report --contrib · 전체 기간 (…)
 
 ── 요약 ───────────────────────────
    (bar table: 연구노트 · 카드 · 밀도, one row per member)
@@ -101,10 +94,9 @@ Default is screen only. A document that measures people, sitting in git forever,
 
 With `--write`, save the same content as markdown to `$VAULT/reports/contrib/YYYYMMDD.md` (`mkdir -p` on demand), dated because it is a snapshot of a moving count. Convert the bars to a plain markdown table; keep everything else as printed.
 
-Then honor `$KALTI_GIT_SYNC` as the other skills do (`push` / `commit` / `ask` / `off`, unset → `ask`) — with one exception: **confirm before committing even in `push` mode.** Every other skill commits the author's own record; this one commits a file about colleagues, and that deserves a deliberate yes. The file is already saved either way; report the outcome in one line.
+Then sync as the router SKILL.md says — including its one exception for this mode: **confirm before committing even in `push` mode.** The file is already saved either way; report the outcome in one line.
 
 ## What this skill does not do
 
-- **It never writes to `journals/` or `ontology/`.** It reads both and writes, at most, one file under `reports/contrib/`.
 - **It does not judge the work, and does not recommend.** No "should write more", no "should refine more". If the counts suggest something worth acting on, that belongs to whoever reads them.
-- **It does not fix what it notices.** Malformed frontmatter, an uncited journal, a project with no cards — mention it in a closing line if it affects the counts, and leave the fixing to `/kalti-journal` and `/kalti-ontology`.
+- **It writes at most one file, `reports/contrib/YYYYMMDD.md`, and only with `--write`.** The rest of the "never does" list is in the router SKILL.md.

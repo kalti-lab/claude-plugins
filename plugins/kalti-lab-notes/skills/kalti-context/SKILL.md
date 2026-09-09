@@ -1,7 +1,6 @@
 ---
 name: kalti-context
-disable-model-invocation: true
-description: "Reads the kalti ontology and hands the current session what the lab already knows — before work starts, not after. Invoke with /kalti-context followed by whatever you want to know about, in plain words: a project name, a topic, a concept, or a question. The skill resolves what was meant, pulls the matching cards (goal, live hypotheses, findings, and above all the rejected/superseded paths that leave no trace in the repo), and hands back an organized summary. Read-only: it never writes to journals/ or ontology/ and runs no git commands. Where kalti-journal and kalti-ontology fill the vault, this is the read side that makes it pay off."
+description: "Reads the kalti ontology and hands the current session what the lab already knows — before work starts, not after. Use this BEFORE acting whenever work touches the kalti lab-notes vault or a project recorded in it: resuming a dormant project, about to try an approach that may already have been tried and dropped, about to change an experimentally tuned value, or starting something new that another project may already have concluded on. A user may also invoke it directly with /kalti-context followed by whatever they want to know about, in plain words: a project name, a topic, a concept, or a question. The skill resolves what was meant, pulls the matching cards (goal, live hypotheses, findings, and above all the rejected/superseded paths that leave no trace in the repo), and hands back an organized summary. Read-only: it never writes to journals/ or ontology/ and runs no git commands. Where kalti-journal and kalti-ontology fill the vault, this is the read side that makes it pay off."
 ---
 
 # kalti context lookup
@@ -25,11 +24,13 @@ The last one is the highest-value case and the one nobody can do from memory: a 
 
 ## Where to work — resolve the vault first
 
-As a global plugin this runs **from whatever directory it's called in**, so pin down the vault root (the lab-notes clone) **first**; every path below is absolute under it (`$VAULT`).
+Pin down the vault root (the lab-notes clone) **first**; every path below is absolute under it (`$VAULT`).
 
-1. **Config file**: `. ~/.config/kalti/notes.env 2>/dev/null` reads the `$KALTI_VAULT` that setup wrote. If it contains `journals/`·`ontology/`, use it as `$VAULT`.
-2. If missing or empty, try the **default path** `~/dev/lab-notes`.
-3. If neither resolves, point the user to `/kalti-setup`.
+```
+. ~/.config/kalti/notes.env 2>/dev/null; VAULT="${KALTI_VAULT:-$HOME/dev/lab-notes}"
+```
+
+If that directory has no `ontology/`, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** instead of guessing. That file also states the reading rule this skill depends on: **both layers are nested, so never use a flat glob.** `ontology/` holds the documents (project · concept · person · source) at its top level and the project-scoped cards (hypothesis · finding) under `ontology/세부/`.
 
 Prefer the **obsidian CLI** for graph queries when `which obsidian` finds it (`obsidian backlinks`, `obsidian links`, `obsidian properties`); when it is absent, read `$VAULT/ontology/` directly with grep — same answers, more tokens.
 
@@ -37,9 +38,9 @@ Prefer the **obsidian CLI** for graph queries when `which obsidian` finds it (`o
 
 There are no modes and no flags. Whatever follows `/kalti-context` is what the caller wants to know about, written however they write. Work out what it refers to, in this order:
 
-1. **It names a project** (matches a `project` note's filename, or is close to one) → pull everything filed under it: `grep -l 'partOf: "\[\[<project>\]\]"' ontology/*.md`
-2. **It names a concept** (matches a `concept` note) → that card plus its full membership: `obsidian backlinks file="개념-…"`, or `grep -l 'concept: "\[\[개념-…\]\]"' ontology/*.md` as fallback. The card's own body says *why* those findings belong together, which the flat list does not — read it first.
-3. **It is a topic or a question** → route through the **concept layer**, which is the only edge that crosses project boundaries. List the concepts (`grep -l "^type: concept$" ontology/*.md`), pick the ones that cover the topic, then follow their membership out into findings from every project that reached that conclusion. Two hops, not a scan.
+1. **It names a project** (matches a `project` note's filename, or is close to one) → pull everything filed under it: `grep -rl 'partOf: "[[<project>]]"' ontology/ --include='*.md'`
+2. **It names a concept** (matches a `concept` note) → that card plus its full membership: `obsidian backlinks file="개념-…"`, or `grep -rl 'concept: "[[개념-…]]"' ontology/ --include='*.md'` as fallback. The card's own body says *why* those findings belong together, which the flat list does not — read it first.
+3. **It is a topic or a question** → route through the **concept layer**, which is the only edge that crosses project boundaries. List the concepts (`grep -rl "^type: concept$" ontology/ --include='*.md'`), pick the ones that cover the topic, then follow their membership out into findings from every project that reached that conclusion. Two hops, not a scan.
 4. **Nothing covers it** → say so plainly rather than forcing a match, then fall back to a targeted body search with the noise flagged. A missing concept is a refinement candidate: mention it and leave creating it to `/kalti-ontology`.
 
 When the input is ambiguous between a project and a topic, do both and label which is which — it is cheaper than asking.
@@ -68,14 +69,15 @@ So for those two statuses hand over the **body**, not just the title — the `##
 Strip the frontmatter with this exact form. A naive `sed '1,/^---$/d'` looks right and **silently eats the body too**, because the opening `---` is line 1 and the range then runs to the *second* delimiter; chaining two of them deletes everything.
 
 ```
-awk '/^---$/{n++;next} n>=2' "ontology/<note>.md"                        # whole body
-awk '/^---$/{n++;next} n==2 && NF && !/^#/ {print; exit}' "ontology/…"   # first paragraph only
+# $CARD is the resolved path — a document sits in ontology/, a hypothesis or finding in ontology/세부/
+awk '/^---$/{n++;next} n>=2' "$CARD"                        # whole body
+awk '/^---$/{n++;next} n==2 && NF && !/^#/ {print; exit}' "$CARD"   # first paragraph only
 ```
 
 Where a hypothesis was superseded, follow the `supersedes` chain and present it as a sequence so the reader sees the path rather than a pile: "first X, dropped because …, replaced by Y". **Scope that search to the project**, not the whole vault — every chain is local to one project, so a vault-wide grep hands back every chain in the lab (20-odd on kalti's) for you to filter by hand:
 
 ```
-grep -l 'partOf: "\[\[<project>\]\]"' ontology/가설-*.md | xargs grep -h "^supersedes:"
+grep -rl 'partOf: "[[<project>]]"' ontology/ --include='가설-*.md' | xargs grep -h "^supersedes:"
 ```
 
 ## Output shape

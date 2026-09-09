@@ -1,30 +1,12 @@
----
-name: kalti-weekly
-disable-model-invocation: true
-description: "Convention for rolling up a kalti member's research journals into a weekly report. By default it builds the invoking member's OWN report: gathers that author's entries in journals/<author>/ whose date falls in a given ISO week, groups them reader-first (domain → project) into six buckets (progress, findings, decisions, blockers, next actions, ontology candidates), and writes reports/weekly/<author>/YYYY-Www.md with a one-line summary + link per item. Invoke with /kalti-weekly (my current week), /kalti-weekly 2026-W28 (my week 28), /kalti-weekly 2026-W28 jinsik (another member), /kalti-weekly --backfill 2026-W22..2026-W28 (past weeks), or /kalti-weekly --all (optional whole-lab combined report). Re-running is idempotent: everything above the `## 📝 운영자 코멘트 / 메모` heading is regenerated, that section and below is preserved. The report contains no HTML comments."
----
+# kalti report — weekly mode
 
-# kalti weekly report
+The weekly roll-up. It defaults to **one member's own work** (the invoking author) and is not a
+lab-wide report unless `--all` is given. Everything above the operator-notes heading is
+regenerated from the journals on every run — unlike a journal, which is append-only evidence.
 
-The journal system has three layers.
-
-- **Journal layer `journals/<name>/`** — each member's record of work = **evidence**. Entries are filed under per-project subfolders (`_inbox/` when no project), with `YYYYMMDD-`prefixed filenames — so read it **recursively**.
-- **Ontology layer `ontology/`** — the curated knowledge (managed by the group).
-- **Report layer `reports/weekly/<author>/`** — each member's periodic roll-up: one file per ISO week, per member, plus an index. **This skill writes here.**
-
-This skill is the **weekly roll-up** side. A weekly report defaults to **one member's own work** (the invoking author) — it is not a lab-wide report unless explicitly asked with `--all`. A report is a **navigation map, not a copy**: each item is a one-line summary plus a link back to the source journal, so a reader scans fast and clicks through for detail. It is a **derived view** — everything above the operator-notes heading is regenerated from the journals on every run (unlike a journal, which is append-only evidence).
-
-The two principles behind every choice here: **stay faithful to the journals** (one-liners must be backed by the entry — never invent progress that isn't recorded), and **be easy to reference** (lead with project, not with category).
-
-## Where to work — resolve the vault and author first
-
-As a global plugin this runs **from whatever directory it's called in**, so pin down the vault root and the author **first**. Order:
-
-1. **Config file**: `. ~/.config/kalti/notes.env 2>/dev/null` reads `$KALTI_VAULT` and `$KALTI_AUTHOR` that setup wrote. If `$KALTI_VAULT` contains `journals/`, use it as `$VAULT`; use `$KALTI_AUTHOR` as the **default report author**.
-2. If missing or empty, try the **default path** `~/dev/lab-notes`; for the author, list the folders in `$VAULT/journals/` and let the user pick (AskUserQuestion) rather than guessing.
-3. If neither resolves, point the user to run `/kalti-setup` first.
-
-From there every path is absolute under `$VAULT`. Reports are written by **direct file write** into `$VAULT/reports/weekly/<author>/` (`mkdir -p` on demand; headless OK). `$KALTI_GIT_SYNC` (same file) controls git sync at the end.
+The two principles behind every choice here: **stay faithful to the journals** (a one-liner must
+be backed by the entry — never invent progress that isn't recorded), and **be easy to reference**
+(lead with project, not with category).
 
 ## Resolve the target week(s) and author
 
@@ -32,12 +14,12 @@ The arguments decide **which author** and **which week(s)** to build. Weeks are 
 
 | invocation | author | week |
 |---|---|---|
-| `/kalti-weekly` | me (`$KALTI_AUTHOR`) | current ISO week |
-| `/kalti-weekly 2026-W28` | me | that week |
-| `/kalti-weekly 2026-07-08` | me | the week containing that date |
-| `/kalti-weekly 2026-W28 jinsik` | that member | that week |
-| `/kalti-weekly --backfill 2026-W22..2026-W28` | me (or trailing member) | each week in range with entries |
-| `/kalti-weekly --all [week]` | **whole lab (combined)** | that week (default: current) |
+| `/kalti-report` | me (`$KALTI_AUTHOR`) | current ISO week |
+| `/kalti-report 2026-W28` | me | that week |
+| `/kalti-report 2026-07-08` | me | the week containing that date |
+| `/kalti-report 2026-W28 jinsik` | that member | that week |
+| `/kalti-report --backfill 2026-W22..2026-W28` | me (or trailing member) | each week in range with entries |
+| `/kalti-report --all [week]` | **whole lab (combined)** | that week (default: current) |
 
 Compute the week's Monday–Sunday bounds. Derive the ISO week label with `date -d <date> +%G-W%V` (note `%G`, the ISO-week-year, not `%Y`). For `--backfill`, iterate the range and build only weeks with at least one entry — and **`log`/report which weeks were skipped as empty** so coverage is explicit.
 
@@ -82,7 +64,7 @@ That bucket exists so `/kalti-ontology` has somewhere to pick up from — but a 
 
 ```
 cd "$VAULT"
-grep -ohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/*.md | sed 's/\[\[//' | sort -u > /tmp/cited
+grep -rohE '\[\[([0-9]{8}|00)-[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//' | sort -u > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u > /tmp/done
 find journals -name '*.md' ! -name '*사전등록*' | sed 's|.*/||; s|\.md$||' | sort -u | comm -23 - /tmp/done | wc -l
@@ -98,9 +80,9 @@ If any concept card has **drift** — members declaring `concept:` that the card
 
 ```
 cd "$VAULT"
-for c in $(grep -l "^type: concept$" ontology/*.md); do
+for c in $(grep -rl "^type: concept$" ontology/ --include='*.md'); do
   b=$(basename "$c" .md)
-  n=$(grep -l "concept: \"\[\[$b\]\]\"" ontology/*.md 2>/dev/null | while read f; do
+  n=$(grep -rl "concept: \"\[\[$b\]\]\"" ontology/ --include='*.md' 2>/dev/null | while read f; do
         grep -q "\[\[$(basename "$f" .md)\]\]" "$c" || echo x; done | wc -l)
   [ "$n" -gt 0 ] && echo "$b $n건 미언급"
 done
@@ -114,10 +96,10 @@ And if any **dropped hypothesis has lost its reason-chain** — `status: 기각`
 
 ```
 cd "$VAULT"
-for f in $(grep -l '^status: 기각$\|^status: 대체됨$' ontology/가설-*.md); do
+for f in $(grep -rl '^status: 기각$\|^status: 대체됨$' ontology/ --include='가설-*.md'); do
   b=$(basename "$f" .md)
-  s=$(grep -l "supersedes: \"\[\[$b\]\]\"" ontology/가설-*.md 2>/dev/null | wc -l)
-  r=$(grep -l "refutes: \"\[\[$b\]\]\"" ontology/발견-*.md 2>/dev/null | wc -l)
+  s=$(grep -rl "supersedes: \"\[\[$b\]\]\"" ontology/ --include='가설-*.md' 2>/dev/null | wc -l)
+  r=$(grep -rl "refutes: \"\[\[$b\]\]\"" ontology/ --include='발견-*.md' 2>/dev/null | wc -l)
   [ $((s+r)) -eq 0 ] && echo "$b"
 done
 ```
@@ -149,22 +131,3 @@ Copy `assets/weekly-template.md` and fill it. **The report body is written in Ko
 
 Because the regenerated part is rebuilt from source each run, journal edits are picked up on the next run. Mid-week runs are partial and fill in as the week progresses — expected.
 
-## After writing: sync with git
-
-Honor `KALTI_GIT_SYNC` (unset → `ask`), scoping the commit to the report layer:
-
-```
-cd "$VAULT"
-git add reports/
-git commit -m "weekly: <author> <week label> 주간 보고"
-git pull --rebase --autostash
-git push          # only in push mode, or when the user chose push in ask mode
-```
-
-Modes: `push` / `commit` / `ask` (AskUserQuestion) / `off`. Handle no-remote / permission-blocked push / rebase conflict the graceful way the other skills do (the file is already saved; report the outcome in one line).
-
-## What this skill touches (and what it leaves alone)
-
-- Writes **only** under `reports/weekly/`. A default run **reads only the invoking author's** `journals/<author>/`; `--all` reads every member's journals to combine. It never edits journals or `ontology/`.
-- It does not create ontology objects; it only **surfaces candidates** in the 지식화 후보 bucket for `/kalti-ontology`.
-- It does not fix journal hygiene; if it notices problems while reading, mention them in the run summary rather than editing.

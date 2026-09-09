@@ -9,8 +9,7 @@ kalti 연구실용 스킬 묶음. Claude Code 플러그인 형식으로 배포�
 - `kalti-setup` — 1회 셋업(볼트·본인 폴더·git 동기화 모드를 `~/.config/kalti/notes.env`에 기록, 볼트를 Obsidian 앱에 등록, Obsidian CLI·kepano 스킬 안내)
 - `kalti-context` — 작업 전 지식 조회(프로젝트·주제·개념을 받아 온톨로지의 결정·발견·기각 경로를 읽기 전용으로 정리)
 - `kalti-journal` — 일지 작성 규약(증거 남기기, **파일 직접 쓰기**)
-- `kalti-weekly` — 개인별 주간 보고서 생성(일지를 진행·발견·결정·이슈·다음 액션·지식화 후보로 요약)
-- `kalti-contrib` — 사람별 기여 현황(연구노트·카드·밀도 세 수치를 나란히; 총점·순위 없음)
+- `kalti-report` — 파생 보고 두 가지. `--weekly`(기본)는 개인별 주간 보고서를 만들고(일지를 진행·발견·결정·이슈·다음 액션·지식화 후보로 요약), `--contrib`는 사람별 기여 현황을 보여준다(연구노트·카드·밀도 세 수치를 나란히; 총점·순위 없음)
 - `kalti-ontology` — 온톨로지 정제 규약(증거를 지식 객체로, 다같이; **그래프 탐색은 Obsidian CLI**)
 
 ### 설치
@@ -52,8 +51,8 @@ Codex의 설치 명령은 `install`이 아니라 `add`다. 마켓플레이스를
 | 1회 셋업 | `/kalti-setup` | `$kalti-lab-notes:kalti-setup` |
 | 지식 조회 | `/kalti-context` | `$kalti-lab-notes:kalti-context` |
 | 일지 작성 | `/kalti-journal` | `$kalti-lab-notes:kalti-journal` |
-| 주간 정리 | `/kalti-weekly` | `$kalti-lab-notes:kalti-weekly` |
-| 기여 현황 | `/kalti-contrib` | `$kalti-lab-notes:kalti-contrib` |
+| 주간 정리 | `/kalti-report` | `$kalti-lab-notes:kalti-report` |
+| 기여 현황 | `/kalti-report --contrib` | `$kalti-lab-notes:kalti-report --contrib` |
 | 온톨로지 정제 | `/kalti-ontology` | `$kalti-lab-notes:kalti-ontology` |
 
 먼저 **한 번** `kalti-setup`을 돌리면 볼트 위치·본인 폴더가 `~/.config/kalti/notes.env`에 잡힌다. 그다음부턴 **호출 위치는 자유** — 작업하던 코드·실험 폴더 어디서 `kalti-journal`(일지)·`kalti-ontology`(정제)를 불러도, **일지는 항상 셋업에서 지정한 `journals/<본인>/`에 저장**된다. (저장 위치가 자유로운 게 아니라, *부르는 곳*이 자유로운 것 — 연구 작업이 보통 볼트 밖에서 일어나므로 호출만 전역으로 푼 것이다.)

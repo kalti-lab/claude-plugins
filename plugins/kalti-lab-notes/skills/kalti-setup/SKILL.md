@@ -105,10 +105,18 @@ grep -q '"obsidian@obsidian-skills"' ~/.claude/plugins/installed_plugins.json 2>
 
 Show the final values (`KALTI_VAULT`/`KALTI_AUTHOR`/`KALTI_GIT_SYNC`) and what was done (folder created / `notes.env` written / Obsidian vault registered / kepano installed or not).
 
-Then tell the user about the two skills they can now use — the user just finished setup, often doesn't know what these do, and a bare name goes unused. Two points matter and are easy to get wrong:
+Then tell the user about the four skills they can now use — the user just finished setup, often doesn't know what these do, and a bare name goes unused.
 
-- **They don't fire on their own.** Both are slash-only (`disable-model-invocation`), so they never trigger from ordinary conversation — the user has to type `/kalti-journal` or `/kalti-ontology`. This is deliberate: it keeps a journal from being created when nobody asked. Saying "log what I just did" in chat won't start the journal skill; typing the command does.
-- **What each is for:** `/kalti-journal` records work the user just did as a research-journal entry, in their own folder (`journals/<name>/`, filed under per-project subfolders with a `YYYYMMDD-` dated filename). `/kalti-ontology` pulls hypotheses and findings out of accumulated journals and curates them into the knowledge graph (usually in batches).
+| skill | what it does | how it starts |
+|---|---|---|
+| `/kalti-context` | reads the ontology and hands over what the lab already knows about a project, concept or question — above all the approaches already tried and dropped | typed, **or picked up on its own** before work that touches a recorded project |
+| `/kalti-journal` | records work the user just did as a research-journal entry in their own folder (`journals/<name>/`) | typed, **or on a plain request** like "연구노트 써줘" — and it confirms once before writing |
+| `/kalti-ontology` | pulls hypotheses and findings out of accumulated journals into the knowledge graph, usually in batches | typed only |
+| `/kalti-report` | `--weekly` (default) builds this week's report; `--contrib` shows the three per-member numbers | typed only |
+
+The two batch skills are slash-only on purpose — they read wide and write shared files, so nobody
+wants them starting by themselves. The read-only lookup and the journal are not, because a lookup
+is worth the most when it happens *before* the work rather than after someone remembers to ask.
 
 Phrase this however reads naturally — there's no fixed wording.
 

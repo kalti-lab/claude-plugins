@@ -1,7 +1,6 @@
 ---
 name: kalti-journal
-disable-model-invocation: true
-description: "Convention for writing and editing kalti research-group lab notes. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 7-field frontmatter (id, title, date, author, type, tags, project) and the prescribed 7 body sections and 6 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
+description: "Convention for writing and editing kalti research-group lab notes. Trigger it when the user asks for their work to be recorded as a research journal / 연구노트 / 일지 — including phrasings like \"연구노트 써줘\", \"일지로 남겨줘\", \"오늘 한 거 기록해줘\". Do NOT trigger it on your own after finishing a piece of work, and never as a wrap-up habit; when the request is indirect, confirm before writing anything. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 7-field frontmatter (id, title, date, author, type, tags, project) and the prescribed 7 body sections and 6 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
 ---
 
 # Writing kalti research journals
@@ -9,6 +8,18 @@ description: "Convention for writing and editing kalti research-group lab notes.
 kalti is a research group. Members record what they did as **research journals**, and the operator collects those entries and refines them into knowledge (the ontology). This skill is the convention for the **writing** side.
 
 Members only need to write journals — weaving hypotheses and findings into the knowledge graph is the operator's job. So focus on capturing what was done well enough that someone could reproduce it exactly from the note alone, even without you. The format isn't about tidiness: entries get read mechanically during refinement and linked into the vault graph, so the fields have to be where the refinement step expects them.
+
+## If you invoked this yourself, confirm before writing
+
+When the user typed `/kalti-journal`, they have already asked — go straight on. But this skill
+can also be picked up from a plain request, and there the wording may have meant something
+looser than "write it into the vault" (a summary on screen, a note in the repo). Writing to the
+vault commits a file to a shared git repo under the user's name, so **ask once with
+AskUserQuestion before writing anything**: record this as a kalti research journal / just
+summarize here / cancel. Proceed only on the first answer.
+
+Ask this once, at the start. Do not ask again later in the same run — the questions further
+down (new vs existing entry, an ambiguous `project`) are separate and still apply.
 
 ## When to write, and what to base it on
 
@@ -31,11 +42,14 @@ When the basis is in the session or the user's explanation, write only that. For
 
 ## Where to write — resolve the vault and author folder first
 
-This skill is installed globally and runs **from whatever directory it's called in**, so pin down where the entry goes — the lab-notes vault (clone) root (`$VAULT`) and the author folder (`$AUTHOR`) — **first**. Writing to a path relative to the working directory (`journals/...`) would drop the file in the wrong place. Order:
+Pin down where the entry goes — the vault root (`$VAULT`) and the author folder (`$AUTHOR`) — **first**. A path relative to the working directory (`journals/...`) would drop the file into whatever repo the user happens to be sitting in.
 
-1. **Config file**: `. ~/.config/kalti/notes.env 2>/dev/null` loads the `$KALTI_VAULT`/`$KALTI_AUTHOR` that setup wrote. If `$KALTI_VAULT` contains `journals/`, use it as `$VAULT`; if `$VAULT/journals/$KALTI_AUTHOR/` exists, use it as `$AUTHOR`.
-2. If the file is missing or the values are empty, try the **default path** `~/dev/lab-notes` as `$VAULT` (if it has `journals/`). Don't guess the author folder — a typo carves out a stray new folder (`journals/Aram/`) — instead list the **existing folders** in `$VAULT/journals/` and let the user pick (AskUserQuestion). For a new member, take a folder name via "Other (type it in)" (lowercase latin recommended) and `mkdir -p`.
-3. If neither resolves, point the user to run `/kalti-setup` once — it pins the vault and author folder into `~/.config/kalti/notes.env` so there are no more questions next time.
+```
+. ~/.config/kalti/notes.env 2>/dev/null
+VAULT="${KALTI_VAULT:-$HOME/dev/lab-notes}"; AUTHOR="$KALTI_AUTHOR"
+```
+
+If `$VAULT` has no `journals/`, or `$AUTHOR` is empty or names no existing folder, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — never guess an author folder, since a typo carves out a stray member.
 
 From there **every path is absolute under `$VAULT`** — write the entry by **direct file write** into the author folder `$VAULT/journals/$AUTHOR/` (independent of the Obsidian app, headless OK), and do candidate searches there too (**recursively** — see the layout below). (The vault is a git repo — after writing, sync the author folder via "After writing/editing: sync with git" below.)
 
@@ -212,7 +226,7 @@ The frontmatter values above (type, tags, project, tests) — the convention is 
 
 **Only when unsure**, confirm once via AskUserQuestion — batched if possible. "Ambiguous" means:
 
-- **project**: two or more candidates fit, or none in `ontology/` fits and a **new one** is needed. Offer the candidates + "new project" + "hold (skip)". If exactly one is clear, link it without asking. (Find candidates via `obsidian files folder=ontology` or the files in `$VAULT/ontology/`.)
+- **project**: two or more candidates fit, or none in `ontology/` fits and a **new one** is needed. Offer the candidates + "new project" + "hold (skip)". If exactly one is clear, link it without asking. (Find candidates via `obsidian files folder=ontology`, or `find "$VAULT/ontology" -name '*.md'` — recursively; project notes sit at the top of `ontology/`, with hypothesis and finding cards under `ontology/세부/`.)
 - **type**: one piece of work straddles two types (e.g. build vs investigation) and it's unclear which. Put the inferred value as the first option marked "(recommended)" and confirm.
 - **scope/boundary**: the session has **several** chunky pieces of work and it's unclear whether to combine them into one entry or split them. Ask how much counts as one entry.
 
@@ -226,29 +240,15 @@ Journal filenames carry the `YYYYMMDD-` date prefix, so links **to a journal** i
 
 ## After writing/editing: sync with git
 
-Entries are written **directly as files** in the author folder — they persist with no Obsidian, even when an agent runs headless. Sharing them is the point of this system, so they need to reach the shared git repo; if you write but don't push, nobody else sees it. How far to go is the user's preference in `KALTI_GIT_SYNC` (from the `notes.env` already sourced when resolving the vault; treat unset as `ask`):
-
-- `push` — commit and push automatically.
-- `commit` — commit locally only, don't push; tell the user it's committed but not yet shared.
-- `ask` — ask once via AskUserQuestion (push now / commit only / skip), then do that.
-- `off` — don't run git; the file is already saved.
-
-When committing/pushing, scope it to the author folder so other people's changes and stray files aren't swept in:
+Entries are written **directly as files** in the author folder — they persist with no Obsidian, even when an agent runs headless. Sharing them is the point of this system, so they need to reach the shared git repo; if you write but don't push, nobody else sees it. The four modes (`push` / `commit` / `ask` / `off`, unset = `ask`) and the failure handling are in **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — read it before running git. This skill's scope and message:
 
 ```
 cd "$VAULT"
-git add "journals/$AUTHOR/"          # author folder only
+git add "journals/$AUTHOR/"          # author folder only — never -A
 git commit -m "journal: <note title or one-line summary>"
-git pull --rebase --autostash        # integrate others' pushes first
-git push                             # only in push mode, or when the user chose push in ask mode
 ```
 
-Whatever the mode, handle these gracefully:
-- **Vault isn't a git repo, or has no remote** — the file is already saved, so leave it and note in the summary that git sync was skipped (no remote).
-- **push blocked by permissions** (no SSH key/token set) — the commit is already local, so the evidence is safe. Tell the user to run `git push` once they've set up access (it's a secret, so setup/skill can't supply it).
-- **rebase conflict** (rare — usually the author folder doesn't collide) — auto-merging is risky, so revert with `git rebase --abort` and tell the user. A human needs to look at conflicts.
-
-Put the sync result in the summary in one line.
+Scoping to the author folder keeps other people's edits and stray files out of the commit. Put the sync result in the summary in one line.
 
 ## What belongs in a journal — and what doesn't
 

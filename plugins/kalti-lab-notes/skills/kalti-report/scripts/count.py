@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""kalti-contrib — count the three numbers per member.
+"""kalti-report --contrib — count the three numbers per member.
 
 Reads the vault and prints (1) the ready-to-paste 요약 block, (2) per-member
 fact rows, (3) the 참고 line, and (4) a READ list the model uses to pick which
@@ -81,16 +81,22 @@ def collect(vault):
 
 
 def count_cards(vault, journals):
-    """A card that draws on three journals counts one for each of them."""
+    """A card that draws on three journals counts one for each of them.
+
+    Walks ontology/ recursively: the documents (project, concept, person,
+    source) sit at its top level and the project-scoped cards (hypothesis,
+    finding) under ontology/세부/. A flat listdir would count only the top
+    level and quietly report near-zero 카드 for everyone."""
     cards = collections.Counter()
     oroot = os.path.join(vault, "ontology")
-    for fn in sorted(os.listdir(oroot)):
-        if not fn.endswith(".md"):
-            continue
-        with open(os.path.join(oroot, fn), encoding="utf-8") as f:
-            for base in set(WIKILINK.findall(f.read())):
-                if base in journals:
-                    cards[base] += 1
+    for dirpath, _, files in os.walk(oroot):
+        for fn in sorted(files):
+            if not fn.endswith(".md"):
+                continue
+            with open(os.path.join(dirpath, fn), encoding="utf-8") as f:
+                for base in set(WIKILINK.findall(f.read())):
+                    if base in journals:
+                        cards[base] += 1
     return cards
 
 
@@ -156,7 +162,7 @@ def main():
             max(s["cards"] for s in stat.values()),
             max(s["density"] for s in stat.values()))
 
-    print(f"kalti-contrib · 전체 기간 ({min(alld)} ~ {max(alld)})")
+    print(f"kalti-report --contrib · 전체 기간 ({min(alld)} ~ {max(alld)})")
     print()
     print("── 요약 " + "─" * 56)
     print()
