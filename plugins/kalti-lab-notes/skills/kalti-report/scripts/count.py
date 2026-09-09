@@ -112,7 +112,7 @@ def count_cards(vault, journals):
 
     Walks ontology/ recursively: the documents (project, concept, person,
     source) sit at its top level and the project-scoped cards (hypothesis,
-    finding) under ontology/세부/. A flat listdir would count only the top
+    finding) under ontology/<종류>/. A flat listdir would count only the top
     level and quietly report near-zero 카드 for everyone."""
     cards = collections.Counter()
     oroot = os.path.join(vault, "ontology")

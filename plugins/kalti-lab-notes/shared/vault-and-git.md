@@ -42,14 +42,16 @@ Only the skills that write or report per member need this.
 Both layers are nested, so a flat glob silently returns a partial answer instead of an error:
 
 - `journals/<author>/<project>/…` — per-project subfolders, plus `_inbox/`
-- `ontology/` — documents (project · concept · person · source) at the top level,
-  `ontology/세부/` — the project-scoped cards (hypothesis · finding) underneath.
+- `ontology/<종류>/` — one folder per object type: `종목` · `개념` · `사람` · `자료` ·
+  `가설` · `발견`. The folder is what says the type; filenames carry no type prefix,
+  because a hyphen already separates words *inside* names (`이미지생성-파이프라인`),
+  so a leading `개념-` was indistinguishable from the first word of a name.
   A vault that has not been migrated yet holds all of them flat in `ontology/`; a recursive
   read is correct either way, which is exactly why it is the rule.
 
 So never write `ontology/*.md` or `journals/*.md`. Use `grep -r … --include='*.md'`,
 `find … -name '*.md'`, or `os.walk`. The same goes for a name-filtered read: not
-`ontology/가설-*.md` but `grep -r … ontology/ --include='가설-*.md'`.
+`ontology/가설/*.md` but `grep -r … ontology/가설/ --include='*.md'`.
 
 And write it `grep -ar`, not `grep -r`. One byte that is not valid UTF-8 — a truncated
 character pasted out of a terminal, say — can make grep call the file binary and skip it

@@ -247,7 +247,7 @@ The frontmatter values above (type, tags, project, tests) — the convention is 
 
 **Only when unsure**, confirm once via AskUserQuestion — batched if possible. "Ambiguous" means:
 
-- **project**: two or more candidates fit, or none in `ontology/` fits and a **new one** is needed. Offer the candidates + "new project" + "hold (skip)". If exactly one is clear, link it without asking. (Find candidates via `obsidian files folder=ontology`, or `find "$VAULT/ontology" -name '*.md'` — recursively; project notes sit at the top of `ontology/`, with hypothesis and finding cards under `ontology/세부/`.)
+- **project**: two or more candidates fit, or none in `ontology/` fits and a **new one** is needed. Offer the candidates + "new project" + "hold (skip)". If exactly one is clear, link it without asking. (Find candidates via `obsidian files folder=ontology`, or `find "$VAULT/ontology" -name '*.md'` — recursively; project notes sit in `ontology/종목/`, and each other object type has its own folder beside it.)
 - **type**: one piece of work straddles two types (e.g. build vs investigation) and it's unclear which. Put the inferred value as the first option marked "(recommended)" and confirm.
 - **scope/boundary**: the session has **several** chunky pieces of work and it's unclear whether to combine them into one entry or split them. Ask how much counts as one entry.
 

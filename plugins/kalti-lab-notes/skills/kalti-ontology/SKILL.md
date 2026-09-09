@@ -207,7 +207,7 @@ Journals contain conclusions and insights that haven't yet been promoted to a
 Then verify each candidate is genuinely grounded in that journal and isn't a duplicate; keep only those that pass.
 ```
 
-Create only the candidates that pass, as files in `ontology/` (using the blocks in `references/object-templates.md`).
+Create only the candidates that pass, as files in the matching `ontology/<종류>/` folder (using the blocks in `references/object-templates.md`).
 
 ### Check the graph before committing
 

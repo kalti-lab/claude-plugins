@@ -79,7 +79,7 @@ cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals - | wc -l
 If any concept card has **drift** — members declaring `concept:` that the card's body never names — add a second line, because a stale hub is worse than a missing one (a reader trusts it as complete):
 
 ```
-> 개념 카드 드리프트: 개념-조용한-실패 2건 미언급 → `/kalti-ontology`에서 반영
+> 개념 카드 드리프트: 조용한-실패 2건 미언급 → `/kalti-ontology`에서 반영
 ```
 
 ```
@@ -100,10 +100,10 @@ And if any **dropped hypothesis has lost its reason-chain** — `status: 기각`
 
 ```
 cd "$VAULT"
-for f in $(grep -arl '^status: 기각$\|^status: 대체됨$' ontology/ --include='가설-*.md'); do
+for f in $(grep -arl '^status: 기각$\|^status: 대체됨$' ontology/가설/ --include='*.md'); do
   b=$(basename "$f" .md)
-  s=$(grep -arl "supersedes: \"\[\[$b\]\]\"" ontology/ --include='가설-*.md' 2>/dev/null | wc -l)
-  r=$(grep -arl "refutes: \"\[\[$b\]\]\"" ontology/ --include='발견-*.md' 2>/dev/null | wc -l)
+  s=$(grep -arl "supersedes: \"\[\[$b\]\]\"" ontology/가설/ --include='*.md' 2>/dev/null | wc -l)
+  r=$(grep -arl "refutes: \"\[\[$b\]\]\"" ontology/발견/ --include='*.md' 2>/dev/null | wc -l)
   [ $((s+r)) -eq 0 ] && echo "$b"
 done
 ```

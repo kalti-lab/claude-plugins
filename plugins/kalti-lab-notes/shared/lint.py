@@ -34,8 +34,10 @@ ONTO_REQUIRED = {
     "source":     ["id", "title", "type", "url"],
     "person":     ["id", "title", "type", "name", "role", "worksOn"],
 }
-ONTO_PREFIX = {"가설-": "hypothesis", "발견-": "finding", "개념-": "concept",
-               "자료-": "source", "사람-": "person"}
+# 종류는 이름 접두가 아니라 폴더가 말한다. 붙임표가 이름 안에도 쓰이므로
+# (이미지생성-파이프라인) 접두로는 종류와 이름을 구별할 수 없었다.
+ONTO_DIR = {"종목": "project", "가설": "hypothesis", "발견": "finding",
+            "개념": "concept", "자료": "source", "사람": "person"}
 LINK_KEYS = ["partOf", "derivedFrom", "supports", "refutes", "concept",
              "supersedes", "worksOn", "project", "tests"]
 
@@ -231,11 +233,12 @@ def check_ontology(vault, rep, journal_names):
         if ty not in ONTO_REQUIRED:
             rep.err(rel, "type이 6종 밖입니다 (%r)" % ty)
             continue
-        pre = next((p for p in ONTO_PREFIX if base.startswith(p)), None)
-        if pre and ONTO_PREFIX[pre] != ty:
-            rep.err(rel, "이름 접두(%s)와 type(%s)이 어긋납니다" % (pre, ty))
-        if not pre and ty != "project":
-            rep.warn(rel, "type이 %s인데 이름에 접두가 없습니다" % ty)
+        holder = os.path.basename(os.path.dirname(path))
+        if holder not in ONTO_DIR:
+            rep.err(rel, "ontology/ 바로 밑에 있습니다 — 종류 폴더(%s) 안에 두십시오"
+                         % " · ".join(ONTO_DIR))
+        elif ONTO_DIR[holder] != ty:
+            rep.err(rel, "%s/ 안에 있는데 type이 %s입니다" % (holder, ty))
         for k in ONTO_REQUIRED[ty] + ["updated"]:
             if k not in d:
                 rep.err(rel, "%s 칸이 없습니다 (%s의 필수 칸)" % (k, ty))
@@ -262,7 +265,12 @@ def check_ontology(vault, rep, journal_names):
                 and not any(t == base for _, _, t in links):
             rep.warn(rel, "아무도 가리키지 않는 고아 카드입니다")
 
-    print("  온톨로지 배치: 최상위 %d장 · 하위 폴더 %d장" % (len(cards) - nested, nested))
+    byd = {}
+    for rel, ty, _ in cards.values():
+        byd[os.path.basename(os.path.dirname(rel))] = byd.get(
+            os.path.basename(os.path.dirname(rel)), 0) + 1
+    print("  온톨로지 배치: " + " · ".join(
+        "%s %d장" % (k, byd[k]) for k in sorted(byd)))
 
 
 def main():

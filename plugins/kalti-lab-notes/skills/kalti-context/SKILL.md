@@ -30,7 +30,7 @@ Pin down the vault root (the lab-notes clone) **first**; every path below is abs
 . ~/.config/kalti/notes.env 2>/dev/null; VAULT="${KALTI_VAULT:-$HOME/dev/lab-notes}"
 ```
 
-If that directory has no `ontology/`, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** instead of guessing. That file also states the reading rule this skill depends on: **both layers are nested, so never use a flat glob.** `ontology/` holds the documents (project · concept · person · source) at its top level and the project-scoped cards (hypothesis · finding) under `ontology/세부/`.
+If that directory has no `ontology/`, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** instead of guessing. That file also states the reading rule this skill depends on: **both layers are nested, so never use a flat glob.** `ontology/` holds one folder per object type — `종목` · `개념` · `사람` · `자료` · `가설` · `발견` — and the folder, not a name prefix, is what says the type.
 
 Prefer the **obsidian CLI** for graph queries when `which obsidian` finds it (`obsidian backlinks`, `obsidian links`, `obsidian properties`); when it is absent, read `$VAULT/ontology/` directly with grep — same answers, more tokens.
 
@@ -39,7 +39,7 @@ Prefer the **obsidian CLI** for graph queries when `which obsidian` finds it (`o
 There are no modes and no flags. Whatever follows `/kalti-context` is what the caller wants to know about, written however they write. Work out what it refers to, in this order:
 
 1. **It names a project** (matches a `project` note's filename, or is close to one) → pull everything filed under it: `grep -arl 'partOf: "[[<project>]]"' ontology/ --include='*.md'`
-2. **It names a concept** (matches a `concept` note) → that card plus its full membership: `obsidian backlinks file="개념-…"`, or `grep -arl 'concept: "[[개념-…]]"' ontology/ --include='*.md'` as fallback. The card's own body says *why* those findings belong together, which the flat list does not — read it first.
+2. **It names a concept** (matches a `concept` note) → that card plus its full membership: `obsidian backlinks file="<concept>"`, or `grep -arl 'concept: "[[개념-…]]"' ontology/ --include='*.md'` as fallback. The card's own body says *why* those findings belong together, which the flat list does not — read it first.
 3. **It is a topic or a question** → route through the **concept layer**, which is the only edge that crosses project boundaries. List the concepts (`grep -arl "^type: concept$" ontology/ --include='*.md'`), pick the ones that cover the topic, then follow their membership out into findings from every project that reached that conclusion. Two hops, not a scan.
 4. **Nothing covers it** → say so plainly rather than forcing a match, then fall back to a targeted body search with the noise flagged. A missing concept is a refinement candidate: mention it and leave creating it to `/kalti-ontology`.
 
@@ -69,7 +69,7 @@ So for those two statuses hand over the **body**, not just the title — the `##
 Strip the frontmatter with this exact form. A naive `sed '1,/^---$/d'` looks right and **silently eats the body too**, because the opening `---` is line 1 and the range then runs to the *second* delimiter; chaining two of them deletes everything.
 
 ```
-# $CARD is the resolved path — a document sits in ontology/, a hypothesis or finding in ontology/세부/
+# $CARD is the resolved path — each object type lives in its own ontology/<종류>/ folder
 awk '/^---$/{n++;next} n>=2' "$CARD"                        # whole body
 awk '/^---$/{n++;next} n==2 && NF && !/^#/ {print; exit}' "$CARD"   # first paragraph only
 ```
@@ -77,7 +77,7 @@ awk '/^---$/{n++;next} n==2 && NF && !/^#/ {print; exit}' "$CARD"   # first para
 Where a hypothesis was superseded, follow the `supersedes` chain and present it as a sequence so the reader sees the path rather than a pile: "first X, dropped because …, replaced by Y". **Scope that search to the project**, not the whole vault — every chain is local to one project, so a vault-wide grep hands back every chain in the lab (20-odd on kalti's) for you to filter by hand:
 
 ```
-grep -arl 'partOf: "[[<project>]]"' ontology/ --include='가설-*.md' | xargs grep -ah "^supersedes:"
+grep -arl 'partOf: "[[<project>]]"' ontology/가설/ --include='*.md' | xargs grep -ah "^supersedes:"
 ```
 
 ## Output shape
