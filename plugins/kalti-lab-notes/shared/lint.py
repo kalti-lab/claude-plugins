@@ -265,12 +265,18 @@ def check_ontology(vault, rep, journal_names):
                 and not any(t == base for _, _, t in links):
             rep.warn(rel, "아무도 가리키지 않는 고아 카드입니다")
 
-    byd = {}
-    for rel, ty, _ in cards.values():
-        byd[os.path.basename(os.path.dirname(rel))] = byd.get(
-            os.path.basename(os.path.dirname(rel)), 0) + 1
+    # 용어 풀이(role: glossary)는 개념 수에서 따로 뺀다 — 종목을 잇는 허브가 아니라
+    # 낱말 뜻을 적어둔 글이라, 섞어 세면 개념층이 실제보다 두터워 보인다.
+    byd, gloss = {}, 0
+    for rel, ty, d in cards.values():
+        k = os.path.basename(os.path.dirname(rel))
+        byd[k] = byd.get(k, 0) + 1
+        if ty == "concept" and d.get("role") == "glossary":
+            gloss += 1
     print("  온톨로지 배치: " + " · ".join(
-        "%s %d장" % (k, byd[k]) for k in sorted(byd)))
+        "%s %d장%s" % (k, byd[k], "(용어풀이 %d 포함)" % gloss
+                       if k == "개념" and gloss else "")
+        for k in sorted(byd)))
 
 
 def main():

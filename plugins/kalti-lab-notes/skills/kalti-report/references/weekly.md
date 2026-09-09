@@ -84,7 +84,8 @@ If any concept card has **drift** — members declaring `concept:` that the card
 
 ```
 cd "$VAULT"
-for c in $(grep -arl "^type: concept$" ontology/ --include='*.md'); do
+for c in $(grep -arl "^type: concept$" ontology/개념/ --include='*.md'); do
+  grep -aq '^role: glossary' "$c" && continue   # 용어 풀이는 허브가 아니라 제외
   b=$(basename "$c" .md)
   n=$(grep -arl "concept: \"\[\[$b\]\]\"" ontology/ --include='*.md' 2>/dev/null | while read f; do
         grep -q "\[\[$(basename "$f" .md)\]\]" "$c" || echo x; done | wc -l)

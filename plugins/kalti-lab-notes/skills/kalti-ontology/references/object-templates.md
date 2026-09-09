@@ -88,6 +88,8 @@ updated:          # YYYY-MM-DD
 id: con-
 title:
 type: concept
+# role: glossary   # 종목을 잇는 허브가 아니라 낱말 뜻만 적는 글이면 이 줄을 살린다.
+#                  # 개념 수·드리프트 검사에서 빠진다.
 tags: []
 updated:          # YYYY-MM-DD
 ---
