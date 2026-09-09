@@ -96,7 +96,7 @@ for c in $(grep -arl "^type: concept$" ontology/개념/ --include='*.md'); do
 done
 ```
 
-And if any **dropped hypothesis has lost its reason-chain** — `status: 기각` or `대체됨` with no successor hypothesis pointing at it via `supersedes` and no finding pointing at it via `refutes` — add a third line. A rejection with no recorded reason is the exact condition that lets a dead premise come back to work, and this lab has already been caught by it once — a measurement approach it had discarded turned up ten days later as the justification for the next move:
+And if any **dropped hypothesis or reversed decision has lost its reason-chain** — a `기각`/`대체됨` hypothesis with no successor pointing at it via `supersedes` and no finding pointing at it via `refutes`, or a `번복됨` decision with no newer decision pointing at it — add a third line. A rejection with no recorded reason is the exact condition that lets a dead premise come back to work, and this lab has already been caught by it once — a measurement approach it had discarded turned up ten days later as the justification for the next move:
 
 ```
 > 버린 가설 31건 · 왜 버렸는지 안 이어진 것 1건 → `/kalti-ontology`에서 근거 보완
@@ -104,11 +104,18 @@ And if any **dropped hypothesis has lost its reason-chain** — `status: 기각`
 
 ```
 cd "$VAULT"
+# 버린 가설 — 뒤이은 가설도, 반박한 발견도 안 가리키면 이유가 그래프에 없다
 for f in $(grep -arl '^status: 기각$\|^status: 대체됨$' ontology/가설/ --include='*.md'); do
   b=$(basename "$f" .md)
   s=$(grep -arl "supersedes: \"\[\[$b\]\]\"" ontology/가설/ --include='*.md' 2>/dev/null | wc -l)
   r=$(grep -arl "refutes: \"\[\[$b\]\]\"" ontology/발견/ --include='*.md' 2>/dev/null | wc -l)
-  [ $((s+r)) -eq 0 ] && echo "$b"
+  [ $((s+r)) -eq 0 ] && echo "가설 $b"
+done
+# 번복된 결정 — 뒤집은 새 결정이 안 가리키면 왜 뒤집었는지가 남지 않는다
+for f in $(grep -arl '^status: 번복됨$' ontology/결정/ --include='*.md' 2>/dev/null); do
+  b=$(basename "$f" .md)
+  s=$(grep -arl "supersedes: \"\[\[$b\]\]\"" ontology/결정/ --include='*.md' 2>/dev/null | wc -l)
+  [ "$s" -eq 0 ] && echo "결정 $b"
 done
 ```
 

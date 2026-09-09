@@ -160,6 +160,27 @@ def bar(value, top):
     return "█" * max(1, round(BAR * value / top)) if top else ""
 
 
+def project_rollup(vault, journals, cards):
+    """종목 축. 사람 축이 "누가 얼마나 썼나"를 보는 자리라면 이쪽은
+    "무엇이 굴러가고 무엇이 멈췄나"를 본다 — 조용해진 종목과, 일지는 쌓였는데
+    카드가 안 나온 종목이 사람 축에서는 보이지 않는다."""
+    P = {}
+    for base, meta in journals.items():
+        pr = meta["project"] or "(종목 없음)"
+        s = P.setdefault(pr, {"n": 0, "cards": 0, "dates": [], "who": set()})
+        s["n"] += 1
+        s["cards"] += cards[base]
+        s["dates"].append(meta["date"])
+        s["who"].add(meta["author"])
+    # 종목 카드의 status
+    oroot = os.path.join(vault, "ontology", "종목")
+    if os.path.isdir(oroot):
+        for fn in os.listdir(oroot):
+            if fn.endswith(".md") and fn[:-3] in P:
+                P[fn[:-3]]["status"] = field(read_head(os.path.join(oroot, fn)), "status")
+    return P
+
+
 def main():
     vault = resolve_vault(sys.argv)
     journals = collect(vault)
@@ -225,6 +246,34 @@ def main():
     print("  있는 노트가 카드를 많이 낸다. 연구 실력보다 기록 습관에 가까운 값이다.")
     print(f"· 서로의 노트를 인용한 건 통틀어 {cross_citations(vault, journals)}건이다.")
     print()
+    if "--projects" in sys.argv:
+        P = project_rollup(vault, journals, cards)
+        today = max(alld)
+        print("── 종목 " + "─" * 56)
+        print()
+        pw = max(vlen(p) for p in P) + 2   # 한글은 두 칸이라 vlen으로 재야 맞는다
+        print(vpad("종목", pw) + "일지  카드  사람  마지막      쉰 날  상태")
+        for pr in sorted(P, key=lambda k: -P[k]["n"]):
+            s = P[pr]
+            idle = (today - max(s["dates"])).days
+            print(vpad(pr, pw) + "%4d  %4d  %4d  %s  %5d  %s"
+                  % (s["n"], s["cards"], len(s["who"]), max(s["dates"]),
+                     idle, s.get("status", "-")))
+        print()
+        dry = [p for p, s in P.items() if s["cards"] == 0]
+        if dry:
+            print("· 일지는 쌓였는데 카드가 한 장도 안 나온 종목 %d개: %s"
+                  % (len(dry), " · ".join(sorted(dry))))
+        quiet = sorted(((today - max(s["dates"])).days, p) for p, s in P.items()
+                       if (today - max(s["dates"])).days >= 60
+                       and s.get("status") == "진행")
+        if quiet:
+            print("· 60일 넘게 조용한데 상태가 '진행'인 종목 %d개:" % len(quiet))
+            for d, p in quiet:
+                print("    %s — %d일" % (p, d))
+            print("  쉰 것과 접은 것은 다르다. 접었으면 상태를 바꾸고, 아니면 그대로 둔다.")
+        print()
+
     print("=== READ (작업용 — 보고서에 넣지 말 것) " + "=" * 22)
     for a in order:
         mine = sorted((b for b in journals if journals[b]["author"] == a),

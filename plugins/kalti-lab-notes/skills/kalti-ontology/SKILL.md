@@ -68,7 +68,32 @@ Status values are written into the notes in Korean (the team's working language)
 - **decision**: `유효` / `번복됨` (standing / reversed)
 - **finding · concept · source · person**: no status
 
-Hypotheses are alive. When a new hypothesis replaces an old one, set the old one's status to `대체됨` and have the new one point at the old one with `supersedes` (don't delete — the history is the research narrative).
+### Nothing is deleted, only superseded
+
+The history *is* the research narrative, so a card that stopped being true is never removed. What
+changes is its status and what points at it. Each type ages differently:
+
+**hypothesis** — replaced by a newer claim: old one goes `대체됨`, the new one points back with
+`supersedes`. Measured and found false: `기각`, and the finding that killed it points at it with
+`refutes`. Either way the *reason* must be reachable from the card. A dropped hypothesis with no
+successor and no refuting finding is the exact condition that lets a dead premise come back to
+work — this lab was caught by it once, a discarded measurement approach turning up ten days later
+as the justification for the next move. The weekly reports that count and it should stay at zero.
+
+**decision** — reversed: old one goes `번복됨`, the new decision points back with `supersedes`,
+and *why it was reversed* goes in the new decision's 왜. A decision is never `기각` — it was not
+wrong, it was replaced. When only part of a decision is overturned, leave the status `유효` and add
+a **## 어떻게 뒤집혔나** section naming what fell and what still stands; forcing the whole card to
+`번복됨` throws away the part that is still load-bearing.
+
+**finding** — has no status, because a conclusion does not expire; it gets narrowed. A later
+result that contradicts it is itself a finding, and the two are joined by the concept they share
+or by the hypothesis they both touch. If a finding turns out to be plainly wrong, the honest fix
+is to rewrite its body saying what the earlier reading missed and why — the card keeps its name
+and its citations, so anyone who followed a link still lands somewhere that explains itself.
+
+**project** — `보류` means someone decided to stop; it is not what happens when a project simply
+goes quiet. Dormancy is not a status. Set it only when a journal says so.
 
 ## id convention
 
@@ -208,8 +233,11 @@ To extract journal → ontology candidates, instruct the AI (a subagent, etc.) l
 ```
 Read the journals in the scope given below, and the existing objects in ontology/.
 Scope: <one project folder, e.g. $VAULT/journals/aram/이미지생성-파이프라인/>
-Journals contain conclusions and insights that haven't yet been promoted to a
-'finding' or 'hypothesis' object — find those and propose them as candidates.
+These journals hold conclusions, live claims and choices that have not yet been
+promoted to an object. Propose them as candidates, one of three kinds:
+  finding    — a conclusion the journal states as settled, with evidence behind it
+  hypothesis — a claim still being tested, or one the journal records as dropped
+  decision   — a choice that was made. Not true-or-false, chosen. What was ruled out?
 - Exclude anything already in the ontology; propose only new ones.
 - For each candidate, quote the source journal sentence verbatim (groundingQuote),
   and point at that journal with derivedFrom.
@@ -217,7 +245,45 @@ Journals contain conclusions and insights that haven't yet been promoted to a
 Then verify each candidate is genuinely grounded in that journal and isn't a duplicate; keep only those that pass.
 ```
 
+**One journal can yield more than one kind, and that is not duplication.** A pivot entry usually
+carries both — the testable claim becomes a `hypothesis`, and the choice with its cost becomes a
+`decision`. Measured on this vault: of 18 `decision` journals, 14 were already cited by a hypothesis
+or finding, and every one of them still had an unrecorded *what we gave up instead*.
+
+Which kind is it? The journal's own `type` is a hint, not the answer — a `build` entry often
+carries a decision, and an `experiment` often carries both a finding and a superseded hypothesis.
+Ask instead:
+
+| The sentence says… | kind |
+|---|---|
+| this is so, and here is what showed it | `finding` |
+| this may be so; we are measuring / we measured and dropped it | `hypothesis` |
+| we are going this way, and not that way | `decision` |
+| nothing that survives outside the run — a step, a version bump, a rename | none, record it in the review log |
+
 Create only the candidates that pass, as files in the matching `ontology/<종류>/` folder (using the blocks in `references/object-templates.md`).
+
+### When a new concept is warranted
+
+A `concept` is not written from one journal. It is found by laying findings side by side, so it
+comes **after** the findings exist, not during their extraction.
+
+The bar is **three or more different projects saying the same thing.** Three findings inside one
+project is that project's conclusion, not a concept — the whole job of this layer is crossing
+project boundaries, and a hub that spans one project crosses nothing.
+
+Two more tests before creating one:
+
+- **Does it tell the reader to do something differently?** Every existing concept carries a rule
+  you can act on. If all that survives is "be careful", it is general advice, not something this
+  lab found out. Leave it; when more cases arrive and a shared mechanism gets sharper, make it then.
+- **Is the name narrow enough to keep things out?** A name broad enough to admit anything will
+  admit everything, and a hub carrying a hundred findings tells you nothing when you open it.
+
+Concepts are cheap to add later and awkward to untangle once written. When unsure, don't.
+
+A concept card that is only a glossary entry — a term explained, not a hub joining projects —
+takes `role: glossary` and drops out of the concept count and the drift check.
 
 ### Check the graph before committing
 

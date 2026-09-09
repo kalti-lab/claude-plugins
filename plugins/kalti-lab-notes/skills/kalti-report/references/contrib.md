@@ -96,6 +96,26 @@ With `--write`, save the same content as markdown to `$VAULT/reports/contrib/YYY
 
 Then sync as the router SKILL.md says — including its one exception for this mode: **confirm before committing even in `push` mode.** The file is already saved either way; report the outcome in one line.
 
+## The project axis (`--projects`)
+
+The three numbers above answer *who wrote how much*. They cannot answer *what is still moving*,
+because a project that nobody has touched in three months looks exactly like one finished last
+week — both just contribute to somebody's journal count.
+
+`--projects` prints one row per project: journals, cards, how many people, last entry, days idle,
+and the status on its project card. Two lines follow the table:
+
+- **projects with journals but not one card.** The refinement cursor counts journals; this counts
+  projects. A project can be fully "cited" and still have produced no knowledge.
+- **projects idle 60+ days whose status still says 진행.** Not a nag — status means someone
+  decided, and dormancy is not a decision. The line exists so the gap between what the card claims
+  and what the dates show stays visible. Print the projects and the day counts; don't recommend
+  a status change, that is the owner's call.
+
+Run it when someone asks what the lab is working on, or before planning a cycle. It is not part of
+the default contribution view — that one is about people, and mixing the axes makes both harder
+to read.
+
 ## What this skill does not do
 
 - **It does not judge the work, and does not recommend.** No "should write more", no "should refine more". If the counts suggest something worth acting on, that belongs to whoever reads them.
