@@ -21,7 +21,7 @@ Pin down the vault root (the lab-notes clone, where journals and ontology live t
 . ~/.config/kalti/notes.env 2>/dev/null; VAULT="${KALTI_VAULT:-$HOME/dev/lab-notes}"
 ```
 
-If that directory has no `journals/`·`ontology/`, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** rather than guessing. That file also carries the rule this skill leans on hardest: **both layers are nested, so a flat glob returns a partial answer with no error.** Read them with `grep -r … --include='*.md'`, `find`, or `os.walk` — never `ontology/*.md`.
+If that directory has no `journals/`·`ontology/`, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** rather than guessing. That file also carries the rule this skill leans on hardest: **both layers are nested, so a flat glob returns a partial answer with no error.** Read them with `grep -ar … --include='*.md'`, `find`, or `os.walk` — never `ontology/*.md`.
 
 ## Query and verify the graph via the `obsidian` CLI
 
@@ -164,9 +164,9 @@ So a run that reads a journal and finds nothing records that fact in `reports/�
 cd "$VAULT"
 # 일지의 이름 집합. prereg는 type 칸으로 뺀다 — 파일 이름으로 거르면 제목에 "사전등록"이
 # 들어간 experiment 일지가 조용히 빠진다(볼트에 실제로 한 편 있었다).
-grep -rL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' | sort -u > /tmp/journals
+grep -arL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' | sort -u > /tmp/journals
 # 온톨로지가 가리키는 것 중 실제로 일지인 것 = 정제된 일지
-grep -roh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
+grep -aroh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
 comm -12 /tmp/journals /tmp/linked > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals -

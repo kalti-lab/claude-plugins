@@ -51,6 +51,20 @@ So never write `ontology/*.md` or `journals/*.md`. Use `grep -r … --include='*
 `find … -name '*.md'`, or `os.walk`. The same goes for a name-filtered read: not
 `ontology/가설-*.md` but `grep -r … ontology/ --include='가설-*.md'`.
 
+And write it `grep -ar`, not `grep -r`. One byte that is not valid UTF-8 — a truncated
+character pasted out of a terminal, say — can make grep call the file binary and skip it
+**whole**, with no warning and exit code 0. Measured on this vault: a bad byte planted in a
+title line dropped that journal out of the refinement cursor's denominator, 279 → 278, in
+silence; `-a` held it at 279. Note grep decides by sniffing the **start** of the file, so
+the same byte appended to the end of that journal changed nothing — which makes this worse,
+not better. It is intermittent, and it depends on where the byte happens to land.
+
+What it costs when it does fire: a journal vanishes from the cursor's denominator, or a
+card's every wikilink vanishes from the linked set, and the weekly prints the shrunken
+number as if it were the count. `-a` reads the file as text instead. `shared/lint.py`
+reports such a file as an error so it gets fixed at the source; `-a` is what keeps the
+tally right until someone does.
+
 ---
 
 ## Syncing with git (`KALTI_GIT_SYNC`)

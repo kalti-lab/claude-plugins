@@ -95,7 +95,7 @@ A move alone is link-safe (Obsidian resolves by basename, which is unchanged). A
 ```
 # find the referencing notes
 obsidian backlinks file="<oldbase>" format=json     # CLI present
-grep -rl "[[<oldbase>" "$VAULT"                      # fallback when no CLI
+grep -arl "[[<oldbase>" "$VAULT"                      # fallback when no CLI
 ```
 
 In each referencing note, swap only the basename token, preserving any suffix — match `[[oldbase` only when the next char is `]`, `|`, `#`, or `^` (and the embed form `![[oldbase…]]`) so a longer name isn't partially clobbered:

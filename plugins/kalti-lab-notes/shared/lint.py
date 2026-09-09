@@ -76,6 +76,21 @@ def split_fm(text):
     return pairs, body
 
 
+def read_text(path, rel, rep):
+    """깨진 바이트가 한 개만 섞여도 grep -r는 그 파일을 통째로 건너뛴다 — 경고도
+    종료코드도 없이. 그러면 정제 커서의 분모에서 일지 한 편이 사라지거나 카드 한 장의
+    링크가 통째로 빠지고, 주간 보고는 그 줄어든 숫자를 맞는 값처럼 싣는다.
+    조용히 틀리느니 여기서 시끄럽게 잡는다."""
+    raw = open(path, "rb").read()
+    try:
+        return raw.decode("utf-8")
+    except UnicodeDecodeError as e:
+        rep.err(rel, "UTF-8로 못 읽는 바이트가 %d번째 자리에 있습니다 — "
+                     "grep -r가 이 파일을 조용히 건너뛰어 커서·링크 집계에서 빠집니다"
+                     % e.start)
+        return raw.decode("utf-8", errors="replace")
+
+
 class Report:
     def __init__(self):
         self.errors, self.warns = [], []
@@ -97,7 +112,7 @@ def check_journals(vault, rep, only=None):
         rel = os.path.relpath(path, vault)
         base = os.path.basename(path)[:-3]
         names[base] = rel
-        text = open(path, encoding="utf-8", errors="replace").read()
+        text = read_text(path, rel, rep)
         fm, body = split_fm(text)
 
         # 이름·id 고유성 — 날짜 접두가 사라지면 이것이 유일한 방어선이다
@@ -202,7 +217,7 @@ def check_ontology(vault, rep, journal_names):
             nested += 1
         if base.upper() in ("README", "INDEX"):
             continue        # 객체가 아니라 이 폴더를 설명하는 글이다
-        text = open(path, encoding="utf-8", errors="replace").read()
+        text = read_text(path, rel, rep)
         fm, body = split_fm(text)
         if fm is None:
             rep.err(rel, "꼬리표 칸이 없습니다 — 객체인지 설명글인지 구별되지 않습니다")

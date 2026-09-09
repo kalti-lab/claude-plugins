@@ -38,9 +38,9 @@ Prefer the **obsidian CLI** for graph queries when `which obsidian` finds it (`o
 
 There are no modes and no flags. Whatever follows `/kalti-context` is what the caller wants to know about, written however they write. Work out what it refers to, in this order:
 
-1. **It names a project** (matches a `project` note's filename, or is close to one) → pull everything filed under it: `grep -rl 'partOf: "[[<project>]]"' ontology/ --include='*.md'`
-2. **It names a concept** (matches a `concept` note) → that card plus its full membership: `obsidian backlinks file="개념-…"`, or `grep -rl 'concept: "[[개념-…]]"' ontology/ --include='*.md'` as fallback. The card's own body says *why* those findings belong together, which the flat list does not — read it first.
-3. **It is a topic or a question** → route through the **concept layer**, which is the only edge that crosses project boundaries. List the concepts (`grep -rl "^type: concept$" ontology/ --include='*.md'`), pick the ones that cover the topic, then follow their membership out into findings from every project that reached that conclusion. Two hops, not a scan.
+1. **It names a project** (matches a `project` note's filename, or is close to one) → pull everything filed under it: `grep -arl 'partOf: "[[<project>]]"' ontology/ --include='*.md'`
+2. **It names a concept** (matches a `concept` note) → that card plus its full membership: `obsidian backlinks file="개념-…"`, or `grep -arl 'concept: "[[개념-…]]"' ontology/ --include='*.md'` as fallback. The card's own body says *why* those findings belong together, which the flat list does not — read it first.
+3. **It is a topic or a question** → route through the **concept layer**, which is the only edge that crosses project boundaries. List the concepts (`grep -arl "^type: concept$" ontology/ --include='*.md'`), pick the ones that cover the topic, then follow their membership out into findings from every project that reached that conclusion. Two hops, not a scan.
 4. **Nothing covers it** → say so plainly rather than forcing a match, then fall back to a targeted body search with the noise flagged. A missing concept is a refinement candidate: mention it and leave creating it to `/kalti-ontology`.
 
 When the input is ambiguous between a project and a topic, do both and label which is which — it is cheaper than asking.
@@ -77,7 +77,7 @@ awk '/^---$/{n++;next} n==2 && NF && !/^#/ {print; exit}' "$CARD"   # first para
 Where a hypothesis was superseded, follow the `supersedes` chain and present it as a sequence so the reader sees the path rather than a pile: "first X, dropped because …, replaced by Y". **Scope that search to the project**, not the whole vault — every chain is local to one project, so a vault-wide grep hands back every chain in the lab (20-odd on kalti's) for you to filter by hand:
 
 ```
-grep -rl 'partOf: "[[<project>]]"' ontology/ --include='가설-*.md' | xargs grep -h "^supersedes:"
+grep -arl 'partOf: "[[<project>]]"' ontology/ --include='가설-*.md' | xargs grep -ah "^supersedes:"
 ```
 
 ## Output shape

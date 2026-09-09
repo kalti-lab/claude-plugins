@@ -43,9 +43,24 @@ def resolve_vault(argv):
     sys.exit("볼트를 찾지 못했습니다. /kalti-setup을 먼저 실행하십시오.")
 
 
+def read_text(path, n=None):
+    """깨진 바이트가 섞이면 여기서 파일 이름과 함께 멈춘다.
+    세는 도구라 조용히 건너뛰면 틀린 숫자가 사람 이름 옆에 붙는다."""
+    # 바이트로 잘라 읽으면 안 된다 — 경계에서 한글 한 글자가 반토막 나
+    # 멀쩡한 파일이 깨진 파일로 보고된다(실제로 그렇게 한 번 틀렸다).
+    # 통째로 읽어 디코딩한 뒤 글자 단위로 자른다.
+    raw = open(path, "rb").read()
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as e:
+        sys.exit("%s: UTF-8로 못 읽는 바이트가 %d번째 자리에 있습니다.\n"
+                 "grep도 이 파일을 조용히 건너뜁니다 — lint를 돌려 고친 뒤 다시 세십시오."
+                 % (path, e.start))
+    return text if n is None else text[:n]
+
+
 def read_head(path, n=2000):
-    with open(path, encoding="utf-8") as f:
-        return f.read(n)
+    return read_text(path, n)
 
 
 def field(text, key, default=""):
@@ -105,8 +120,8 @@ def count_cards(vault, journals):
         for fn in sorted(files):
             if not fn.endswith(".md"):
                 continue
-            with open(os.path.join(dirpath, fn), encoding="utf-8") as f:
-                for base in set(WIKILINK.findall(f.read())):
+            for base in set(WIKILINK.findall(
+                    read_text(os.path.join(dirpath, fn)))):
                     if base in journals:
                         cards[base] += 1
     return cards
@@ -124,8 +139,7 @@ def cross_citations(vault, journals):
                 break
         if not path:
             continue
-        with open(path, encoding="utf-8") as f:
-            for ref in set(WIKILINK.findall(f.read())):
+        for ref in set(WIKILINK.findall(read_text(path))):
                 if ref in journals and journals[ref]["author"] != meta["author"]:
                     n += 1
     return n

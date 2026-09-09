@@ -66,9 +66,9 @@ That bucket exists so `/kalti-ontology` has somewhere to pick up from — but a 
 cd "$VAULT"
 # 일지의 이름 집합. prereg는 type 칸으로 뺀다 — 파일 이름으로 거르면 제목에 "사전등록"이
 # 들어간 experiment 일지가 조용히 빠진다(볼트에 실제로 한 편 있었다).
-grep -rL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' | sort -u > /tmp/journals
+grep -arL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' | sort -u > /tmp/journals
 # 온톨로지가 가리키는 것 중 실제로 일지인 것 = 정제된 일지
-grep -roh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
+grep -aroh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
 comm -12 /tmp/journals /tmp/linked > /tmp/cited
 grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals - | wc -l
@@ -84,9 +84,9 @@ If any concept card has **drift** — members declaring `concept:` that the card
 
 ```
 cd "$VAULT"
-for c in $(grep -rl "^type: concept$" ontology/ --include='*.md'); do
+for c in $(grep -arl "^type: concept$" ontology/ --include='*.md'); do
   b=$(basename "$c" .md)
-  n=$(grep -rl "concept: \"\[\[$b\]\]\"" ontology/ --include='*.md' 2>/dev/null | while read f; do
+  n=$(grep -arl "concept: \"\[\[$b\]\]\"" ontology/ --include='*.md' 2>/dev/null | while read f; do
         grep -q "\[\[$(basename "$f" .md)\]\]" "$c" || echo x; done | wc -l)
   [ "$n" -gt 0 ] && echo "$b $n건 미언급"
 done
@@ -100,10 +100,10 @@ And if any **dropped hypothesis has lost its reason-chain** — `status: 기각`
 
 ```
 cd "$VAULT"
-for f in $(grep -rl '^status: 기각$\|^status: 대체됨$' ontology/ --include='가설-*.md'); do
+for f in $(grep -arl '^status: 기각$\|^status: 대체됨$' ontology/ --include='가설-*.md'); do
   b=$(basename "$f" .md)
-  s=$(grep -rl "supersedes: \"\[\[$b\]\]\"" ontology/ --include='가설-*.md' 2>/dev/null | wc -l)
-  r=$(grep -rl "refutes: \"\[\[$b\]\]\"" ontology/ --include='발견-*.md' 2>/dev/null | wc -l)
+  s=$(grep -arl "supersedes: \"\[\[$b\]\]\"" ontology/ --include='가설-*.md' 2>/dev/null | wc -l)
+  r=$(grep -arl "refutes: \"\[\[$b\]\]\"" ontology/ --include='발견-*.md' 2>/dev/null | wc -l)
   [ $((s+r)) -eq 0 ] && echo "$b"
 done
 ```
