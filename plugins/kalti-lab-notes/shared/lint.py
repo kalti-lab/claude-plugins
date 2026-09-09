@@ -33,13 +33,22 @@ ONTO_REQUIRED = {
     "concept":    ["id", "title", "type", "tags"],
     "source":     ["id", "title", "type", "url"],
     "person":     ["id", "title", "type", "name", "role", "worksOn"],
+    "decision":   ["id", "title", "type", "status", "date", "partOf", "derivedFrom"],
 }
 # 종류는 이름 접두가 아니라 폴더가 말한다. 붙임표가 이름 안에도 쓰이므로
 # (이미지생성-파이프라인) 접두로는 종류와 이름을 구별할 수 없었다.
+# 상태 낱말은 정확히 일치해야 한다 — 커서·주간이 `^status: 기각$` 같은 문자열로 찾기
+# 때문에, 한 글자만 달라도 그 카드는 조용히 집계에서 빠진다.
+STATUS = {
+    "project":    {"진행", "보류", "완료", "보관"},
+    "hypothesis": {"제안", "채택", "기각", "대체됨"},
+    "decision":   {"유효", "번복됨"},
+}
 ONTO_DIR = {"종목": "project", "가설": "hypothesis", "발견": "finding",
-            "개념": "concept", "자료": "source", "사람": "person"}
+            "개념": "concept", "자료": "source", "사람": "person",
+            "결정": "decision"}
 LINK_KEYS = ["partOf", "derivedFrom", "supports", "refutes", "concept",
-             "supersedes", "worksOn", "project", "tests"]
+             "supersedes", "worksOn", "project", "tests", "basedOn"]
 
 # 사람이 판단할 필요 없이 일지에서 빼야 하는 것들. 값이 아니라 배선(配線)이다.
 # 코드 파일 확장자만. json·yaml·toml은 뺐다 — package.json처럼 누구나 아는
@@ -256,6 +265,13 @@ def check_ontology(vault, rep, journal_names):
         for k in ONTO_REQUIRED[ty] + ["updated"]:
             if k not in d:
                 rep.err(rel, "%s 칸이 없습니다 (%s의 필수 칸)" % (k, ty))
+        if ty in STATUS:
+            st = d.get("status", "").strip().strip("\"'")
+            if st and st not in STATUS[ty]:
+                rep.err(rel, "status가 %s에 없는 낱말입니다 (%r) — 쓸 수 있는 것: %s"
+                             % (ty, st, " · ".join(sorted(STATUS[ty]))))
+        elif "status" in d:
+            rep.warn(rel, "%s에는 status 칸이 없습니다" % ty)
         if ty == "person" and ({"email", "phone"} & set(d)):
             rep.err(rel, "사람 카드에 연락처가 있습니다 — 위키로 나가면 되돌릴 수 없습니다")
         cid = d.get("id", "")

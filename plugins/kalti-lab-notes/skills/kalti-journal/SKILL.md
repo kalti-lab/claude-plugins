@@ -171,8 +171,18 @@ filename, an `author` that disagrees with the folder.
 
 **경고 are yours to judge.** A source filename, a commit hash, a temp path, a tag outside the
 agreed list. Usually the fix is to rewrite the line per "What belongs in a journal" — but a raw
-identifier that is genuinely a value someone must reproduce can stay. Fix what *this run* wrote;
-for warnings on entries other people wrote, say so in the summary and leave them alone.
+identifier that is genuinely a value someone must reproduce can stay: where the warning text
+was *found* is evidence, a verbatim return value is an observation, and a command someone must
+re-run is reproduction. Strip what was merely appended — a filename in parentheses after a
+phrase that already says the thing in plain words — and leave what carries the meaning.
+
+Fix what *this run* wrote. For warnings on entries **other people** wrote, the default is to
+report them in the summary and leave them alone — a journal is its author's record. The one
+exception is **the lab operator, who may clean up anyone's entries**; when they do, the commit
+message says whose notes were touched and why, so the author can see it in the history rather
+than discovering it in a diff. A personal absolute path or anything else that should not leave
+the machine is cleaned regardless of who wrote it — this vault is public and can go out as a
+wiki, and that is not reversible.
 
 ## Choosing frontmatter values
 

@@ -73,11 +73,11 @@ grep -arL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||'
 # 온톨로지가 가리키는 것 중 실제로 일지인 것 = 정제된 일지
 grep -aroh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
 comm -12 /tmp/journals /tmp/linked > /tmp/cited
-grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
+grep -oh '^- [^ ]*' reports/정제/검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals - | wc -l
 ```
 
-`M` counts journals **nobody has looked at yet** — journals already read and found to hold nothing are recorded in `reports/정제-검토기록.md` and subtracted. Counting those forever would keep the number above zero permanently and drain it of meaning.
+`M` counts journals **nobody has looked at yet** — journals already read and found to hold nothing are recorded in `reports/정제/검토기록.md` and subtracted. Counting those forever would keep the number above zero permanently and drain it of meaning.
 
 If any concept card has **drift** — members declaring `concept:` that the card's body never names — add a second line, because a stale hub is worse than a missing one (a reader trusts it as complete):
 

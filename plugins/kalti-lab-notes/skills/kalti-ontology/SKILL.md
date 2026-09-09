@@ -57,6 +57,7 @@ Especially useful in refinement: `unresolved` shows what journals link to but ha
 | `concept` | a recurring term or technique |
 | `source` | a paper, doc, or link |
 | `person` | a participant |
+| `decision` | a choice that was made, why, and what it ruled out |
 
 ## status (per type)
 
@@ -64,6 +65,7 @@ Status values are written into the notes in Korean (the team's working language)
 
 - **project**: `진행` / `보류` / `완료` / `보관` (active / on-hold / done / archived)
 - **hypothesis**: `제안` / `채택` / `기각` / `대체됨` (proposed / accepted / rejected / superseded)
+- **decision**: `유효` / `번복됨` (standing / reversed)
 - **finding · concept · source · person**: no status
 
 Hypotheses are alive. When a new hypothesis replaces an old one, set the old one's status to `대체됨` and have the new one point at the old one with `supersedes` (don't delete — the history is the research narrative).
@@ -89,6 +91,10 @@ Write each direction once, and read the reverse via Obsidian backlinks (avoids c
 | `derivedFrom` | derived from | finding | experiment journal |
 | `concept` | is an instance of | finding, hypothesis | concept |
 | `worksOn` | works on | person | project |
+| `partOf` | belongs to | decision | project |
+| `supersedes` | reverses | decision | decision |
+| `basedOn` | rests on | decision | finding, hypothesis |
+| `derivedFrom` | recorded in | decision | journal |
 
 ## Required fields per type
 
@@ -101,6 +107,7 @@ A card is a living document; without it a reader cannot tell a settled conclusio
 | hypothesis | id, title, type, status, partOf (supersedes when replacing) |
 | finding | id, title, type, date, partOf, derivedFrom, (supports / refutes) |
 | concept | id, title, type, tags |
+| decision | id, title, type, status, date, partOf, derivedFrom (supersedes when reversing) |
 | source | id, title, type, url |
 | person | id, title, type, name, role, worksOn (a list) — **never a contact address** |
 
@@ -157,7 +164,7 @@ obsidian backlinks file="<journal name>" format=json    # no ontology/ backlink 
 
 A journal with no incoming link is **not automatically remaining work**. Most journals record what was built, renamed, deployed or set up, and honestly yield nothing to promote — reading one and finding nothing is a correct, common outcome, not a failure. If the cursor counts those forever it never reaches zero and stops meaning anything.
 
-So a run that reads a journal and finds nothing records that fact in `reports/정제-검토기록.md`, and the cursor subtracts it. Never edit the journal itself to mark it — journals are evidence and belong to their author; the record layer is where operational state goes.
+So a run that reads a journal and finds nothing records that fact in `reports/정제/검토기록.md`, and the cursor subtracts it. Never edit the journal itself to mark it — journals are evidence and belong to their author; the record layer is where operational state goes.
 
 ```
 # journals neither cited by ontology/ nor already reviewed
@@ -171,7 +178,7 @@ grep -arL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||'
 # 온톨로지가 가리키는 것 중 실제로 일지인 것 = 정제된 일지
 grep -aroh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
 comm -12 /tmp/journals /tmp/linked > /tmp/cited
-grep -oh '^- [^ ]*' reports/정제-검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
+grep -oh '^- [^ ]*' reports/정제/검토기록.md 2>/dev/null | sed 's/^- //' | sort -u > /tmp/checked
 cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals -
 ```
 
@@ -237,7 +244,7 @@ git add "ontology/"                  # the ontology layer only — never -A
 git commit -m "ontology: <one line on what was refined/added>"
 ```
 
-A run that also appended to `reports/정제-검토기록.md` adds that file too. Put the sync result in the summary in one line.
+A run that also appended to `reports/정제/검토기록.md` adds that file too. Put the sync result in the summary in one line.
 
 ## Why two layers
 
