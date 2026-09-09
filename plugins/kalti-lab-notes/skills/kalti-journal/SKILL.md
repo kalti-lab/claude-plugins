@@ -53,40 +53,38 @@ If `$VAULT` has no `journals/`, or `$AUTHOR` is empty or names no existing folde
 
 From there **every path is absolute under `$VAULT`** — write the entry by **direct file write** into the author folder `$VAULT/journals/$AUTHOR/` (independent of the Obsidian app, headless OK), and do candidate searches there too (**recursively** — see the layout below). (The vault is a git repo — after writing, sync the author folder via "After writing/editing: sync with git" below.)
 
-### Author-folder layout — per-project subfolders + dated filenames
+### Author-folder layout — per-project subfolders, names with no date
 
-The author folder isn't flat. Entries are filed under a **per-project subfolder**, and filenames carry a **date prefix**:
+The author folder isn't flat. Entries are filed under a **per-project subfolder**, and the filename is the title alone:
 
 ```
 $VAULT/journals/$AUTHOR/
 ├─ _inbox/                       # entries with no project (or a held one)
-│  └─ 20260623-메모-아이디어.md
+│  └─ 메모-아이디어.md
 └─ <project-note-basename>/      # e.g. 이미지생성-파이프라인/
-   ├─ 20260615-샘플러별-디테일-비교.md
-   └─ 20260623-업스케일-검증.md
+   ├─ 00-프로젝트-히스토리-이미지생성-파이프라인.md
+   ├─ 샘플러별-디테일-비교.md
+   └─ 업스케일-검증.md
 ```
 
 - **Subfolder** = the `project` note's filename (the wikilink basename, `[[ ]]` and any `|alias` stripped — e.g. `project: "[[이미지생성-파이프라인]]"` → folder `이미지생성-파이프라인`). No project, or a held/skipped one → `_inbox/`. Create the target folder with `mkdir -p` on demand.
-- **Filename** = `YYYYMMDD-<title>.md` (details under "Writing a new entry").
-- **The one exception — a project overview note.** A note that surveys a whole project rather than one day's work is named `00-<title>-<project>.md` and carries **no date prefix**. The `00-` sorts it to the top of the folder so it is read first, and the trailing project name keeps the basename unique across folders — without it, twelve overview notes all called `00-프로젝트-히스토리.md` share one basename and **no wikilink can address any of them**, which is exactly what happened on kalti's vault until 2026-09-03. Use `type: retro`. There is at most one per project folder; everything else is a dated entry.
+- **Filename** = `<title>.md`. No date — the `date` frontmatter already holds it, and a name that leads with eight digits pushes the meaning to the right in every `[[ ]]` that cites it. A card listing twenty pieces of evidence is the place this is read most.
+- **The name must be unique across the whole vault**, because a wikilink resolves by basename and nothing else. Two notes sharing a name means no link can address either. This is what the date prefix used to guarantee by accident; now it is a rule, and `shared/lint.py` enforces it on every save. Write a title that says what was done and it will not collide — the existing 268 entries have distinct titles with the prefixes stripped.
+- **The one exception — a project overview note.** A note that surveys a whole project rather than one day's work is named `00-<title>-<project>.md`. The `00-` sorts it to the top of the folder so it is read first, and the trailing project name keeps the basename unique — without it, twelve overview notes all called `00-프로젝트-히스토리.md` share one basename and **no wikilink can address any of them**, which is exactly what happened on kalti's vault until 2026-09-03. Use `type: retro`. There is at most one per project folder.
 
 Because the folder is nested, candidate searches and the refinement step read it **recursively** (project subfolders + `_inbox`).
 
 ## Keep the author folder tidy (auto-organize + migration)
 
-Right after the vault and author folder are pinned, bring the author folder into the layout above before doing anything else. Older entries written under the flat scheme (loose in `journals/$AUTHOR/`, no date prefix) get filed into their project subfolder and renamed; entries already in place are left alone. This is **idempotent** — on a tidy folder it moves nothing.
+Right after the vault and author folder are pinned, bring the author folder into the layout above before doing anything else. Entries sitting loose in `journals/$AUTHOR/` get filed into their project subfolder; entries already in place are left alone. This is **idempotent** — on a tidy folder it moves nothing.
 
 For each `*.md` under `$VAULT/journals/$AUTHOR/` (recursive):
 
-1. Read the `project` and `date` frontmatter.
+1. Read the `project` frontmatter.
 2. **Target folder** = the `project` note basename (`[[ ]]`/`|alias` stripped); no project or a held one → `_inbox`.
-3. **Target filename**:
-   - already prefixed (`^\d{8}-`) → keep the name as-is.
-   - a project overview note (`^00-`) → keep the date-free name, but if its basename is not unique across the vault, append `-<project>` so a wikilink can address it. Never give it a date prefix: twelve overview notes written on one day would still collide, and the prefix destroys the sort-to-top the `00-` exists for.
-   - otherwise → `<YYYYMMDD>-<current title>.md`, where `YYYYMMDD` is the `date` frontmatter with the dashes removed. If `date` is missing, fall back to the first git-commit date, then to mtime, and flag it in the report:
-     ```
-     git -C "$VAULT" log --diff-filter=A --date=format:%Y%m%d --format=%ad -- "<path>" | tail -1
-     ```
+3. **Target filename** = the name it already has. This routine does not rename — a name is a link target, and renaming for tidiness alone breaks links for no gain. The two cases where it *must* act:
+   - **a leftover date prefix** (`^\d{8}-`) → strip it. The prefix was retired in 2026-09; anything still carrying one predates that.
+   - **a name that collides with another note anywhere in the vault** → this is the one defect a filename can have, since no wikilink can then address either note. Disambiguate by appending `-<project>`, the way overview notes already do. `shared/lint.py` reports these.
 4. If the current path already equals the target path, it's canonical — skip.
 5. Otherwise move it with `git mv "<old>" "<target-dir>/<new>"` (`mkdir -p` the target dir first). **If the basename changed** (a rename, not just a move), rewrite the links pointing at it — next.
 
@@ -139,7 +137,7 @@ Don't guess whether this is new work or a continuation — ask the user. Make th
 
 ## Writing a new entry
 
-1. **Decide the location and filename.** File the note under its project subfolder `$VAULT/journals/$AUTHOR/<project-or-_inbox>/` (folder = the `project` note basename, or `_inbox` when there's no project; `mkdir -p` it). The filename is `YYYYMMDD-<title>.md`: a **date prefix** then a **descriptive title that says what was done** — the team works in Korean, so the titles are Korean (e.g. `$VAULT/journals/aram/이미지생성-파이프라인/20260615-샘플러별-디테일-비교.md`). The `YYYYMMDD` is the entry's `date` with the dashes removed (the `date` frontmatter still stays `YYYY-MM-DD`); the `id` field stays date-free. The date prefix sorts entries chronologically and the title keeps them recognizable at a glance — but it means **wikilinks to the entry include the prefix** (`[[20260615-샘플러별-디테일-비교]]`), so link by the full dated filename.
+1. **Decide the location and filename.** File the note under its project subfolder `$VAULT/journals/$AUTHOR/<project-or-_inbox>/` (folder = the `project` note basename, or `_inbox` when there's no project; `mkdir -p` it). The filename is `<title>.md` — a **descriptive title that says what was done**, in Korean like the rest of the team's writing (e.g. `$VAULT/journals/aram/이미지생성-파이프라인/샘플러별-디테일-비교.md`). No date in the name: the `date` frontmatter holds it. Make the title specific enough to be unique vault-wide — "실험" or "정리" will collide with someone eventually, "샘플러별-디테일-비교" will not.
 2. **Copy the template and fill it in.** Copy this skill's `assets/journal-template.md` verbatim and fill only the values. Start from the file rather than reconstructing the format from memory — the fields, order, and section titles are assumptions the refinement step depends on, and any drift breaks the automatic linking. Sections that don't apply can be left empty, but keep the order and titles.
 3. If you're stuck on how to fill it, look at a worked example — `references/example-experiment.md` for a measurement experiment, `references/example-code-build.md` for a code-tuning investigation (it shows a noisy draft beside the cleaned version).
 
@@ -231,8 +229,10 @@ head it reads as fine.
 go/no-go judgement, and any comparison between systems or models. **When it is not** — reading
 a value to understand the current state, or a check that only asks whether the code runs.
 
-**Naming and placement.** Same as any entry: `YYYYMMDD-사전등록-<무엇을>.md` under the project
-folder, so it sorts next to the work it precedes. The `experiment` journal that follows links
+**Naming and placement.** Same as any entry: `사전등록-<무엇을>.md` under the project folder, so
+it sorts next to the work it precedes. The `사전등록-` prefix is part of the title, not a marker —
+the skills that exclude pre-registrations read `type: prereg`, never the filename, because a journal
+titled "…사전등록 재실험…" is an `experiment` and a name filter drops it silently. The `experiment` journal that follows links
 back to it from `## 배경`, and if the measurement contradicts the pre-registration — a
 definition had to change mid-way, the sample turned out too small — **say so in the journal
 rather than editing the pre-registration.** The gap between the two is the finding.
@@ -257,7 +257,7 @@ Baseline: **fill when confident, ask only when not.** Don't ask about values the
 
 Always write wikilinks `[[ ]]` with the note's **filename**, because Obsidian resolves links by filename (basename). `id` is just the entry's fixed marker, not a link identifier.
 Example: `project: "[[이미지생성-파이프라인]]"` (good), `"[[proj-image-pipeline]]"` (bad).
-Journal filenames carry the `YYYYMMDD-` date prefix, so links **to a journal** include it — `[[20260615-샘플러별-디테일-비교]]`, not `[[샘플러별-디테일-비교]]` (the same goes for the `배경` section's links to earlier entries). Ontology object names have no such prefix, so links to them stay bare.
+Every note name in the vault is bare — no date, no type marker — so a link is just the title: `[[샘플러별-디테일-비교]]`. Nothing in a link's shape says whether it points at a journal or a card; that is decided by which folder the file is actually in, never by a pattern.
 
 ## After writing/editing: sync with git
 

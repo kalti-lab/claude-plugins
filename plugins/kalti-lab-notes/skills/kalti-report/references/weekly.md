@@ -29,7 +29,7 @@ Output paths:
 
 ## Gather the week's entries
 
-Walk the journals **recursively** and select entries whose `date` frontmatter falls within the week's bounds (inclusive). **For the default/personal run, restrict to `journals/<author>/` only** — other members' folders are not read. For `--all`, read every author folder. Skip project-history files (`00-*.md`) — they are retrospectives, not week-dated work — and skip pre-registrations (`type: prereg`, named `…-사전등록-….md`): they carry no results, and the measurement they precede is reported by its own `experiment` entry.
+Walk the journals **recursively** and select entries whose `date` frontmatter falls within the week's bounds (inclusive). **For the default/personal run, restrict to `journals/<author>/` only** — other members' folders are not read. For `--all`, read every author folder. Skip project-history files (`00-*.md`) — they are retrospectives, not week-dated work — and skip pre-registrations by their **`type: prereg`**, never by their filename: a journal titled "…사전등록 재실험…" is an `experiment`, and a name filter drops it silently.
 
 Prefer the **obsidian CLI** when present for accurate frontmatter reads; if `which obsidian` finds nothing (headless), read the files directly (graceful fallback — same result). For each selected entry, read: `project`, `type`, `title`, and the section bodies used below.
 
@@ -48,7 +48,7 @@ Group the selected entries **domain → project** (a personal report is one memb
 | **다음 주 계획** (next) | `다음 액션` | measurable next goals |
 | **지식화 후보** (ontology candidates) | hypotheses/findings flagged in the body | feeds `/kalti-ontology` |
 
-Every rendered item ends with a `[[YYYYMMDD-…]]` wikilink to the source journal (journal basenames are unique, so wikilinks are safe there). Omit empty buckets. The minimal core, if trimming, is 발견·결정·다음.
+Every rendered item ends with a `[[…]]` wikilink to the source journal, by its bare filename (journal basenames are unique vault-wide, so wikilinks are safe there; weekly reports are not, which is why *their* links are relative paths — see below). Omit empty buckets. The minimal core, if trimming, is 발견·결정·다음.
 
 Domains are the recurring topic clusters (e.g. 메모리 시스템 / AI 에이전트 도구 / 금융·트레이딩 ML / ML 평가·검증 하네스 / 콘텐츠 생성 / 이미지 생성 / 연구방법론). Infer each project's domain from its work; when unsure, group by project alone.
 

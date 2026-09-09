@@ -8,7 +8,7 @@ description: "Convention for refining kalti research journals into an ontology (
 
 The journal system has two layers.
 
-- **Journal layer `journals/<name>/`** — each member's record of work = **evidence**. Within a member folder, entries are filed under per-project subfolders (`_inbox/` when no project), with `YYYYMMDD-`prefixed filenames — so read it recursively.
+- **Journal layer `journals/<name>/`** — each member's record of work = **evidence**. Within a member folder, entries are filed under per-project subfolders (`_inbox/` when no project) — so read it recursively.
 - **Ontology layer `ontology/`** — the living knowledge refined out of journals, as objects: the meaning nodes that show up in the graph. **Managed by the group together.**
 
 This skill is the **refinement (curation)** side. The core of refinement is promoting into objects only conclusions actually grounded in the journals, without duplication — inventing facts that aren't there breaks trust in the whole graph.
@@ -73,7 +73,7 @@ Hypotheses are alive. When a new hypothesis replaces an old one, set the old one
 `type-abbrev + slug` (no date or sequence — an id is a fixed marker and shouldn't shift): `proj-` / `hyp-` / `find-` / `con-` / `src-` / `per-`
 e.g. `proj-image-pipeline`, `hyp-sampler`, `find-karras`, `con-nodes2`, `src-nodes2-doc`, `per-aram`
 
-**Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename. Ontology object names are bare (no date), but **journal** filenames carry a `YYYYMMDD-` prefix, so links *to a journal* — `tests` and especially `derivedFrom` — include it: `derivedFrom: "[[20260615-샘플러별-디테일-비교]]"`, not `"[[샘플러별-디테일-비교]]"`. The exception is a **project overview note**, which is date-free by design and linked as `"[[00-프로젝트-히스토리-agrune]]"` — see the `kalti-journal` layout section. Those notes are worth citing: they hold the across-the-months reasoning (why a line was abandoned, what a pivot cost) that no single dated entry contains.
+**Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename. Every name in the vault is bare — cards and journals alike — so `derivedFrom: "[[샘플러별-디테일-비교]]"` is the whole form. Nothing in a link's shape tells you what it points at; only the file's actual location does. **Project overview notes** (`"[[00-프로젝트-히스토리-agrune]]"`) are worth citing alongside dated work: they hold the across-the-months reasoning — why a line was abandoned, what a pivot cost — that no single entry contains.
 
 ## Relationship links (typed)
 
@@ -173,7 +173,7 @@ Append to the record under a dated heading, in three groups, and say in one line
 
 **Pre-registrations are excluded from the cursor — by their `type`, never by their filename.** A journal titled "…사전등록 재실험…" is an `experiment` whose subject is a pre-registration, and a name filter drops it silently; that is a real entry in this vault. A `type: prereg` entry states what will count as correct *before* a measurement; it holds no conclusion to promote, so counting it would keep the backlog above zero forever. Its findings arrive in the `experiment` journal that follows it.
 
-The cursor never guesses a link's kind from its shape. A journal name carries no reserved pattern — nothing in `[[샘플러별-디테일-비교]]` says "journal" rather than "card" — so the only correct test is membership in the set of files actually under `journals/`. Both resolve by **filename**, the way a wikilink does. If two journals share a basename, no link can tell them apart — fix that on the journal side first (the `kalti-journal` tidy routine gives every entry a `YYYYMMDD-` prefix), then refine them.
+The cursor never guesses a link's kind from its shape. A journal name carries no reserved pattern — nothing in `[[샘플러별-디테일-비교]]` says "journal" rather than "card" — so the only correct test is membership in the set of files actually under `journals/`. Both resolve by **filename**, the way a wikilink does. If two journals share a basename, no link can tell them apart — fix that on the journal side first (`shared/lint.py` reports the collision and `kalti-journal` disambiguates by appending the project), then refine them.
 
 ### Project objects come first
 
