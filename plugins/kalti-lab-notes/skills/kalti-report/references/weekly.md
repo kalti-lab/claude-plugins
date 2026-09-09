@@ -66,7 +66,10 @@ That bucket exists so `/kalti-ontology` has somewhere to pick up from — but a 
 cd "$VAULT"
 # 일지의 이름 집합. prereg는 type 칸으로 뺀다 — 파일 이름으로 거르면 제목에 "사전등록"이
 # 들어간 experiment 일지가 조용히 빠진다(볼트에 실제로 한 편 있었다).
-grep -arL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' | sort -u > /tmp/journals
+# 00-프로젝트-히스토리는 다른 일지를 요약한 회고라 정제 대상이 아니다
+# (주간·기여도 같은 이유로 건너뛴다). 세면 영원히 미정제로 남는다.
+grep -arL '^type: prereg$' journals/ --include='*.md' | sed 's|.*/||; s|\.md$||' \
+  | grep -v '^00-' | sort -u > /tmp/journals
 # 온톨로지가 가리키는 것 중 실제로 일지인 것 = 정제된 일지
 grep -aroh '\[\[[^]|#^]*' ontology/ --include='*.md' | sed 's/\[\[//; s/[[:space:]]*$//' | sort -u > /tmp/linked
 comm -12 /tmp/journals /tmp/linked > /tmp/cited
