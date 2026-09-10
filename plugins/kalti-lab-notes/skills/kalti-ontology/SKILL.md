@@ -6,6 +6,10 @@ description: "Convention for refining kalti research journals into an ontology (
 
 # kalti ontology refinement
 
+## 낱말 — 쓰기 전에 읽는다
+
+**`${CLAUDE_PLUGIN_ROOT}/shared/writing.md`를 따른다.** 한국 사람이 실제 대화에서 쓰는 낱말만 쓰고, 글에서나 보이는 말·번역투·새로 만든 비유는 안 쓴다. 기술 용어는 뜻을 우리말로 먼저 말하고 이름을 괄호에 넣는다. 지적받은 뒤에 고치는 게 아니라 처음 쓸 때부터 그렇게 쓴다. 그 파일에 이 볼트에서 실제로 걸렸던 낱말 표가 있다.
+
 The journal system has two layers.
 
 - **Journal layer `journals/<name>/`** — each member's record of work = **evidence**. Within a member folder, entries are filed under per-project subfolders (`_inbox/` when no project) — so read it recursively.

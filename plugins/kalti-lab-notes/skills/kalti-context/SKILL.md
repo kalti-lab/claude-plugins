@@ -9,6 +9,12 @@ The vault has two layers of accumulated knowledge — `journals/` (evidence) and
 
 What this hands over is **what the codebase and git cannot hold**. `kalti-journal` deliberately keeps file lists, symbol names and commit hashes out of journals, on the grounds that the repo and git already have them. So what is left in the ontology is exactly the complement: which approaches were tried and dropped, why a tuned value is the value it is, and which landmines will silently reappear if someone steps on them again.
 
+## 낱말 — 쓰기 전에 읽는다
+
+**`${CLAUDE_PLUGIN_ROOT}/shared/writing.md`를 따른다.** 한국 사람이 실제 대화에서 쓰는 낱말만 쓰고, 글에서나 보이는 말·번역투·새로 만든 비유는 안 쓴다. 기술 용어는 뜻을 우리말로 먼저 말하고 이름을 괄호에 넣는다. 지적받은 뒤에 고치는 게 아니라 처음 쓸 때부터 그렇게 쓴다. 그 파일에 이 볼트에서 실제로 걸렸던 낱말 표가 있다.
+
+찾아온 것을 사람에게 풀어 말할 때도 같다. 카드에 적힌 딱딱한 낱말을 그대로 옮기지 말고 쉬운 말로 바꿔 말한다.
+
 ## When this is worth calling
 
 Calling it on every task is waste — routine work (fix this bug, add this feature) is answered by reading the repo. It pays off at four moments:

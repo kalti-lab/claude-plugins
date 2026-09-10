@@ -72,8 +72,49 @@ NOISE = [
     # 뒤에 점이 또 오면 도메인이다(case.ftc.go.kr) — 그건 파일 이름이 아니다.
     (re.compile(r"[\w.-]*[\w-]\.(?:" + CODE_EXT + r")\b(?!\.)"), "소스 파일 이름"),
 ]
+# 딱딱한 낱말 — shared/writing.md 참고.
+# 넓게 잡으면 안 된다. 이 볼트에서 재 봤더니 넓은 목록은 1,873건이 걸리는데
+# 그중 82%가 `게이트`(dsforge의 공정 이름)·`실측`·`하네스`·`전사`처럼
+# 그 팀이 원래 쓰는 말이었다. 다른 뜻으로 쓰일 여지가 없는 것만 남긴다.
+# 지금 목록으로 볼트 전체 119건. 늘릴 때는 먼저 세어 보고 늘린다.
+STIFF = [
+    ("씻겨나",    "없어진다 · 사라진다"),
+    ("둔한 자",   "결과가 들쭉날쭉해진다"),
+    ("평면이다",  "한 군데가 아니라 전체에서 쓴다"),
+    ("뒤집힌 것", "예상이 빗나간 것"),
+    ("공허 통과", "검사할 대상이 0개라 그냥 합격한다"),
+    ("일반칙",    "어디에나 통하는 규칙"),
+    ("검출기",    "눈으로 봐야만 잡힌다"),
+    ("방어선",    "실제로 사고를 막았다"),
+    ("미증명",    "아직 확인 못 했다"),
+    ("대체안",    "대신할 방법"),
+    ("층위",      "성격"),
+    ("절벽이",    "뚝 끊긴다"),
+    ("자루",      "(비유를 새로 만들지 않는다)"),
+    ("기제",      "어떻게 그렇게 되는지"),
+    ("기전",      "어떻게 그렇게 되는지"),
+]
+
 FENCE = re.compile(r"```.*?```", re.S)
 WIKILINK = re.compile(r"\[\[([^\]|#^]+)")
+
+
+def check_stiff(rel, body, rep):
+    """말로는 안 쓰는 낱말. 두 군데는 빼고 본다.
+    - 위키링크 안쪽: 파일 이름은 링크가 찾아가는 주소라 못 바꾼다.
+    - 본문 맨 위 제목 줄: 파일 이름을 그대로 되풀이한 것이라 같은 이유로 못 바꾼다.
+      (`가설/사고를-켜면-포맷차이가-씻겨나간다` 같은 카드가 실제로 그렇다.)"""
+    plain = re.sub(r"(?m)^#[^\n]*$", "", body, count=1)
+    plain = FENCE.sub("", plain)
+    # 따옴표 안과 인용 줄은 남의 문장이다. 카드는 일지 문장을 그대로 옮겨 근거로
+    # 삼는 것이 규약이라, 여기를 고치면 근거가 아니게 된다. 그래서 검사에서 뺀다.
+    plain = re.sub(r"(?m)^>[^\n]*$", "", plain)
+    plain = re.sub(r'"[^"\n]{0,400}"|\u201c[^\u201d\n]{0,400}\u201d', "", plain)
+    plain = WIKILINK.sub("", plain)
+    stiff = [(w, alt) for w, alt in STIFF if w in plain]
+    if stiff:
+        rep.warn(rel, "말로는 안 쓰는 낱말 %d개: %s" % (
+            len(stiff), " · ".join("%s→%s" % (w, a) for w, a in stiff[:3])))
 
 
 def walk(root):
@@ -225,6 +266,8 @@ def check_journals(vault, rep, only=None):
             if hits:
                 rep.warn(rel, "%s %d건: %s" % (label, len(hits),
                                                ", ".join(sorted(map(str, hits))[:3])))
+
+        check_stiff(rel, body, rep)
     return names
 
 
@@ -286,6 +329,7 @@ def check_ontology(vault, rep, journal_names):
             incoming[tgt.strip()] += 1
         if ty == "finding" and "concept" not in d:
             rep.warn(rel, "개념이 안 붙어 종목 밖에서 찾을 수 없습니다")
+        check_stiff(rel, body, rep)
 
     for rel, key, tgt in links:
         if tgt not in cards and tgt not in journal_names:

@@ -9,6 +9,12 @@ kalti is a research group. Members record what they did as **research journals**
 
 Members only need to write journals — weaving hypotheses and findings into the knowledge graph is the operator's job. So focus on capturing what was done well enough that someone could reproduce it exactly from the note alone, even without you. The format isn't about tidiness: entries get read mechanically during refinement and linked into the vault graph, so the fields have to be where the refinement step expects them.
 
+## 낱말 — 쓰기 전에 읽는다
+
+**`${CLAUDE_PLUGIN_ROOT}/shared/writing.md`를 따른다.** 한국 사람이 실제 대화에서 쓰는 낱말만 쓰고, 글에서나 보이는 말·번역투·새로 만든 비유는 안 쓴다. 기술 용어는 뜻을 우리말로 먼저 말하고 이름을 괄호에 넣는다. 지적받은 뒤에 고치는 게 아니라 처음 쓸 때부터 그렇게 쓴다. 그 파일에 이 볼트에서 실제로 걸렸던 낱말 표가 있다.
+
+남이 쓴 일지의 낱말은 고치지 않는다 — 일지는 그 사람의 기록이다. 이 규칙은 **지금 쓰는 글**에 건다.
+
 ## If you invoked this yourself, confirm before writing
 
 When the user typed `/kalti-journal`, they have already asked — go straight on. But this skill
