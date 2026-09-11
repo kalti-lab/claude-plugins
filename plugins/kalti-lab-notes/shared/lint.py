@@ -98,12 +98,37 @@ STIFF = [
 FENCE = re.compile(r"```.*?```", re.S)
 WIKILINK = re.compile(r"\[\[([^\]|#^]+)")
 
+# 번역투 문법 — 낱말과 오탐의 성질이 다르다. 낱말의 오탐은 팀이 그 말을 다른
+# 뜻으로 쓰는 것이라(게이트·하네스) 목록에서 빼는 수밖에 없지만, 문법의 오탐은
+# 짧은 문자열이 다른 문법과 겹치는 것이라 어미를 붙여 좁히면 없어진다 —
+# `에 있어`는 볼트에서 12건 전부 "DB에 있어" 같은 장소격 오탐이었는데
+# `함에 있어`로 좁히니 0건이다(2026-09-11, 719편 실측). 한글에는 정규식의
+# 낱말 경계가 안 통하므로 어미·조사를 문자열에 직접 넣는다. 아래는 전부 실측
+# 0건 — 지금 있는 걸 잡는 게 아니라 앞으로 나오면 바로 걸리는 지뢰선이다.
+# 늘릴 때는 STIFF와 같은 절차: 먼저 볼트 전체를 세고, 0이거나 전수 확인한
+# 것만 넣는다. `에 대한`(38건)·`것으로 보인다`(3건)는 멀쩡한 쓰임이 섞여 보류.
+PATTERNS = [
+    ("되어지",       "…된다 (이중 피동)"),
+    ("되어진",       "…된다 (이중 피동)"),   # 되어진다 — '되어지'로는 안 걸린다
+    ("되어져",       "…돼서 (이중 피동)"),
+    ("에 다름 아니", "바로 …다"),
+    ("라고 할 수 있", "…다 (돌려 말하지 않는다)"),
+    ("함으로써",     "…해서 · …하니"),
+    ("함에 있어",    "…할 때 · …에서"),
+    ("적인 측면",    "…쪽 · …면"),
+    ("필요가 있다",  "…해야 한다"),
+    ("바 있다",      "…한 적이 있다 · …했다"),
+    ("진행하였",     "…했다"),
+    ("것으로 사료",  "…로 보인다 · …인 듯하다"),
+]
 
-def check_stiff(rel, body, rep):
-    """말로는 안 쓰는 낱말. 두 군데는 빼고 본다.
+
+def strip_quoted(body):
+    """검사에서 뺄 곳을 걷어낸 산문만 남긴다.
     - 위키링크 안쪽: 파일 이름은 링크가 찾아가는 주소라 못 바꾼다.
     - 본문 맨 위 제목 줄: 파일 이름을 그대로 되풀이한 것이라 같은 이유로 못 바꾼다.
-      (`가설/사고를-켜면-포맷차이가-씻겨나간다` 같은 카드가 실제로 그렇다.)"""
+      (`가설/사고를-켜면-포맷차이가-씻겨나간다` 같은 카드가 실제로 그렇다.)
+    - 코드 블록: 값일 수 있다."""
     plain = re.sub(r"(?m)^#[^\n]*$", "", body, count=1)
     plain = FENCE.sub("", plain)
     # 따옴표 안과 인용 줄은 남의 문장이다. 카드는 일지 문장을 그대로 옮겨 근거로
@@ -111,10 +136,20 @@ def check_stiff(rel, body, rep):
     plain = re.sub(r"(?m)^>[^\n]*$", "", plain)
     plain = re.sub(r'"[^"\n]{0,400}"|\u201c[^\u201d\n]{0,400}\u201d', "", plain)
     plain = WIKILINK.sub("", plain)
+    return plain
+
+
+def check_stiff(rel, body, rep):
+    """말로는 안 쓰는 낱말과 번역투 문법. 어디를 빼고 보는지는 strip_quoted 참고."""
+    plain = strip_quoted(body)
     stiff = [(w, alt) for w, alt in STIFF if w in plain]
     if stiff:
         rep.warn(rel, "말로는 안 쓰는 낱말 %d개: %s" % (
             len(stiff), " · ".join("%s→%s" % (w, a) for w, a in stiff[:3])))
+    pats = [(w, alt) for w, alt in PATTERNS if w in plain]
+    if pats:
+        rep.warn(rel, "번역투 문법 %d개: %s" % (
+            len(pats), " · ".join("%s→%s" % (w, a) for w, a in pats[:3])))
 
 
 def walk(root):
@@ -422,6 +457,20 @@ def check_ontology(vault, rep, journal_names):
         for k in sorted(byd)))
 
 
+def check_file(vault, path):
+    """파일 하나만 낱말·번역투 검사. 훅(글을 쓴 직후)과 교정 절차가 쓴다.
+    구조 검사(꼬리표 칸·절·링크)는 볼트 전체 맥락이 필요해서 여기서는 안 한다.
+    걸리면 1로 나가 — 훅이 이 값을 보고 같은 턴에 되먹인다."""
+    rep = Report()
+    rel = os.path.relpath(path, vault) if vault else path
+    text = read_text(path, rel, rep)
+    _, body = split_fm(text)
+    check_stiff(rel, body, rep)
+    for _, msg in rep.errors + rep.warns:
+        print("%s: %s" % (rel, msg))
+    return 1 if (rep.errors or rep.warns) else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("vault")
@@ -429,7 +478,10 @@ def main():
     ap.add_argument("--ontology", action="store_true")
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--detail", action="store_true", help="건별로 파일까지 보여준다")
+    ap.add_argument("--file", help="이 파일 하나만 낱말·번역투 검사")
     a = ap.parse_args()
+    if a.file:
+        return check_file(a.vault, a.file)
     both = not (a.journals or a.ontology)
     rep = Report()
 

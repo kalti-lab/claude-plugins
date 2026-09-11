@@ -14,7 +14,8 @@
         "./skills/kalti-journal",
         "./skills/kalti-ontology",
         "./skills/kalti-report",
-        "./skills/kalti-context"
+        "./skills/kalti-context",
+        "./skills/korean-polish"
       ]
     }
   ]

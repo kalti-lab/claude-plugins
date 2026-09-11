@@ -83,6 +83,16 @@ Writing rules that already bit once, so they are rules:
 3. Add the issue's row to the **지난 호** table in `$VAULT/reports/digest/README.md` — title line
    plus a `file://` open link like the existing rows.
 
+## Step 4.5 — 발행 전 말 다듬기 패스 (서브에이전트)
+
+소식을 만드는 턴은 집계·템플릿·글자 수 상한을 동시에 다루느라 낱말에 쓸 주의가
+안 남는다 — 낱말 규칙이 세 겹으로 있어도 8월호 초안에서 18개가 걸린 이유다.
+그래서 발행 직전에 **교정만 하는 서브에이전트**를 하나 띄운다. 프롬프트에는 딱
+세 가지만 준다: 완성된 HTML 경로, `${CLAUDE_PLUGIN_ROOT}/skills/korean-polish/SKILL.md`
+경로, 그리고 "HTML은 글자만 고치고 태그·구조는 건드리지 말 것". 소식 내용이나
+집계 문맥은 주지 않는다 — 격리가 목적이다. 에이전트가 돌아오면 글자 수 상한
+(Step 3의 표)을 다시 세고, 새로 걸린 낱말은 실행 요약에 옮겨 적는다.
+
 ## Step 5 — verify before reporting done
 
 - Count every capped slot (spaces included) and state the counts in the run summary.

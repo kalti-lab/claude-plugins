@@ -297,6 +297,14 @@ Concepts are cheap to add later and awkward to untangle once written. When unsur
 A concept card that is only a glossary entry — a term explained, not a hub joining projects —
 takes `role: glossary` and drops out of the concept count and the drift check.
 
+### Re-read the wording before committing
+
+Read each card you wrote back **from disk** and test every sentence against
+`shared/writing.md`: "would I say it this way out loud?" Change words, never meaning; never
+touch quoted journal sentences (they are evidence), names inside wikilinks, the team-vocabulary
+table, or frontmatter. A word you fixed that the table does not list goes in the run summary as
+"새로 걸린 것".
+
 ### Check the graph before committing
 
 ```

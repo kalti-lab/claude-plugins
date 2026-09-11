@@ -163,6 +163,17 @@ Right before writing the file out, reread the draft once and strip the noise the
 
 What stays: the result-determining **values** (thresholds, parameters, versions), the **observations** as seen, and the **decisions** — each readable by a teammate outside this codebase.
 
+### Then re-read what you wrote — from disk, sentence by sentence
+
+Writing the entry and checking its wording are different jobs; done in one breath, the wording
+always loses (measured: the rules sat in three places and still got broken twice). So after the
+file is saved, **read it back from disk** — not from the memory of drafting it — and put every
+sentence to the one test in `shared/writing.md`: "would I say it this way to a teammate out
+loud?" If not, change the words, never the meaning. Leave alone: the team-vocabulary table in
+writing.md, quoted lines (`>` and quotation marks), names inside wikilinks, code blocks, and
+frontmatter. If you fixed a word the writing.md table does not list yet, report it in the run
+summary as "새로 걸린 것" (writing.md tells how it gets accumulated).
+
 ### Then run the checker — the altitude pass is judgement, this part is not
 
 Right after the file is written, before the commit:

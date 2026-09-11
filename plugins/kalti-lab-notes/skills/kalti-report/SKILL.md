@@ -10,6 +10,11 @@ description: "Builds the kalti lab's derived report layer under reports/ — the
 
 **`${CLAUDE_PLUGIN_ROOT}/shared/writing.md`를 따른다.** 한국 사람이 실제 대화에서 쓰는 낱말만 쓰고, 글에서나 보이는 말·번역투·새로 만든 비유는 안 쓴다. 기술 용어는 뜻을 우리말로 먼저 말하고 이름을 괄호에 넣는다. 지적받은 뒤에 고치는 게 아니라 처음 쓸 때부터 그렇게 쓴다. 그 파일에 이 볼트에서 실제로 걸렸던 낱말 표가 있다.
 
+**그리고 다 쓴 뒤에 한 번 더** — 커밋(소식은 발행) 전에 파일을 디스크에서 새로
+읽어 `korean-polish` 스킬의 절차로 되읽는다. 주간은 같은 턴에서 하면 되고,
+월간 소식은 집계·템플릿·글자 수가 한 턴에 몰리는 산출물이라 `references/digest.md`가
+정한 대로 서브에이전트로 격리해 돌린다.
+
 The vault has three layers: `journals/<name>/` (each member's evidence), `ontology/` (the curated
 knowledge), and `reports/` (the periodic derived views). **This skill writes to the third, and
 only the third.** Both other layers are nested, so read them recursively — never `journals/*.md`
