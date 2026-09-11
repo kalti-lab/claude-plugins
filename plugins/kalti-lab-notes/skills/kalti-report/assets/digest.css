@@ -55,8 +55,8 @@ body{
 
 /* ── 숫자 띠 ────────────────────────────────────────── */
 .figures{display:grid; grid-template-columns:repeat(5,1fr); background:var(--band); margin-bottom:3mm}
-.figures div{padding:2.2mm 1mm; text-align:center; border-right:1px solid rgba(255,255,255,.85)}
-.figures div:last-child{border-right:0}
+.figures > div{padding:2.2mm 1mm; text-align:center; border-right:1px solid rgba(255,255,255,.85)}
+.figures > div:last-child{border-right:0}
 .figures .n{font-family:"Pretendard",var(--sans); font-size:21px; font-weight:900; line-height:1; color:var(--accent); letter-spacing:-.03em}
 .figures .n small{font-size:11px; font-weight:700; margin-left:1px}
 .figures .k{font-family:var(--sans); font-size:8.5px; font-weight:600; color:var(--ink-soft); margin-top:1.6mm; letter-spacing:.04em}
