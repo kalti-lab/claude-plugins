@@ -347,6 +347,21 @@ def check_ontology(vault, rep, journal_names):
             if st and st not in STATUS[ty]:
                 rep.err(rel, "status가 %s에 없는 낱말입니다 (%r) — 쓸 수 있는 것: %s"
                              % (ty, st, " · ".join(sorted(STATUS[ty]))))
+            # 결론이 난 날은 꼬리표 칸에 있어야 한다. 본문 `## 상태` 줄에서
+            # 긁는 방식은 관행이지 규약이 아니어서, 소식·주간이 기계로 셀 때
+            # 형식이 어긋난 장이 조용히 빠진다(개수 세는 검사가 못 잡는
+            # 종류의 누락이다). 2026-09-11에 68+1장을 소급하며 규약으로 올렸다.
+            date_field = {"hypothesis": ("closed", {"채택", "기각", "대체됨"}),
+                          "decision":   ("reversed", {"번복됨"})}.get(ty)
+            if date_field:
+                key, closing = date_field
+                if st in closing:
+                    if key not in d:
+                        rep.err(rel, "status가 %s인데 %s 칸이 없습니다 — 언제 판가름 났는지를 기계가 못 셉니다" % (st, key))
+                    elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d[key].strip().strip("\"'")):
+                        rep.err(rel, "%s가 YYYY-MM-DD가 아닙니다 (%r)" % (key, d[key]))
+                elif key in d:
+                    rep.err(rel, "status가 %s인데 %s 칸이 있습니다 — 아직 판가름 나지 않았습니다" % (st, key))
         elif "status" in d:
             rep.warn(rel, "%s에는 status 칸이 없습니다" % ty)
         if ty == "person" and ({"email", "phone"} & set(d)):

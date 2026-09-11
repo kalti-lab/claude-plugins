@@ -181,12 +181,147 @@ def project_rollup(vault, journals, cards):
     return P
 
 
+def onto_heads(vault):
+    """ontology/ 전체를 한 번 걷어 (상대경로, 머리 텍스트) 목록으로."""
+    out = []
+    for dirpath, _, files in os.walk(os.path.join(vault, "ontology")):
+        for fn in sorted(files):
+            if fn.endswith(".md"):
+                out.append((fn[:-3], read_head(os.path.join(dirpath, fn), 3000)))
+    return out
+
+
+def digest(vault, journals, cards, month):
+    """--digest YYYY-MM. 월간 소식의 숫자를 전부 한 번에 뽑는다.
+
+    글은 사람이(스킬이) 쓰고, 여기서는 세는 것만 한다 — 손으로나 즉석
+    grep으로 세면 실행마다 수가 달라진다는 contrib의 규칙이 여기에도 그대로
+    적용된다. 판가름 난 날은 본문이 아니라 꼬리표 칸(closed/reversed)에서
+    읽는다. 본문 줄에서 긁으면 형식이 어긋난 장이 조용히 빠진다."""
+    mj = {b: m for b, m in journals.items() if str(m["date"])[:7] == month}
+    heads = onto_heads(vault)
+
+    finds, decs, closed, rev = [], [], [], []
+    superseded_by = {}   # 옛 카드 이름 -> 새 카드 이름 (supersedes/refutes 역방향)
+    for base, h in heads:
+        ty = field(h, "type")
+        for k in ("supersedes", "refutes"):
+            m = re.search(r'^%s:[ \t]*"?\[\[([^\]]+)' % k, h, re.M)
+            if m:
+                superseded_by[m.group(1)] = base
+        d = field(h, "date")
+        if ty == "finding" and d[:7] == month:
+            finds.append((base, field(h, "partOf")))
+        if ty == "decision" and d[:7] == month:
+            decs.append((base, field(h, "partOf")))
+        if ty == "hypothesis" and field(h, "closed")[:7] == month:
+            closed.append((base, field(h, "status"), field(h, "closed"), field(h, "partOf")))
+        if ty == "decision" and field(h, "reversed")[:7] == month:
+            rev.append((base, field(h, "reversed"), field(h, "partOf")))
+
+    pj = lambda v: (re.search(r"\[\[([^\]]+)", v) or [None, v or "-"])[1]
+
+    # 아직 안 본 일지 — 온톨로지가 가리키지 않고 검토기록에도 없는 것
+    checked = set()
+    try:
+        rec = read_text(os.path.join(vault, "reports", "정제", "검토기록.md"))
+        checked = {m.group(1) for m in re.finditer(r"(?m)^- (\S+)", rec)}
+    except OSError:
+        pass
+    pending = [b for b in journals if cards[b] == 0 and b not in checked]
+
+    print("kalti-report --digest · %s" % month)
+    print()
+    print("── 숫자 다섯 칸 " + "─" * 40)
+    st = collections.Counter(s for _, s, _, _ in closed)
+    print("  일지 %d편 · 새로 알아낸 것 %d장 · 새로 정한 것 %d장 · "
+          "판가름 난 생각 %d건(%s) · 아직 안 본 일지 %d"
+          % (len(mj), len(finds), len(decs), len(closed) + len(rev),
+             " ".join("%s %d" % kv for kv in st.most_common()) or "-",
+             len(pending)))
+
+    print()
+    print("── 종목 순위 (새로 알아낸 것 + 새로 정한 것 + 판가름 난 생각) " + "─" * 8)
+    chg = collections.Counter()
+    for _, po in finds: chg[pj(po)] += 1
+    for _, po in decs: chg[pj(po)] += 1
+    for _, _, _, po in closed: chg[pj(po)] += 1
+    for _, _, po in rev: chg[pj(po)] += 1
+    jn = collections.Counter(m["project"] for m in mj.values())
+    for p, n in chg.most_common():
+        print("  %s %2d   (그 달 일지 %d편)" % (vpad(p, 26), n, jn.get(p, 0)))
+    quiet = [p for p in jn if p not in chg]
+    if quiet:
+        print("  카드 없이 일지만 있는 종목: " + " · ".join(sorted(quiet)))
+
+    print()
+    print("── 예상이 빗나간 것 (기각·대체됨·번복됨) " + "─" * 22)
+    for base, s, d, po in sorted(closed, key=lambda x: x[2]):
+        if s == "채택":
+            continue
+        print("  %s (%s, %s, %s)" % (base, s, d, pj(po)))
+        if base in superseded_by:
+            print("      → 대신: %s" % superseded_by[base])
+    for base, d, po in rev:
+        print("  %s (번복됨, %s, %s)" % (base, d, pj(po)))
+    print("  채택: " + (" · ".join(b for b, s, _, _ in closed if s == "채택") or "-"))
+
+    print()
+    print("── 기여 (그 달, 회고 제외) " + "─" * 32)
+    ppl = collections.defaultdict(lambda: {"n": 0, "c": 0,
+                                           "types": collections.Counter()})
+    for b, m in mj.items():
+        if m["type"] == "retro":
+            continue
+        s = ppl[m["author"]]
+        s["n"] += 1; s["c"] += cards[b]; s["types"][m["type"]] += 1
+    for a in sorted(ppl):
+        s = ppl[a]
+        print("  %-9s 연구노트 %2d · 카드 %3d · 밀도 %.1f · %s"
+              % (a, s["n"], s["c"], s["c"] / s["n"] if s["n"] else 0,
+                 " ".join("%s %d" % (TYPE_KO.get(k, k), v)
+                          for k, v in s["types"].most_common())))
+    retro = sum(1 for m in mj.values() if m["type"] == "retro")
+    if retro:
+        print("  (회고 %d편은 다른 일지를 간추린 글이라 뺐다 — 일지 칸과 그만큼 어긋난다)" % retro)
+
+    print()
+    print("── 다음 호 예고 후보 (그 달 `## 다음 액션` 중 날짜·숫자 붙은 줄) " + "─" * 5)
+    jroot = os.path.join(vault, "journals")
+    hits = 0
+    for b, m in sorted(mj.items(), key=lambda kv: kv[1]["date"]):
+        path = None
+        for dirpath, _, files in os.walk(os.path.join(jroot, m["author"])):
+            if b + ".md" in files:
+                path = os.path.join(dirpath, b + ".md"); break
+        if not path:
+            continue
+        sec = re.search(r"(?ms)^## 다음 액션\s*\n(.+?)(?=\n## |\Z)", read_text(path))
+        if not sec:
+            continue
+        for line in sec.group(1).splitlines():
+            s = line.strip()
+            if s.startswith(("-", "*")) and re.search(
+                    r"\d{4}-\d{2}-\d{2}|\d+[%%건편개층mm]|\dB\b", s):
+                print("  [%s] %s" % (m["project"], s.lstrip("-* ")[:110]))
+                hits += 1
+    if not hits:
+        print("  (없음)")
+
+
 def main():
     vault = resolve_vault(sys.argv)
     journals = collect(vault)
     if not journals:
         sys.exit("연구노트를 찾지 못했습니다.")
     cards = count_cards(vault, journals)
+
+    for i, a in enumerate(sys.argv):
+        if a == "--digest":
+            if i + 1 >= len(sys.argv) or not re.fullmatch(r"\d{4}-\d{2}", sys.argv[i + 1]):
+                sys.exit("--digest 뒤에 YYYY-MM을 적어야 합니다.")
+            digest(vault, journals, cards, sys.argv[i + 1])
+            return
 
     stat = {}
     for base, meta in journals.items():

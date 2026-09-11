@@ -72,6 +72,14 @@ Status values are written into the notes in Korean (the team's working language)
 - **decision**: `유효` / `번복됨` (standing / reversed)
 - **finding · concept · source · person**: no status
 
+**The date a status settles goes in frontmatter, not only in prose.** The moment a hypothesis
+leaves `제안` it gets `closed: YYYY-MM-DD`; the moment a decision becomes `번복됨` it gets
+`reversed: YYYY-MM-DD`. The body `## 상태` line still carries the same date for the human reader,
+but machines (the monthly 소식, lint) count from the frontmatter field — prose formats drift, and
+a drifted line is silently skipped rather than miscounted, which is worse. `shared/lint.py` errors
+when the field is missing on a settled status, and when it is present on `제안`/`유효` (nothing
+has settled yet). Backfilled across all 68+1 settled cards on 2026-09-11.
+
 ### Nothing is deleted, only superseded
 
 The history *is* the research narrative, so a card that stopped being true is never removed. What

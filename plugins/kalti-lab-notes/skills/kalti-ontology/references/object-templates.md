@@ -39,6 +39,8 @@ id: hyp-
 title:
 type: hypothesis
 status: 제안      # 제안 / 채택 / 기각 / 대체됨
+# closed:         # YYYY-MM-DD. 채택·기각·대체된 날 — 상태가 제안이 아니게 되는 순간 넣는다.
+#                 # 본문 `## 상태` 줄에도 같은 날짜를 적지만, 기계가 세는 쪽은 이 칸이다.
 partOf: "[[(종목 노트 이름)]]"
 # supersedes: "[[(옛 가설 노트 이름)]]"   # 대체하면
 # concept: "[[(개념 노트 이름)]]"       # 종목을 넘나드는 개념에 속하면
@@ -120,6 +122,7 @@ id: dec-
 title:
 type: decision
 status: 유효      # 유효 / 번복됨
+# reversed:       # YYYY-MM-DD. 번복된 날 — 상태를 번복됨으로 바꾸는 순간 넣는다.
 date:             # YYYY-MM-DD. 정한 날
 partOf: "[[(종목 노트 이름)]]"
 derivedFrom: "[[(그 결정이 적힌 일지 이름)]]"
