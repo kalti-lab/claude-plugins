@@ -1,0 +1,178 @@
+/* 칼퇴공학연구소 소식 — 판형 (매 호 동일) ------------------------------
+   A4 세로 2면. 1면은 이달의 연구, 2면은 나머지 기사와 기여.
+   이 파일만 고치면 모든 호의 생김새가 같이 바뀐다.            */
+
+:root{
+  /* 색은 명함(KALTI-aram-outline.pdf)에서 그대로 잰 것이다.
+     명함에 강조색이 없어서 이 신문도 회색 네 단계로만 간다.       */
+  --ink:#333132;          /* 명함 글자·로고 */
+  --ink-soft:#6d6f71;     /* 명함 부제·아이콘 */
+  --ink-faint:#9a9b9d;
+  --rule:#333132;
+  --hair:#dcddde;         /* 명함 뒷면 바탕 */
+  --accent:#c8102e;      /* 포인트 하나. 명함에는 없지만 회색만으로는 눈이 쉴 데가 없다 */
+  --band:#dcddde;         /* 숫자 띠 — 명함 뒷면을 그대로 옮긴 것 */
+  --tint:#f1f1f2;         /* 상자 바탕 */
+  --paper:#ffffff;
+  --serif:"AppleMyungjo","Nanum Myeongjo","Batang",'Times New Roman',serif;
+  --sans:"Apple SD Gothic Neo","Pretendard","Noto Sans KR",-apple-system,sans-serif;
+  --page-w:210mm; --page-h:297mm; --page-pad:14mm;
+}
+
+*{box-sizing:border-box}
+html{background:#77716a}
+body{
+  margin:0; padding:18px 0 40px;
+  font-family:var(--serif); color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+.sheet{
+  width:var(--page-w); min-height:var(--page-h); height:var(--page-h);
+  margin:0 auto 18px; padding:var(--page-pad);
+  background:var(--paper); overflow:hidden;
+  display:flex; flex-direction:column;
+  box-shadow:0 2px 14px rgba(0,0,0,.35);
+}
+
+/* ── 제호 ───────────────────────────────────────────── */
+.masthead{border-bottom:3px double var(--rule); padding-bottom:4mm; margin-bottom:2.4mm}
+.masthead .row{display:flex; align-items:flex-end; justify-content:space-between; gap:8mm}
+.masthead .issue{text-align:right; font-family:var(--sans)}
+.masthead .kind{
+  font-size:15px; font-weight:800; letter-spacing:.26em; color:var(--accent);
+  padding-bottom:1.6mm; margin-bottom:1.6mm; border-bottom:1px solid var(--hair);
+}
+.masthead .meta{font-size:8.6px; line-height:1.65; color:var(--ink-soft); letter-spacing:.02em}
+.masthead .meta b{font-weight:800; color:var(--ink)}
+/* 바깥 svg에 비율을 못 박아야 한다. 안 그러면 svg 기본 폭 300px을 잡아
+   로고 오른쪽에 빈 공간이 생긴다(실제로 그랬다). */
+.masthead .logo{height:66px; aspect-ratio:57.7/34.42; width:auto; color:var(--ink); display:block}
+.masthead .strap{
+  margin-top:3mm; padding-top:1.6mm; border-top:1px solid var(--hair);
+  font-family:var(--sans); font-size:10px; color:var(--ink-soft); letter-spacing:.01em;
+}
+
+/* ── 숫자 띠 ────────────────────────────────────────── */
+.figures{display:grid; grid-template-columns:repeat(5,1fr); background:var(--band); margin-bottom:3mm}
+.figures div{padding:2.2mm 1mm; text-align:center; border-right:1px solid rgba(255,255,255,.85)}
+.figures div:last-child{border-right:0}
+.figures .n{font-family:"Pretendard",var(--sans); font-size:21px; font-weight:900; line-height:1; color:var(--accent); letter-spacing:-.03em}
+.figures .n small{font-size:11px; font-weight:700; margin-left:1px}
+.figures .k{font-family:var(--sans); font-size:8.5px; font-weight:600; color:var(--ink-soft); margin-top:1.6mm; letter-spacing:.04em}
+
+/* ── 꼭지 ───────────────────────────────────────────── */
+.kicker{
+  font-family:var(--sans); font-size:10px; font-weight:800; letter-spacing:.14em;
+  color:var(--accent); border-bottom:2px solid var(--accent);
+  padding-bottom:1.2mm; margin-bottom:2.6mm; display:flex; justify-content:space-between; align-items:baseline;
+}
+.kicker span{font-weight:600; letter-spacing:.02em; color:var(--ink-faint); font-size:9px}
+
+/* ── 이달의 연구 ────────────────────────────────────── */
+.lead{flex:1; display:flex; flex-direction:column; min-height:0}
+.lead h2{
+  font-family:var(--sans); font-weight:800; font-size:30px; line-height:1.22;
+  letter-spacing:-.03em; margin:0 0 2.4mm; word-break:keep-all;
+}
+.lead .deck{
+  font-size:12.5px; line-height:1.55; color:var(--ink-soft); word-break:keep-all;
+  padding-bottom:3mm; margin-bottom:3mm; border-bottom:1px solid var(--hair);
+}
+.lead .deck b{color:var(--ink); font-weight:400; box-shadow:inset 0 -7px 0 var(--band)}
+.body2{
+  column-count:2; column-gap:7mm; column-rule:1px solid var(--hair);
+  font-size:10.2px; line-height:1.72; text-align:justify; word-break:keep-all;
+}
+.body2 p{margin:0 0 2.2mm; text-indent:1em}
+.body2 p:first-child{text-indent:0}
+
+/* ── 곁기사 상자 ────────────────────────────────────── */
+.aside{background:var(--tint); border-top:2px solid var(--rule); padding:2.6mm 3.4mm; margin-top:3mm}
+.aside h3{
+  font-family:var(--sans); font-size:11px; font-weight:800; letter-spacing:.02em;
+  margin:0 0 2.2mm; display:flex; align-items:center; gap:1.6mm;
+}
+.aside h3::before{content:""; width:7px; height:7px; background:var(--accent); display:inline-block}
+.aside h3 em{font-style:normal; font-weight:600; font-size:9px; color:var(--ink-faint); margin-left:auto}
+table.flip{width:100%; border-collapse:collapse; font-size:9.2px; line-height:1.45}
+table.flip th{
+  font-family:var(--sans); font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--ink-faint);
+  text-align:left; padding:0 2mm 1.2mm 0; border-bottom:1px solid var(--hair); white-space:nowrap;
+}
+table.flip td{padding:1.3mm 2mm 1.3mm 0; border-bottom:1px dotted var(--hair); vertical-align:top; word-break:keep-all}
+table.flip td:last-child, table.flip th:last-child{padding-right:0}
+table.flip .st{font-family:var(--sans); font-size:8.2px; font-weight:800; white-space:nowrap; color:var(--accent)}
+table.flip .st i{font-style:normal; font-weight:400; color:var(--ink-faint); display:block}
+table.flip .pj{font-family:var(--sans); font-size:8.2px; color:var(--ink-faint); white-space:nowrap}
+.aside .note{font-size:8.8px; color:var(--ink-soft); margin:2.4mm 0 0; line-height:1.5; word-break:keep-all}
+
+/* ── 인용 ───────────────────────────────────────────── */
+.quote{border-top:2px solid var(--rule); border-bottom:2px solid var(--rule); padding:3.4mm 0; margin-top:4mm; text-align:center}
+.quote p{margin:0; font-size:16px; line-height:1.45; word-break:keep-all}
+.quote p::before{content:"“"; color:var(--ink-faint); margin-right:.1em}
+.quote p::after{content:"”"; color:var(--ink-faint); margin-left:.1em}
+.quote cite{display:block; font-family:var(--sans); font-style:normal; font-size:8.5px; color:var(--ink-faint); margin-top:2mm; letter-spacing:.02em}
+
+/* ── 2면 기사 ───────────────────────────────────────── */
+.stories{column-count:2; column-gap:7mm; column-rule:1px solid var(--hair); flex:1; min-height:0}
+article.story{break-inside:avoid; margin-bottom:4.4mm}
+article.story h3{
+  font-family:var(--sans); font-weight:800; font-size:13.5px; line-height:1.3; letter-spacing:-.02em;
+  margin:0 0 1.4mm; word-break:keep-all;
+}
+article.story .meta{
+  font-family:var(--sans); font-size:8px; color:var(--ink-faint); letter-spacing:.03em;
+  padding-bottom:1.4mm; margin-bottom:1.8mm; border-bottom:1px solid var(--hair);
+}
+article.story .meta b{color:var(--accent); font-weight:800}
+article.story ul{margin:0; padding:0; list-style:none}
+article.story li{
+  font-size:9.6px; line-height:1.68; margin-bottom:1.5mm; padding-left:3mm; position:relative;
+  text-align:justify; word-break:keep-all;
+}
+article.story li::before{content:"·"; position:absolute; left:.6mm; color:var(--ink-faint); font-weight:700}
+
+.brief{border-top:1px solid var(--rule); padding-top:2.4mm; margin-top:1mm; font-size:9px; line-height:1.6; color:var(--ink-soft); word-break:keep-all}
+.brief b{font-family:var(--sans); font-size:8.5px; font-weight:800; letter-spacing:.04em; color:var(--ink); margin-right:1.5mm}
+
+/* ── 다음 호 예고 ───────────────────────────────────── */
+.ahead{border:1px solid var(--rule); padding:3mm 3.4mm; margin-top:4mm}
+.ahead h3{font-family:var(--sans); font-size:10px; font-weight:800; letter-spacing:.1em; color:var(--accent); margin:0 0 2.2mm}
+.ahead ul{margin:0; padding:0; list-style:none; column-count:2; column-gap:6mm}
+.ahead li{font-size:9px; line-height:1.58; margin-bottom:1.4mm; break-inside:avoid; word-break:keep-all}
+.ahead li b{font-family:var(--sans); font-size:8.5px; font-weight:800; margin-right:1.2mm}
+
+/* ── 기여 ───────────────────────────────────────────── */
+.contrib{margin-top:4mm; border-top:2px solid var(--rule); padding-top:3mm}
+.contrib h3{font-family:var(--sans); font-size:10px; font-weight:800; letter-spacing:.1em; margin:0 0 2.6mm; display:flex; justify-content:space-between; align-items:baseline}
+.contrib h3 em{font-style:normal; font-weight:600; font-size:8.5px; color:var(--ink-faint); letter-spacing:.02em}
+.bars{display:grid; grid-template-columns:auto repeat(3,1fr); gap:1.6mm 5mm; align-items:center}
+.bars .hd{font-family:var(--sans); font-size:8px; font-weight:700; letter-spacing:.06em; color:var(--ink-faint); text-align:left}
+.bars .who{font-family:var(--sans); font-size:10px; font-weight:700}
+.bars .cell{display:flex; align-items:center; gap:1.8mm}
+.bars .v{font-family:var(--sans); font-size:11px; font-weight:800; width:8mm; text-align:right; letter-spacing:-.02em}
+.bars .bar{height:5px; background:var(--ink); opacity:.9}
+.bars .track{flex:1; background:var(--band); height:5px}
+.contrib .note{font-size:8.6px; line-height:1.6; color:var(--ink-soft); margin:3mm 0 0; word-break:keep-all}
+
+/* ── 꼬리말 ─────────────────────────────────────────── */
+.colophon{
+  margin-top:auto; padding-top:2.6mm; border-top:1px solid var(--hair);
+  font-family:var(--sans); font-size:7.8px; line-height:1.6; color:var(--ink-faint);
+  display:flex; align-items:center; justify-content:space-between; gap:4mm;
+}
+.colophon .mark{height:11px; aspect-ratio:57.7/34.19; width:auto; color:var(--ink-faint); flex:none}
+.colophon .txt{flex:1}
+.colophon .pg{font-weight:700; color:var(--ink)}
+
+a{color:inherit; text-decoration:none; border-bottom:1px dotted var(--hair)}
+a:hover{border-bottom-color:var(--accent)}
+
+@media print{
+  html{background:#fff}
+  body{padding:0}
+  .sheet{margin:0; box-shadow:none; page-break-after:always}
+  .sheet:last-child{page-break-after:auto}
+  @page{size:A4; margin:0}
+}

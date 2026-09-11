@@ -1,7 +1,7 @@
 ---
 name: kalti-report
 disable-model-invocation: true
-description: "Builds the kalti lab's derived report layer under reports/ — the two views that read journals/ and ontology/ but never write to them. Two modes. /kalti-report (or --weekly) rolls one member's journals for an ISO week into reports/weekly/<author>/YYYY-Www.md as a navigation map: six buckets (progress, findings, decisions, blockers, next actions, ontology candidates), each item one line plus a wikilink back to the source journal; accepts a week (2026-W28), a member, or --backfill A..B, and is idempotent (everything above the 운영자 코멘트 heading regenerates). /kalti-report --contrib shows what each member has put in as three plain numbers side by side (연구노트 · 카드 · 밀도), with no total, no rank, and no winner; screen-only unless --write. Both are derived views: they are regenerated from the journals, so nothing here is ever the grounding for an ontology card."
+description: "Builds the kalti lab's derived report layer under reports/ — the two views that read journals/ and ontology/ but never write to them. Three modes. /kalti-report (or --weekly) rolls one member's journals for an ISO week into reports/weekly/<author>/YYYY-Www.md as a navigation map: six buckets (progress, findings, decisions, blockers, next actions, ontology candidates), each item one line plus a wikilink back to the source journal; accepts a week (2026-W28), a member, or --backfill A..B, and is idempotent (everything above the 운영자 코멘트 heading regenerates). /kalti-report --contrib shows what each member has put in as three plain numbers side by side (연구노트 · 카드 · 밀도), with no total, no rank, and no winner; screen-only unless --write. /kalti-report --digest [YYYY-MM] builds the monthly whole-lab newspaper (연구실 소식) into reports/digest/YYYY-MM.html — an A4 two-page fixed layout: 이달의 연구 leads page one, four more stories on page two, what got overturned, one quoted sentence from a journal, per-member contrib; every number comes from count.py --digest and the issue is a single self-contained HTML file. All are derived views: they are regenerated from the journals, so nothing here is ever the grounding for an ontology card."
 ---
 
 # kalti report layer
@@ -29,8 +29,9 @@ Two things hold in both modes:
 |---|---|---|
 | `/kalti-report`, `2026-W28`, `… jinsik`, `--backfill A..B` | **weekly** (default) | `references/weekly.md` |
 | `/kalti-report --contrib` (`--write` to save a copy) | **contrib** | `references/contrib.md` |
+| `/kalti-report --digest [YYYY-MM]` (default: last month) | **digest** (월간 소식) | `references/digest.md` |
 
-Both live under `${CLAUDE_PLUGIN_ROOT}/skills/kalti-report/`. The full convention is in there, not
+All three live under `${CLAUDE_PLUGIN_ROOT}/skills/kalti-report/`. The full convention is in there, not
 here. A bare `/kalti-report` is weekly mode for the invoking member's current ISO week — don't ask.
 
 ## Vault, author, git
@@ -48,7 +49,7 @@ If `$VAULT` has no `journals/`, or weekly mode needs an author and `$KALTI_AUTHO
 again before running git, follow **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — it holds
 the fallbacks, the four sync modes (`push` / `commit` / `ask` / `off`, unset = `ask`) and the
 failure handling. This skill's scope is `git add reports/` — never `-A` — with
-`weekly: <author> <week> 주간 보고` or `contrib: <YYYY-MM-DD> 기여 현황`.
+`weekly: <author> <week> 주간 보고`, `contrib: <YYYY-MM-DD> 기여 현황` or `digest: <YYYY-MM> 소식`.
 
 **Contrib mode confirms before committing even in `push` mode.** Every other commit in this system
 is the author's own record; that one is a file about colleagues.
