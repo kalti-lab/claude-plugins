@@ -88,13 +88,9 @@ kalti-report --contrib · 전체 기간 (…)
 
 Members are ordered by 연구노트 count, descending — the script fixes the order, and it is a sort, not a standing. Do not re-sort by 밀도 to make a point.
 
-## Saving a copy: `--write`
+## Screen only — this mode writes nothing
 
-Default is screen only. A document that measures people, sitting in git forever, gets read later in ways nobody intended — so it is written only when asked.
-
-With `--write`, save the same content as markdown to `$VAULT/reports/contrib/YYYYMMDD.md` (`mkdir -p` on demand), dated because it is a snapshot of a moving count. Convert the bars to a plain markdown table; keep everything else as printed.
-
-Then sync as the router SKILL.md says — including its one exception for this mode: **confirm before committing even in `push` mode.** The file is already saved either way; report the outcome in one line.
+A document that measures people, sitting in git forever, gets read later in ways nobody intended. There used to be a `--write` flag for saving a dated copy; it was specified for months and used zero times (`reports/contrib/` was never created), so it went the way of weekly's `--all` — removed on 2026-09-11 rather than left to rot. Numbers someone wants to keep belong in the monthly 소식, which already carries the month's three figures per member with the no-total no-rank rule intact.
 
 ## The project axis (`--projects`)
 
@@ -119,4 +115,4 @@ to read.
 ## What this skill does not do
 
 - **It does not judge the work, and does not recommend.** No "should write more", no "should refine more". If the counts suggest something worth acting on, that belongs to whoever reads them.
-- **It writes at most one file, `reports/contrib/YYYYMMDD.md`, and only with `--write`.** The rest of the "never does" list is in the router SKILL.md.
+- **It writes no file at all.** The rest of the "never does" list is in the router SKILL.md.

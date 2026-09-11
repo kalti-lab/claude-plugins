@@ -123,23 +123,27 @@ In each referencing note, swap only the basename token, preserving any suffix �
   ```
   (Honor `KALTI_GIT_SYNC` for whether to push — same modes as below. The normal entry commit stays scoped to `journals/$AUTHOR/`.)
 
-## First, on every call: new entry vs existing entry
+## New entry vs continuation — decide it yourself
 
-Don't guess whether this is new work or a continuation — ask the user. Make this decision after pinning the vault location and passing the "nothing to write about" gate above (i.e. once the work to record is settled). Ask via the **AskUserQuestion** tool — the choice UI is smoother. (If the user already said "as a new entry" / "continue that one" when invoking, follow that and skip the question.)
+Do not ask. Scan `$VAULT/journals/$AUTHOR/` (recursively) for candidates by title, `project`,
+open next actions, and topic. **Merge into an existing entry only when the work is clearly a
+continuation of exactly one entry** — same project, same thread, an open next action this session
+advanced. Anything else is a new entry. Say which you chose (and why, one line) in the run
+summary; if the user then points at a different entry, merge there — nothing is lost by having
+started a new file.
 
-**1) New vs existing** (AskUserQuestion, two choices):
-- **Write a new entry** → go to "Writing a new entry" below.
-- **Continue/edit an existing entry** → go to candidate search.
+The same goes for **how many entries**: when the session holds several distinct pieces of work,
+split them the way the ontology would want them cited — one entry per coherent piece, not one
+diary of the day. Decide, write, and state the split in the summary. (If the user already said
+"as one entry" / "continue that one", follow that.)
 
-**2) If existing — search, then let them pick:**
-- Scan `$VAULT/journals/$AUTHOR/` and shortlist relevant candidates by relevance (title, `project`, open "next actions", topic).
-- If there's **exactly one** candidate, merge into it without asking.
-- If there are **two or more**, offer the **top 4 by relevance** as choices (this tool allows at most 4). If the wanted entry isn't listed, have the user type the filename in **"Other (type it in)"** — AskUserQuestion always offers free input, so any number of candidates fits within this limit.
-- If there are **no** relevant candidates — the auto-search may have missed it, so confirm rather than silently starting a new entry. Ask (AskUserQuestion) "write a new entry / cancel", and let the user **name a file to merge into via "Other (type it in)"** (they may know a file the shortlist missed).
+Merging (continue/edit) follows the "don't delete, revise" principle: don't erase or overwrite
+existing content. Append what's newly known with the date (`## 추가 기록 (2026-06-20)`, or
+`(2026-06-20 추가) ...` in the relevant section), and leave wrong content struck through
+(`~~...~~`) with the reason. Keep the existing filename.
 
-**3) Merging (continue/edit)** follows the "don't delete, revise" principle: don't erase or overwrite existing content. Append what's newly known with the date (`## 추가 기록 (2026-06-20)`, or `(2026-06-20 추가) ...` in the relevant section), and leave wrong content struck through (`~~...~~`) with the reason. Keep the existing filename — its date prefix marks the original creation date, so don't re-date it on edit.
-
-(Even for entirely new work, if there's a related earlier entry, link it from the new note's `배경` section with `[[earlier entry]]`.)
+(Even for entirely new work, if there's a related earlier entry, link it from the new note's
+`배경` section with `[[earlier entry]]`.)
 
 ## Writing a new entry
 
@@ -257,17 +261,18 @@ rather than editing the pre-registration.** The gap between the two is the findi
 
 **`tests`** — only for an `experiment` that tests a hypothesis: keep the template's `# tests:` line and point it at the hypothesis note under test. Drop that line for other types.
 
-## Fill vs ask — only when genuinely ambiguous
+## Fill everything yourself
 
-The frontmatter values above (type, tags, project, tests) — the convention is all in this skill, so by default **fill them yourself** from session context plus a read of `ontology/`. Don't re-ask the user for something already decided (the "don't make me re-explain" principle).
+The frontmatter values (type, tags, project, tests) — the convention is all in this skill, so
+**fill them from session context plus a read of `ontology/`, and do not ask.** Two or more
+`project` candidates fit? Pick the one the work actually advanced and note the choice in the
+summary. None fits? File under `_inbox/` rather than inventing a project note — creating project
+cards is `/kalti-ontology`'s job. A type that straddles two kinds goes by where the *finding*
+came from (measured → experiment, built → build).
 
-**Only when unsure**, confirm once via AskUserQuestion — batched if possible. "Ambiguous" means:
-
-- **project**: two or more candidates fit, or none in `ontology/` fits and a **new one** is needed. Offer the candidates + "new project" + "hold (skip)". If exactly one is clear, link it without asking. (Find candidates via `obsidian files folder=ontology`, or `find "$VAULT/ontology" -name '*.md'` — recursively; project notes sit in `ontology/종목/`, and each other object type has its own folder beside it.)
-- **type**: one piece of work straddles two types (e.g. build vs investigation) and it's unclear which. Put the inferred value as the first option marked "(recommended)" and confirm.
-- **scope/boundary**: the session has **several** chunky pieces of work and it's unclear whether to combine them into one entry or split them. Ask how much counts as one entry.
-
-Baseline: **fill when confident, ask only when not.** Don't ask about values the user already stated when invoking (e.g. "as a build entry for project X").
+The one question that remains is the **"nothing to write about" gate** near the top: when the
+session holds no real work, ask what to record rather than writing fiction. Everything else is
+yours to judge, stated in the summary so the user can correct it afterward.
 
 ## Links by filename (not id)
 
@@ -277,7 +282,7 @@ Every note name in the vault is bare — no date, no type marker — so a link i
 
 ## After writing/editing: sync with git
 
-Entries are written **directly as files** in the author folder — they persist with no Obsidian, even when an agent runs headless. Sharing them is the point of this system, so they need to reach the shared git repo; if you write but don't push, nobody else sees it. The four modes (`push` / `commit` / `ask` / `off`, unset = `ask`) and the failure handling are in **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — read it before running git. This skill's scope and message:
+Entries are written **directly as files** in the author folder — they persist with no Obsidian, even when an agent runs headless. Sharing them is the point of this system, so they need to reach the shared git repo; if you write but don't push, nobody else sees it. **This skill never asks about git**: with `KALTI_GIT_SYNC` set to `push` / `commit` / `off`, honor it; unset or `ask`, decide yourself — commit always, and push when a remote exists and the entry is finished work. Report what you did in one line. The failure handling is in **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — read it before running git. This skill's scope and message:
 
 ```
 cd "$VAULT"

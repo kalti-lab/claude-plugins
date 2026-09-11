@@ -10,11 +10,11 @@ be backed by the entry — never invent progress that isn't recorded), and **be 
 
 ## Resolve the target week(s) and author
 
-The arguments decide **which author** and **which week(s)** to build. Weeks are **ISO 8601** (Monday–Sunday), labelled `YYYY-Www` (e.g. `2026-W28`). The **default author is `$KALTI_AUTHOR`** (the invoker), and a report always covers exactly one member.
+The arguments decide **which author(s)** and **which week(s)** to build. Weeks are **ISO 8601** (Monday–Sunday), labelled `YYYY-Www` (e.g. `2026-W28`). A report file always covers exactly one member. When the invocation names nobody, the router SKILL.md has already asked whose week to write — **me** (`$KALTI_AUTHOR`), **every member** (run this same procedure once per `journals/` folder, one file each), or a named member.
 
 | invocation | author | week |
 |---|---|---|
-| `/kalti-report` | me (`$KALTI_AUTHOR`) | current ISO week |
+| `/kalti-report` | asked: me / every member / named | current ISO week |
 | `/kalti-report 2026-W28` | me | that week |
 | `/kalti-report 2026-07-08` | me | the week containing that date |
 | `/kalti-report 2026-W28 jinsik` | that member | that week |
