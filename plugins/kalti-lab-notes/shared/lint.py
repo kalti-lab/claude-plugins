@@ -392,11 +392,11 @@ def check_ontology(vault, rep, journal_names):
                 key, closing = date_field
                 if st in closing:
                     if key not in d:
-                        rep.err(rel, "status가 %s인데 %s 칸이 없습니다 — 언제 판가름 났는지를 기계가 못 셉니다" % (st, key))
+                        rep.err(rel, "status가 %s인데 %s 칸이 없습니다 — 언제 결론이 났는지를 기계가 못 셉니다" % (st, key))
                     elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d[key].strip().strip("\"'")):
                         rep.err(rel, "%s가 YYYY-MM-DD가 아닙니다 (%r)" % (key, d[key]))
                 elif key in d:
-                    rep.err(rel, "status가 %s인데 %s 칸이 있습니다 — 아직 판가름 나지 않았습니다" % (st, key))
+                    rep.err(rel, "status가 %s인데 %s 칸이 있습니다 — 아직 결론이 나지 않았습니다" % (st, key))
         elif "status" in d:
             rep.warn(rel, "%s에는 status 칸이 없습니다" % ty)
         if ty == "person" and ({"email", "phone"} & set(d)):

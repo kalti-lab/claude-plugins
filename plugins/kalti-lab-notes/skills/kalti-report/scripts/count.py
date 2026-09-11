@@ -196,7 +196,7 @@ def digest(vault, journals, cards, month):
 
     글은 사람이(스킬이) 쓰고, 여기서는 세는 것만 한다 — 손으로나 즉석
     grep으로 세면 실행마다 수가 달라진다는 contrib의 규칙이 여기에도 그대로
-    적용된다. 판가름 난 날은 본문이 아니라 꼬리표 칸(closed/reversed)에서
+    적용된다. 결론 난 날은 본문이 아니라 꼬리표 칸(closed/reversed)에서
     읽는다. 본문 줄에서 긁으면 형식이 어긋난 장이 조용히 빠진다."""
     mj = {b: m for b, m in journals.items() if str(m["date"])[:7] == month}
     heads = onto_heads(vault)
@@ -235,13 +235,13 @@ def digest(vault, journals, cards, month):
     print("── 숫자 다섯 칸 " + "─" * 40)
     st = collections.Counter(s for _, s, _, _ in closed)
     print("  일지 %d편 · 새로 알아낸 것 %d장 · 새로 정한 것 %d장 · "
-          "판가름 난 생각 %d건(%s) · 아직 안 본 일지 %d"
+          "결론 난 생각 %d건(%s) · 아직 안 본 일지 %d"
           % (len(mj), len(finds), len(decs), len(closed) + len(rev),
              " ".join("%s %d" % kv for kv in st.most_common()) or "-",
              len(pending)))
 
     print()
-    print("── 종목 순위 (새로 알아낸 것 + 새로 정한 것 + 판가름 난 생각) " + "─" * 8)
+    print("── 종목 순위 (새로 알아낸 것 + 새로 정한 것 + 결론 난 생각) " + "─" * 8)
     chg = collections.Counter()
     for _, po in finds: chg[pj(po)] += 1
     for _, po in decs: chg[pj(po)] += 1

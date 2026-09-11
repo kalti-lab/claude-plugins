@@ -27,7 +27,7 @@ reason: the numbers must come out identical run to run. Settlement dates are rea
 (`closed:` on hypotheses, `reversed:` on decisions), never scraped from body prose — a drifted
 prose line is silently skipped, which is worse than a wrong count.
 
-If the script errors or a figure looks impossible (e.g. 판가름 난 생각 0 in an active month), stop
+If the script errors or a figure looks impossible (e.g. 결론 난 생각 0 in an active month), stop
 and say so rather than writing an issue around it.
 
 ## Step 2 — choose, in this order
