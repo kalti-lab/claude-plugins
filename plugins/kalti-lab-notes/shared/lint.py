@@ -77,12 +77,13 @@ NOISE = [
 # 그중 82%가 `게이트`(dsforge의 공정 이름)·`실측`·`하네스`·`전사`처럼
 # 그 팀이 원래 쓰는 말이었다. 다른 뜻으로 쓰일 여지가 없는 것만 남긴다.
 # 지금 목록으로 볼트 전체 119건. 늘릴 때는 먼저 세어 보고 늘린다.
+# 뺀 것 셋 — `자루`는 빗자루(지우개 옆 아이콘)에 걸렸고, `뒤집힌 것`은
+# "상관 0.14로 뒤집힌 것을 잡아내"처럼 멀쩡한 쓰임이 있고, `공허 통과`는
+# dsforge가 만들어 쓰는 이름이자 카드 이름이라 게이트·하네스와 같은 부류다.
 STIFF = [
     ("씻겨나",    "없어진다 · 사라진다"),
     ("둔한 자",   "결과가 들쭉날쭉해진다"),
     ("평면이다",  "한 군데가 아니라 전체에서 쓴다"),
-    ("뒤집힌 것", "예상이 빗나간 것"),
-    ("공허 통과", "검사할 대상이 0개라 그냥 합격한다"),
     ("일반칙",    "어디에나 통하는 규칙"),
     ("검출기",    "눈으로 봐야만 잡힌다"),
     ("방어선",    "실제로 사고를 막았다"),
@@ -90,7 +91,6 @@ STIFF = [
     ("대체안",    "대신할 방법"),
     ("층위",      "성격"),
     ("절벽이",    "뚝 끊긴다"),
-    ("자루",      "(비유를 새로 만들지 않는다)"),
     ("기제",      "어떻게 그렇게 되는지"),
     ("기전",      "어떻게 그렇게 되는지"),
 ]
@@ -125,6 +125,13 @@ def walk(root):
                 yield os.path.join(dirpath, fn)
 
 
+def blank(v):
+    """칸은 있는데 값이 비었으면 없는 것과 같다. `summary: ""`가 검사를 그냥
+    통과하던 것을 한 번 고쳤는데, `concept:`·`worksOn:`·`project: ""`에도
+    같은 구멍이 있었다(11 + 3 + 1장). 그래서 한 군데로 모은다."""
+    return not v.strip().strip("\"'").strip("[]").strip()
+
+
 def split_fm(text):
     """꼬리표 칸을 (순서 있는 [(키, 값)], 본문)으로 가른다. 없으면 (None, 본문)."""
     if not text.startswith("---\n"):
@@ -134,10 +141,26 @@ def split_fm(text):
         return None, text
     fm, body = text[4:end], text[end + 4:]
     pairs = []
-    for line in fm.splitlines():
-        m = re.match(r"^([A-Za-z_][\w]*):(.*)$", line)
-        if m:
-            pairs.append((m.group(1), m.group(2).strip()))
+    lines = fm.splitlines()
+    i = 0
+    while i < len(lines):
+        m = re.match(r"^([A-Za-z_][\w]*):(.*)$", lines[i])
+        i += 1
+        if not m:
+            continue
+        key, val = m.group(1), m.group(2).strip()
+        # 값을 줄 바꿔 목록으로 적은 칸(`concept:` 다음 줄에 `  - "[[개념]]"`).
+        # 한 줄만 읽던 때는 이게 빈 칸으로 보여서 링크 검사에서 통째로 빠졌다 —
+        # 발견 11장의 concept, 사람 카드 3장의 worksOn, 일지 6편의 tags가
+        # 그렇게 안 보이고 있었다. 한 줄로 이어 붙여 같은 값으로 만든다.
+        if not val:
+            items = []
+            while i < len(lines) and re.match(r"^\s+-\s", lines[i]):
+                items.append(lines[i].split("-", 1)[1].strip())
+                i += 1
+            if items:
+                val = ", ".join(items)
+        pairs.append((key, val))
     return pairs, body
 
 
@@ -202,9 +225,17 @@ def check_journals(vault, rep, only=None):
         for k in FM_REQUIRED:
             if k not in d:
                 rep.err(rel, "%s 칸이 없습니다" % k)
-        # 따옴표를 벗겨야 summary: "" 같은 빈 칸이 잡힌다
-        if "summary" in d and not d["summary"].strip().strip("\"'").strip():
-            rep.err(rel, "summary 칸이 비었습니다 — 이게 없으면 주간·기여·정제가 매번 본문을 다시 읽습니다")
+            elif blank(d[k]):
+                # `_inbox/`는 종목이 정해지지 않은 일지를 두는 자리라
+                # project가 빈 것이 정상이다.
+                if k == "project" and os.sep + "_inbox" + os.sep in path:
+                    pass
+                # 빈 태그는 깨진 게 아니라 안 붙인 것뿐이라 경고로 둔다
+                else:
+                    (rep.warn if k == "tags" else rep.err)(
+                        rel, "%s 칸이 있는데 비었습니다" % k)
+        if "summary" in d and blank(d["summary"]):
+            rep.err(rel, "summary가 없으면 주간·기여·정제가 매번 본문을 다시 읽습니다")
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", d.get("updated", "")):
             rep.err(rel, "updated가 YYYY-MM-DD가 아닙니다 (%r)" % d.get("updated", ""))
         present = [k for k in keys if k in FM_ORDER]
@@ -273,6 +304,7 @@ def check_journals(vault, rep, only=None):
 
 def check_ontology(vault, rep, journal_names):
     root = os.path.join(vault, "ontology")
+    no_concept = []
     if not os.path.isdir(root):
         rep.err("ontology/", "폴더가 없습니다")
         return
@@ -308,6 +340,8 @@ def check_ontology(vault, rep, journal_names):
         for k in ONTO_REQUIRED[ty] + ["updated"]:
             if k not in d:
                 rep.err(rel, "%s 칸이 없습니다 (%s의 필수 칸)" % (k, ty))
+            elif blank(d[k]):
+                rep.err(rel, "%s 칸이 있는데 비었습니다 (%s의 필수 칸)" % (k, ty))
         if ty in STATUS:
             st = d.get("status", "").strip().strip("\"'")
             if st and st not in STATUS[ty]:
@@ -327,8 +361,13 @@ def check_ontology(vault, rep, journal_names):
                 links.append((rel, k, tgt.strip()))
         for tgt in WIKILINK.findall(FENCE.sub("", body)):
             incoming[tgt.strip()] += 1
-        if ty == "finding" and "concept" not in d:
-            rep.warn(rel, "개념이 안 붙어 종목 밖에서 찾을 수 없습니다")
+        # 개념이 안 붙은 발견은 장마다 경고하지 않는다. 대부분은 한 종목
+        # 안에서만 뜻이 있는 결론이라 영영 개념이 안 붙고(86장을 훑었을 때
+        # 기존 개념에 붙은 건 5장뿐이었다), 그러면 경고가 0이 될 수 없어
+        # 뜻을 잃는다. 예전 "아무도 안 가리키는 카드" 검사를 없앤 것과 같은
+        # 이유다. 장마다 알리는 대신 끝에 수만 한 줄로 적는다.
+        if ty == "finding" and ("concept" not in d or blank(d.get("concept", ""))):
+            no_concept.append(rel)
         check_stiff(rel, body, rep)
 
     for rel, key, tgt in links:
@@ -358,6 +397,10 @@ def check_ontology(vault, rep, journal_names):
         byd[k] = byd.get(k, 0) + 1
         if ty == "concept" and d.get("role") == "glossary":
             gloss += 1
+    if no_concept:
+        tot = sum(byd.get(k, 0) for k in ("발견",)) or len(no_concept)
+        print("  개념이 안 붙은 발견 %d장 / %d장 — 한 종목 안에서만 뜻이 있는 결론이면 "
+              "그대로 두고, 세 종목 넘게 같은 데 닿았으면 개념을 만든다" % (len(no_concept), tot))
     print("  온톨로지 배치: " + " · ".join(
         "%s %d장%s" % (k, byd[k], "(용어풀이 %d 포함)" % gloss
                        if k == "개념" and gloss else "")

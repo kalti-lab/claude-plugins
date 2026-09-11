@@ -1,7 +1,7 @@
 ---
 name: kalti-report
 disable-model-invocation: true
-description: "Builds the kalti lab's derived report layer under reports/ — the two views that read journals/ and ontology/ but never write to them. Two modes. /kalti-report (or --weekly) rolls one member's journals for an ISO week into reports/weekly/<author>/YYYY-Www.md as a navigation map: six buckets (progress, findings, decisions, blockers, next actions, ontology candidates), each item one line plus a wikilink back to the source journal; accepts a week (2026-W28), a member, --backfill A..B, or --all for a whole-lab report, and is idempotent (everything above the 운영자 코멘트 heading regenerates). /kalti-report --contrib shows what each member has put in as three plain numbers side by side (연구노트 · 카드 · 밀도), with no total, no rank, and no winner; screen-only unless --write. Both are derived views: they are regenerated from the journals, so nothing here is ever the grounding for an ontology card."
+description: "Builds the kalti lab's derived report layer under reports/ — the two views that read journals/ and ontology/ but never write to them. Two modes. /kalti-report (or --weekly) rolls one member's journals for an ISO week into reports/weekly/<author>/YYYY-Www.md as a navigation map: six buckets (progress, findings, decisions, blockers, next actions, ontology candidates), each item one line plus a wikilink back to the source journal; accepts a week (2026-W28), a member, or --backfill A..B, and is idempotent (everything above the 운영자 코멘트 heading regenerates). /kalti-report --contrib shows what each member has put in as three plain numbers side by side (연구노트 · 카드 · 밀도), with no total, no rank, and no winner; screen-only unless --write. Both are derived views: they are regenerated from the journals, so nothing here is ever the grounding for an ontology card."
 ---
 
 # kalti report layer
@@ -27,7 +27,7 @@ Two things hold in both modes:
 
 | invocation | mode | follow |
 |---|---|---|
-| `/kalti-report`, `2026-W28`, `… jinsik`, `--backfill A..B`, `--all` | **weekly** (default) | `references/weekly.md` |
+| `/kalti-report`, `2026-W28`, `… jinsik`, `--backfill A..B` | **weekly** (default) | `references/weekly.md` |
 | `/kalti-report --contrib` (`--write` to save a copy) | **contrib** | `references/contrib.md` |
 
 Both live under `${CLAUDE_PLUGIN_ROOT}/skills/kalti-report/`. The full convention is in there, not

@@ -1,7 +1,7 @@
 # kalti report — weekly mode
 
-The weekly roll-up. It defaults to **one member's own work** (the invoking author) and is not a
-lab-wide report unless `--all` is given. Everything above the operator-notes heading is
+The weekly roll-up. It covers **one member's own work** (the invoking author) — it is never a
+lab-wide report; the whole-lab view is the monthly 소식 (`reports/digest/`). Everything above the operator-notes heading is
 regenerated from the journals on every run — unlike a journal, which is append-only evidence.
 
 The two principles behind every choice here: **stay faithful to the journals** (a one-liner must
@@ -10,7 +10,7 @@ be backed by the entry — never invent progress that isn't recorded), and **be 
 
 ## Resolve the target week(s) and author
 
-The arguments decide **which author** and **which week(s)** to build. Weeks are **ISO 8601** (Monday–Sunday), labelled `YYYY-Www` (e.g. `2026-W28`). The **default author is `$KALTI_AUTHOR`** (the invoker) — the report covers only that member's work unless `--all` is given.
+The arguments decide **which author** and **which week(s)** to build. Weeks are **ISO 8601** (Monday–Sunday), labelled `YYYY-Www` (e.g. `2026-W28`). The **default author is `$KALTI_AUTHOR`** (the invoker), and a report always covers exactly one member.
 
 | invocation | author | week |
 |---|---|---|
@@ -19,17 +19,16 @@ The arguments decide **which author** and **which week(s)** to build. Weeks are 
 | `/kalti-report 2026-07-08` | me | the week containing that date |
 | `/kalti-report 2026-W28 jinsik` | that member | that week |
 | `/kalti-report --backfill 2026-W22..2026-W28` | me (or trailing member) | each week in range with entries |
-| `/kalti-report --all [week]` | **whole lab (combined)** | that week (default: current) |
 
 Compute the week's Monday–Sunday bounds. Derive the ISO week label with `date -d <date> +%G-W%V` (note `%G`, the ISO-week-year, not `%Y`). For `--backfill`, iterate the range and build only weeks with at least one entry — and **`log`/report which weeks were skipped as empty** so coverage is explicit.
 
-Output paths:
-- Personal (default / a named member): `reports/weekly/<author>/YYYY-Www.md`
-- `--all` (whole lab): `reports/weekly/all/YYYY-Www.md`
+Output path: `reports/weekly/<author>/YYYY-Www.md`.
+
+**There is no whole-lab weekly.** A `--all` mode was specified here for months and never run once — `reports/weekly/all/` was never created. The monthly 소식 (`reports/digest/`) now fills that place, and it does the job better: it groups by project rather than by person, picks what to lead with, and carries a judgement. Spec that nothing executes is documentation debt, so it is gone rather than left to rot.
 
 ## Gather the week's entries
 
-Walk the journals **recursively** and select entries whose `date` frontmatter falls within the week's bounds (inclusive). **For the default/personal run, restrict to `journals/<author>/` only** — other members' folders are not read. For `--all`, read every author folder. Skip project-history files (`00-*.md`) — they are retrospectives, not week-dated work — and skip pre-registrations by their **`type: prereg`**, never by their filename: a journal titled "…사전등록 재실험…" is an `experiment`, and a name filter drops it silently.
+Walk the journals **recursively** and select entries whose `date` frontmatter falls within the week's bounds (inclusive). **Restrict to `journals/<author>/` only** — other members' folders are not read. Skip project-history files (`00-*.md`) — they are retrospectives, not week-dated work — and skip pre-registrations by their **`type: prereg`**, never by their filename: a journal titled "…사전등록 재실험…" is an `experiment`, and a name filter drops it silently.
 
 Prefer the **obsidian CLI** when present for accurate frontmatter reads; if `which obsidian` finds nothing (headless), read the files directly (graceful fallback — same result). For each selected entry, start from frontmatter: `project`, `type`, `title`, and **`summary`** — the note's own one-sentence answer to *what came out*, which every journal now carries (lint errors without it). That sentence is what the 발견·결과 bucket wants, so quote it rather than re-deriving one from the body. Open the section bodies only for what `summary` does not cover — 막힌 점, 다음 주 계획, and hypothesis/finding candidates — and for entries whose summary reads thin.
 
@@ -37,7 +36,7 @@ If **no** entries fall in the week, don't write an empty report — tell the use
 
 ## Classify into six buckets (reader-first)
 
-Group the selected entries **domain → project** (a personal report is one member, so member headings are unnecessary; an `--all` report adds a member note per project). Pull each bucket from the entry's matching section — a one-liner in the report, detail stays in the journal:
+Group the selected entries **domain → project** (a report is one member, so member headings are unnecessary). Pull each bucket from the entry's matching section — a one-liner in the report, detail stays in the journal:
 
 | bucket | pulled from | notes |
 |---|---|---|
@@ -140,7 +139,7 @@ Copy `assets/weekly-template.md` and fill it. **The report body is written in Ko
 
 1. **Deterministic path** — `reports/weekly/<author>/YYYY-Www.md`. Same author+week → same file, updated in place, never a `2026-W28 (1).md`. A personal run never touches another member's file or the `all/` report.
 2. **Heading boundary (no markers, no comments)** — on re-run, regenerate everything from the top of the file down to — but **not** including — the `## 📝 운영자 코멘트 / 메모` heading, and preserve that heading and everything below it verbatim. If the heading is absent (new file), build the full template with an empty 운영자 코멘트 section at the end. The report never contains HTML comments.
-3. **Deterministic ordering** — sort entries `date → project` (add `author` for `--all`) so the same journals produce byte-identical output. No new/changed journals → no diff.
+3. **Deterministic ordering** — sort entries `date → project`. so the same journals produce byte-identical output. No new/changed journals → no diff.
 4. **Index upsert** — update this report's row in `reports/weekly/README.md` (keyed by member+week) if present, else add it (newest first). Never append a duplicate row.
 5. **Neighbor link refresh** — after writing, if the same member's adjacent-week report exists, update *its* footer link to point back here, so the per-member chain stays consistent.
 
