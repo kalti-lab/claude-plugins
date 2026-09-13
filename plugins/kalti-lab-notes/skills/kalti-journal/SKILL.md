@@ -1,6 +1,5 @@
 ---
 name: kalti-journal
-disable-model-invocation: true
 description: "Convention for writing and editing kalti research-group lab notes. Trigger it when the user asks for their work to be recorded as a research journal / 연구노트 / 일지 — including phrasings like \"연구노트 써줘\", \"일지로 남겨줘\", \"오늘 한 거 기록해줘\". Do NOT trigger it on your own after finishing a piece of work, and never as a wrap-up habit; when the request is indirect, confirm before writing anything. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 7-field frontmatter (id, title, date, author, type, tags, project) and the prescribed 7 body sections and 6 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
 ---
 

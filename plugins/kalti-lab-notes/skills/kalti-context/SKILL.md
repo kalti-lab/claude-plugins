@@ -1,6 +1,5 @@
 ---
 name: kalti-context
-disable-model-invocation: true
 description: "Reads the kalti lab's ontology and hands back what the lab already knows about something — the goal, the live hypotheses, the findings, and above all the approaches already tried and dropped, which leave no trace in any repo. Trigger it when the user's own words point at the lab's notes — 연구노트, 일지, 온톨로지, 볼트, 연구실, kalti, lab-notes — or when the session is working inside the lab-notes vault itself, and they are asking what is known, what was decided, or what was already tried. Also invoked directly as /kalti-context followed by a project name, a topic, a concept, or a question in plain words. It cannot tell from a bare project name whether that project belongs to the lab, so it does not guess: with no such cue, a lookup is the user's to ask for. Read-only — it never writes to journals/ or ontology/ and runs no git commands."
 ---
 
