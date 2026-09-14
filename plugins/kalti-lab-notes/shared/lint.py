@@ -288,9 +288,12 @@ def check_journals(vault, rep, only=None):
         date = d.get("date", "")
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
             rep.err(rel, "date가 YYYY-MM-DD가 아닙니다 (%r)" % date)
-        m = re.match(r"^(\d{8})-", base)
-        if m and date and m.group(1) != date.replace("-", ""):
-            rep.err(rel, "파일 이름의 날짜(%s)와 date 칸(%s)이 다릅니다" % (m.group(1), date))
+        # 날짜 접두는 2026-09에 폐지됐다. 예전 검사는 "접두와 date 칸이 다를 때만"
+        # 오류라, 맞는 날짜가 붙은 접두는 조용히 통과했다 — 스킬을 안 거치고 옛
+        # 모양으로 쓴 일지가 실제로 그렇게 들어왔다(2026-09-14). 있는 것 자체가
+        # 오류다. 볼트 실측 0건이라 기존 파일에는 안 걸린다.
+        if re.match(r"^\d{8}-", base):
+            rep.err(rel, "파일 이름에 날짜 접두가 있습니다 — 폐지된 규약입니다. 접두를 떼십시오 (날짜는 date 칸이 갖고 있습니다)")
 
         ty = d.get("type", "")
         if ty not in TYPES:
