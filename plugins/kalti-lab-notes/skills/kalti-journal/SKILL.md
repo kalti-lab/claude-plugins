@@ -44,7 +44,7 @@ A journal is **evidence**: only a record of work actually done lets the later gr
 
 It's tempting to read other journals in `journals/` (especially other people's folders) and spin a plausible entry from them, but that's fiction, not evidence, and it breaks trust in the whole system. Reading existing journals is useful in exactly two cases: (1) **finding** a candidate file to continue (metadata only — title, `project`, date), and (2) format reference (`assets/journal-template.md`, `references/example-experiment.md`). Neither copies *content*.
 
-When the basis is in the session or the user's explanation, write only that. For metadata that's genuinely missing (which `project`, the hypothesis note tested, the `author` name), ask once briefly rather than filling it by inference.
+When the basis is in the session or the user's explanation, write only that. The one metadata question worth asking is the `author` name when it is genuinely uncertain — a typo there carves out a ghost member. Everything else (`project`, `tests`, tags) you fill yourself and state in the summary — see "Fill everything yourself".
 
 ## Where to write — resolve the vault and author folder first
 
@@ -277,8 +277,14 @@ rather than editing the pre-registration.** The gap between the two is the findi
 The frontmatter values (type, tags, project, tests) — the convention is all in this skill, so
 **fill them from session context plus a read of `ontology/`, and do not ask.** Two or more
 `project` candidates fit? Pick the one the work actually advanced and note the choice in the
-summary. None fits? File under `_inbox/` rather than inventing a project note — creating project
-cards is `/kalti-ontology`'s job. A type that straddles two kinds goes by where the *finding*
+summary. **No existing card fits but the work clearly belongs to one project?** Write a new
+name into `project:` anyway and file the entry under that folder — the card does not have to
+exist yet. Creating the card is still `/kalti-ontology`'s job, and that skill reads exactly this
+field to know which cards are missing ("journals already carry the answer"); an empty `project:`
+is the one thing it cannot recover from. This is how every new project's first journal works —
+the name in the journal precedes the card. `_inbox/` is only for work that belongs to **no**
+project (a one-off errand, or genuinely undecided) — "no matching card" and "no project" are
+different cases. A type that straddles two kinds goes by where the *finding*
 came from (measured → experiment, built → build).
 
 The one question that remains is the **"nothing to write about" gate** near the top: when the
