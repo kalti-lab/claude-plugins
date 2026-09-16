@@ -347,6 +347,12 @@ def check_journals(vault, rep, only=None):
 def check_ontology(vault, rep, journal_names):
     root = os.path.join(vault, "ontology")
     no_concept = []
+    # 개념 카드가 모르는 소속 — 발견·가설이 concept로 선언했는데 그 개념 카드
+    # 본문이 안 언급하는 것. 소속 명단의 정본은 선언(꼬리표 칸)이지만, 카드를
+    # 열어 보는 사람은 본문만 읽으므로 빠진 것이 있으면 카드가 완전한 척한다.
+    # 규칙은 예전부터 있었는데 커밋 전 검사에도 없고 기계도 안 봐서, 실제로
+    # 카드를 만들고 본문에 안 넣는 일이 났다(2026-09-16, 5건). 여기서 잡는다.
+    members, concept_bodies = collections.defaultdict(list), {}
     if not os.path.isdir(root):
         rep.err("ontology/", "폴더가 없습니다")
         return
@@ -425,6 +431,11 @@ def check_ontology(vault, rep, journal_names):
         # 이유다. 장마다 알리는 대신 끝에 수만 한 줄로 적는다.
         if ty == "finding" and ("concept" not in d or blank(d.get("concept", ""))):
             no_concept.append(rel)
+        if ty in ("finding", "hypothesis"):
+            for tgt in WIKILINK.findall(d.get("concept", "")):
+                members[tgt.strip()].append(base)
+        if ty == "concept" and d.get("role") != "glossary":
+            concept_bodies[base] = body
         check_stiff(rel, body, rep)
 
     for rel, key, tgt in links:
@@ -442,6 +453,12 @@ def check_ontology(vault, rep, journal_names):
     for base, (rel, ty, d) in cards.items():
         if ty == "concept" and d.get("role") != "glossary" and not declared[base]:
             rep.warn(rel, "발견이 하나도 안 붙은 개념입니다 — 허브가 아니면 용어집(role: glossary)이거나 지울 것입니다")
+    for cbase, cbody in concept_bodies.items():
+        miss = [m for m in members.get(cbase, [])
+                if ("[[%s]]" % m) not in cbody and ("[[%s|" % m) not in cbody]
+        if miss:
+            rep.warn(cards[cbase][0], "개념 카드가 모르는 소속 %d건: %s — 카드 본문 묶음에 한 줄씩 넣으십시오"
+                     % (len(miss), " · ".join(sorted(miss)[:3])))
         if ty == "source" and not incoming[base] \
                 and not any(t == base for _, _, t in links):
             rep.warn(rel, "아무도 인용하지 않는 자료입니다")

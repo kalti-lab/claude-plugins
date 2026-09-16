@@ -346,6 +346,14 @@ the note it cites. Fix them before the commit; a broken link is invisible until 
 be found from inside its own project), and an orphan card nobody points at. Work them down over
 time; do not let them block a run.
 
+**One warning is not backlog and must be cleared in the same run: 개념 카드가 모르는 소속.**
+It fires when a card you just wrote declares `concept:` but the concept card's body never names
+it. The declaration is the authoritative membership list, so nothing is lost — but a reader opens
+the concept card, not the backlinks, and a card missing a member reads as complete when it is not.
+This is the drift check from "The concept layer is the cross-project index", and it sat in that
+descriptive section with no checkpoint until a run created five such cards in one pass
+(2026-09-16). Adding one curated line per member to the matching grouping closes it.
+
 ## After applying: sync with git
 
 The ontology is **shared knowledge managed by the group**, so changes should reach everyone else's graph. The four modes (`push` / `commit` / `ask` / `off`, unset = `ask`) and the failure handling are in **`${CLAUDE_PLUGIN_ROOT}/shared/vault-and-git.md`** — read it before running git. This skill's scope and message:
