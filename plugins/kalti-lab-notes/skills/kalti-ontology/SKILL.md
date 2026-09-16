@@ -223,6 +223,15 @@ cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals -
 
 Append to the record under a dated heading, in three groups, and say in one line per entry why nothing came out: **뽑을 결론 없음** (nothing to promote), **결론은 있으나 보류** (a conclusion exists but no single project owns it, so `partOf` cannot be chosen), **링크를 걸 수 없음** (the filename collides with others, so no wikilink can address it). The second and third are held work, not finished work — keep them visible.
 
+**A run that read only part of a project says so, in its own group.** The cursor counts journals,
+and a journal cited by even one card looks finished — so a run that skims a folder for one kind of
+conclusion (decisions, say) and stops leaves work that is invisible to every later run. Add a
+**이번 범위에서 아직 안 본 것** group naming those journals and what looks promotable in each, so
+the next run starts there instead of re-reading the folder. This is not hypothetical: on
+2026-09-16 one run skimmed 18 neuromem journals for decisions only, wrote that group voluntarily,
+and a later run picked up the seven it named and found 16 more cards. Nothing but that group would
+have surfaced them.
+
 **The one-line reason per entry is what makes the record auditable, so a bare list is not an entry.** The 2026-09-03 batch wrote 33 names with one shared paragraph above them; nobody reading it later could tell what had actually been looked for in any given journal, and the entries turned out to be wrong without anything on the page to show it. If a run cannot say in one line what it looked for and why nothing survived, it has not read that journal closely enough to close it.
 
 ### The record is a judgement under a convention, so a convention change re-opens it

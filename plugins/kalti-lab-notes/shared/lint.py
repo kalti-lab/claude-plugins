@@ -352,6 +352,67 @@ def check_journals(vault, rep, only=None):
     return names
 
 
+def check_project_cards(vault, rep):
+    """일지가 이름을 댄 종목인데 카드가 없는 것.
+
+    정제의 진행 커서는 **일지 단위**로 센다 — 카드가 이 일지를 인용했나. 그래서
+    종목 카드 자체가 없는 것은 아무도 안 센다. 게다가 커서는 회고(`00-`)를 빼기
+    때문에, 일지가 개관 하나뿐인 종목은 영영 안 뜬다. 실제로 rag-chatbot-study가
+    그렇게 묻혀 있었다(2026-09-16에 손으로 찾음).
+
+    오류가 아니라 경고다 — 새 종목은 일지가 카드보다 먼저 오는 것이 규약이라
+    (0.55.2), 아직 정제를 안 돌린 상태는 정상이다."""
+    jroot = os.path.join(vault, "journals")
+    if not os.path.isdir(jroot):
+        return
+    named, seen = {}, set()
+    for path in walk(jroot):
+        rel = os.path.relpath(path, vault)
+        fm, _ = split_fm(read_text(path, rel, rep))
+        if not fm:
+            continue
+        for tgt in WIKILINK.findall(dict(fm).get("project", "")):
+            named.setdefault(tgt.strip(), rel)
+    croot = os.path.join(vault, "ontology", "종목")
+    if os.path.isdir(croot):
+        seen = {fn[:-3] for fn in os.listdir(croot) if fn.endswith(".md")}
+    missing = sorted(set(named) - seen)
+    if missing:
+        rep.warn("ontology/종목/", "일지가 이름을 댔는데 카드가 없는 종목 %d개: %s — "
+                 "/kalti-ontology가 만듭니다" % (len(missing), " · ".join(missing[:3])))
+
+
+def check_refine_log(vault, rep):
+    """검토 기록의 형식만 본다 — 판정 내용은 사람 몫이다.
+
+    닫힌 판정은 커서에서 영영 빠지므로, 그 판정이 **어느 규약 아래** 내려졌고
+    **무엇을 덜 읽었는지**가 남아야 나중에 다시 열 수 있다. 2026-09-03에 33편을
+    한 줄 사유도 없이 닫았고, 그때 없던 결정 카드 때문에 대부분이 잘못 닫혀
+    있었다(2026-09-16 재검토)."""
+    p = os.path.join(vault, "reports", "정제", "검토기록.md")
+    if not os.path.isfile(p):
+        return
+    rel = os.path.relpath(p, vault)
+    text = read_text(p, rel, rep)
+    blocks = re.split(r"(?m)^## (?=\d{4}-\d{2}-\d{2})", text)[1:]
+    for b in blocks:
+        date = b.split("\n", 1)[0].strip()
+        head = b[:1200]
+        if "규약:" not in head:
+            rep.warn(rel, "%s 항목에 규약 줄이 없습니다 — 그때 쓰던 객체 종류를 "
+                          "한 줄로 적어야 규약이 바뀌었을 때 다시 열 수 있습니다" % date)
+        # 이미 다시 열어 재검토한 묶음은 사유 검사에서 뺀다. 그때의 판정은
+        # 되짚어 고쳐졌고, 없던 사유를 지금 지어내는 것이 더 나쁘다. 영영 안
+        # 꺼지는 경고는 뜻을 잃는다는 것이 이 볼트가 이미 배운 것이다.
+        if "다시 열어 재검토" in b:
+            continue
+        bare = [l for l in b.splitlines()
+                if l.startswith("- ") and "—" not in l and "|" not in l]
+        if bare:
+            rep.warn(rel, "%s 항목에 사유 없는 줄 %d개 — 이름만 적은 목록은 항목이 "
+                          "아닙니다(무엇을 찾았고 왜 없었는지 한 줄)" % (date, len(bare)))
+
+
 def check_reports(vault, rep):
     """보고서 층은 낱말만 본다. 구조(꼬리표 칸·절)는 산출물마다 달라 규약이 없다.
     `shared/writing.md`가 "일지·카드·보고서·소식 전부"라고 적어 뒀는데 검사는
@@ -557,6 +618,9 @@ def main():
 
     if both or a.reports:
         check_reports(a.vault, rep)
+    if both:
+        check_project_cards(a.vault, rep)
+        check_refine_log(a.vault, rep)
 
     for label, items in (("오류", rep.errors), ("경고", rep.warns)):
         if label == "경고" and a.quiet:
