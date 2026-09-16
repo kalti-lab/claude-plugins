@@ -8,6 +8,7 @@
     lint.py VAULT                  일지·온톨로지 둘 다
     lint.py VAULT --journals       일지만
     lint.py VAULT --ontology       온톨로지만
+    lint.py VAULT --reports        보고서 층의 낱말만 (소식 .html 포함)
     lint.py VAULT --detail         건별로 어느 파일인지까지
     lint.py VAULT --quiet          오류만, 경고 생략
 
@@ -68,6 +69,11 @@ NOISE = [
      "줄 번호"),
     (re.compile(r"\bPID ?\d+"),                          "프로세스 번호"),
     (re.compile(r"/tmp/|/scratch/|scratchpad"),          "임시 경로"),
+    # 남의 계정 이름이 그대로 실린다. 이 볼트는 위키로 나갈 수 있고 한 번
+    # 나가면 되돌릴 수 없다. 지금은 경고다 — 볼트에 25편이 남아 있어 오류로
+    # 올리면 모든 커밋이 막힌다. 정리한 뒤 오류로 올린다.
+    (re.compile(r"/Users/[A-Za-z0-9_.-]+|/home/[A-Za-z0-9_.-]+|C:\\Users\\[A-Za-z0-9_.-]+"),
+     "개인 절대 경로"),
     (re.compile(r"\d+ ?[+]{3,}|\d+ ?insertions?|\d+ ?deletions?"), "diff 수치"),
     # 뒤에 점이 또 오면 도메인이다(case.ftc.go.kr) — 그건 파일 이름이 아니다.
     (re.compile(r"[\w.-]*[\w-]\.(?:" + CODE_EXT + r")\b(?!\.)"), "소스 파일 이름"),
@@ -143,9 +149,11 @@ def strip_quoted(body):
     return plain
 
 
-def check_stiff(rel, body, rep):
-    """말로는 안 쓰는 낱말과 번역투 문법. 어디를 빼고 보는지는 strip_quoted 참고."""
-    plain = strip_quoted(body)
+def check_stiff(rel, body, rep, summary=""):
+    """말로는 안 쓰는 낱말과 번역투 문법. 어디를 빼고 보는지는 strip_quoted 참고.
+    `summary`는 꼬리표 칸에 있지만 값이 아니라 산문이라 같이 본다 — 잘라내고
+    보던 때는 요약 칸에만 금지 낱말 7건이 살아 있었다(2026-09-16 실측)."""
+    plain = strip_quoted(body) + "\n" + summary
     stiff = [(w, alt) for w, alt in STIFF if w in plain]
     if stiff:
         rep.warn(rel, "말로는 안 쓰는 낱말 %d개: %s" % (
@@ -340,8 +348,34 @@ def check_journals(vault, rep, only=None):
                 rep.warn(rel, "%s %d건: %s" % (label, len(hits),
                                                ", ".join(sorted(map(str, hits))[:3])))
 
-        check_stiff(rel, body, rep)
+        check_stiff(rel, body, rep, d.get("summary", ""))
     return names
+
+
+def check_reports(vault, rep):
+    """보고서 층은 낱말만 본다. 구조(꼬리표 칸·절)는 산출물마다 달라 규약이 없다.
+    `shared/writing.md`가 "일지·카드·보고서·소식 전부"라고 적어 뒀는데 검사는
+    두 층만 걷고 있었다 — 그 사이로 12건이 살아 있었다(2026-09-16 실측).
+    소식은 .html이라 태그를 걷어내고 본다."""
+    root = os.path.join(vault, "reports")
+    if not os.path.isdir(root):
+        return
+    for dirpath, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        for fn in sorted(files):
+            if not fn.endswith((".md", ".html")):
+                continue
+            path = os.path.join(dirpath, fn)
+            rel = os.path.relpath(path, vault)
+            text = read_text(path, rel, rep)
+            if fn.endswith(".html"):
+                text = re.sub(r"(?s)<(script|style)\b.*?</\1>", "", text)
+                text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+                text = re.sub(r"<[^>]+>", " ", text)
+                check_stiff(rel, text, rep)
+            else:
+                fm, body = split_fm(text)
+                check_stiff(rel, body, rep, dict(fm).get("summary", "") if fm else "")
 
 
 def check_ontology(vault, rep, journal_names):
@@ -377,7 +411,7 @@ def check_ontology(vault, rep, journal_names):
         cards[base] = (rel, ty, d)
 
         if ty not in ONTO_REQUIRED:
-            rep.err(rel, "type이 6종 밖입니다 (%r)" % ty)
+            rep.err(rel, "type이 7종 밖입니다 (%r)" % ty)
             continue
         holder = os.path.basename(os.path.dirname(path))
         if holder not in ONTO_DIR:
@@ -436,7 +470,7 @@ def check_ontology(vault, rep, journal_names):
                 members[tgt.strip()].append(base)
         if ty == "concept" and d.get("role") != "glossary":
             concept_bodies[base] = body
-        check_stiff(rel, body, rep)
+        check_stiff(rel, body, rep, d.get("summary", ""))
 
     for rel, key, tgt in links:
         if tgt not in cards and tgt not in journal_names:
@@ -453,15 +487,18 @@ def check_ontology(vault, rep, journal_names):
     for base, (rel, ty, d) in cards.items():
         if ty == "concept" and d.get("role") != "glossary" and not declared[base]:
             rep.warn(rel, "발견이 하나도 안 붙은 개념입니다 — 허브가 아니면 용어집(role: glossary)이거나 지울 것입니다")
+        # 자료 검사는 이 반복문 안에 있어야 한다. 개념 반복문 안에 잘못 들어가
+        # 있던 때는 ty·base·rel이 직전 반복문의 마지막 값으로 굳어, 자료 카드가
+        # 여러 장이면 한 장 빼고 전부 안 봤다(2026-09-16에 찾음).
+        if ty == "source" and not incoming[base] \
+                and not any(t == base for _, _, t in links):
+            rep.warn(rel, "아무도 인용하지 않는 자료입니다")
     for cbase, cbody in concept_bodies.items():
         miss = [m for m in members.get(cbase, [])
                 if ("[[%s]]" % m) not in cbody and ("[[%s|" % m) not in cbody]
         if miss:
             rep.warn(cards[cbase][0], "개념 카드가 모르는 소속 %d건: %s — 카드 본문 묶음에 한 줄씩 넣으십시오"
                      % (len(miss), " · ".join(sorted(miss)[:3])))
-        if ty == "source" and not incoming[base] \
-                and not any(t == base for _, _, t in links):
-            rep.warn(rel, "아무도 인용하지 않는 자료입니다")
 
     # 용어 풀이(role: glossary)는 개념 수에서 따로 뺀다 — 종목을 잇는 허브가 아니라
     # 낱말 뜻을 적어둔 글이라, 섞어 세면 개념층이 실제보다 두터워 보인다.
@@ -488,8 +525,8 @@ def check_file(vault, path):
     rep = Report()
     rel = os.path.relpath(path, vault) if vault else path
     text = read_text(path, rel, rep)
-    _, body = split_fm(text)
-    check_stiff(rel, body, rep)
+    fm, body = split_fm(text)
+    check_stiff(rel, body, rep, dict(fm).get("summary", "") if fm else "")
     for _, msg in rep.errors + rep.warns:
         print("%s: %s" % (rel, msg))
     return 1 if (rep.errors or rep.warns) else 0
@@ -500,13 +537,14 @@ def main():
     ap.add_argument("vault")
     ap.add_argument("--journals", action="store_true")
     ap.add_argument("--ontology", action="store_true")
+    ap.add_argument("--reports", action="store_true", help="보고서 층의 낱말만")
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--detail", action="store_true", help="건별로 파일까지 보여준다")
     ap.add_argument("--file", help="이 파일 하나만 낱말·번역투 검사")
     a = ap.parse_args()
     if a.file:
         return check_file(a.vault, a.file)
-    both = not (a.journals or a.ontology)
+    both = not (a.journals or a.ontology or a.reports)
     rep = Report()
 
     names = check_journals(a.vault, rep, None) if (both or a.journals) else {}
@@ -516,6 +554,9 @@ def main():
                      for p in walk(os.path.join(a.vault, "journals"))} \
                 if os.path.isdir(os.path.join(a.vault, "journals")) else set()
         check_ontology(a.vault, rep, names)
+
+    if both or a.reports:
+        check_reports(a.vault, rep)
 
     for label, items in (("오류", rep.errors), ("경고", rep.warns)):
         if label == "경고" and a.quiet:

@@ -1,7 +1,7 @@
 ---
 name: kalti-ontology
 disable-model-invocation: true
-description: "Convention for refining kalti research journals into an ontology (knowledge graph). Pulls hypotheses and findings from the entries in journals/ and curates them into ontology/ as 6 object types (project, hypothesis, finding, concept, source, person) with typed links. Invoke with /kalti-ontology to create ontology objects, refine/promote journals, or update the knowledge graph. Where kalti-journal records evidence, this turns that evidence into curated knowledge (managed together by the group). The core discipline: don't create an object without grounding — verify each against a quoted sentence from the source journal."
+description: "Convention for refining kalti research journals into an ontology (knowledge graph). Pulls hypotheses and findings from the entries in journals/ and curates them into ontology/ as 7 object types (project, hypothesis, finding, concept, source, person, decision) with typed links. Invoke with /kalti-ontology to create ontology objects, refine/promote journals, or update the knowledge graph. Where kalti-journal records evidence, this turns that evidence into curated knowledge (managed together by the group). The core discipline: don't create an object without grounding — verify each against a quoted sentence from the source journal."
 ---
 
 # kalti ontology refinement
@@ -51,7 +51,7 @@ Especially useful in refinement: `unresolved` shows what journals link to but ha
 
 (With the kepano `obsidian-skills` plugin installed, the model can handle broader Obsidian work too — install via `/kalti-setup`. The table above is enough for the core graph commands.)
 
-## Object types (6)
+## Object types (7)
 
 | type | meaning |
 |---|---|
@@ -109,7 +109,7 @@ goes quiet. Dormancy is not a status. Set it only when a journal says so.
 
 ## id convention
 
-`type-abbrev + slug` (no date or sequence — an id is a fixed marker and shouldn't shift): `proj-` / `hyp-` / `find-` / `con-` / `src-` / `per-`
+`type-abbrev + slug` (no date or sequence — an id is a fixed marker and shouldn't shift): `proj-` / `hyp-` / `find-` / `con-` / `src-` / `per-` / `dec-`
 e.g. `proj-image-pipeline`, `hyp-sampler`, `find-karras`, `con-nodes2`, `src-nodes2-doc`, `per-aram`
 
 **Link by filename (not id).** id is just a fixed marker inside frontmatter; wikilinks `[[ ]]` use the note's filename. Every name in the vault is bare — cards and journals alike — so `derivedFrom: "[[샘플러별-디테일-비교]]"` is the whole form. Nothing in a link's shape tells you what it points at; only the file's actual location does. **Project overview notes** (`"[[00-프로젝트-히스토리-agrune]]"`) are worth citing alongside dated work: they hold the across-the-months reasoning — why a line was abandoned, what a pivot cost — that no single entry contains.

@@ -1,6 +1,6 @@
 ---
 name: kalti-journal
-description: "Convention for writing and editing kalti research-group lab notes. Trigger it when the user asks for their work to be recorded as a research journal / 연구노트 / 일지 — including phrasings like \"연구노트 써줘\", \"일지로 남겨줘\", \"오늘 한 거 기록해줘\". Do NOT trigger it on your own after finishing a piece of work, and never as a wrap-up habit; when the request is indirect, confirm before writing anything. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 7-field frontmatter (id, title, date, author, type, tags, project) and the prescribed 7 body sections and 6 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
+description: "Convention for writing and editing kalti research-group lab notes. Trigger it when the user asks for their work to be recorded as a research journal / 연구노트 / 일지 — including phrasings like \"연구노트 써줘\", \"일지로 남겨줘\", \"오늘 한 거 기록해줘\". Do NOT trigger it on your own after finishing a piece of work, and never as a wrap-up habit; when the request is indirect, confirm before writing anything. Writes a journal entry into the lab-notes vault at journals/<author>/ as a titled file, following the fixed 9-field frontmatter (id, title, date, author, type, tags, project, summary, updated) and the prescribed 7 body sections and 6 principles. Global plugin — invoke with /kalti-journal from any working directory — to write or edit experiment / investigation / build / reading / meeting / decision / retro entries. Don't infer the format by digging through the vault; follow this skill's schema. (Creating or refining ontology objects belongs to the kalti-ontology skill, not this one.)"
 ---
 
 # Writing kalti research journals
@@ -73,9 +73,9 @@ $VAULT/journals/$AUTHOR/
    └─ 업스케일-검증.md
 ```
 
-- **Subfolder** = the `project` note's filename (the wikilink basename, `[[ ]]` and any `|alias` stripped — e.g. `project: "[[이미지생성-파이프라인]]"` → folder `이미지생성-파이프라인`). No project, or a held/skipped one → `_inbox/`. Create the target folder with `mkdir -p` on demand.
+- **Subfolder** = the `project` note's filename (the wikilink basename, `[[ ]]` and any `|alias` stripped — e.g. `project: "[[이미지생성-파이프라인]]"` → folder `이미지생성-파이프라인`). Only work that belongs to **no** project goes to `_inbox/` — see "Fill everything yourself"; a project whose card does not exist yet still gets its own folder. Create the target folder with `mkdir -p` on demand.
 - **Filename** = `<title>.md`. No date — the `date` frontmatter already holds it, and a name that leads with eight digits pushes the meaning to the right in every `[[ ]]` that cites it. A card listing twenty pieces of evidence is the place this is read most.
-- **The name must be unique across the whole vault**, because a wikilink resolves by basename and nothing else. Two notes sharing a name means no link can address either. This is what the date prefix used to guarantee by accident; now it is a rule, and `shared/lint.py` enforces it on every save. Write a title that says what was done and it will not collide — the existing 268 entries have distinct titles with the prefixes stripped.
+- **The name must be unique across the whole vault**, because a wikilink resolves by basename and nothing else. Two notes sharing a name means no link can address either. This is what the date prefix used to guarantee by accident; now it is a rule that `shared/lint.py` reports on a full run (`--journals`). The save-time hook only checks wording, so a collision surfaces at the pre-commit gate, not the moment you write. Write a title that says what was done and it will not collide — the existing 268 entries have distinct titles with the prefixes stripped.
 - **The one exception — a project overview note.** A note that surveys a whole project rather than one day's work is named `00-<title>-<project>.md`. The `00-` sorts it to the top of the folder so it is read first, and the trailing project name keeps the basename unique — without it, twelve overview notes all called `00-프로젝트-히스토리.md` share one basename and **no wikilink can address any of them**, which is exactly what happened on kalti's vault until 2026-09-03. Use `type: retro`. There is at most one per project folder.
 
 Because the folder is nested, candidate searches and the refinement step read it **recursively** (project subfolders + `_inbox`).
@@ -187,8 +187,9 @@ It reads the whole author tree in about a third of a second and exits 1 if anyth
 **Fix every 오류 before committing.** They are structural, and each one silently breaks a
 downstream skill instead of raising an error: a filename or `id` that collides with another entry
 (then no wikilink can address either — this is the guarantee the date prefix used to provide), a
-missing or misordered frontmatter field, a missing body section, a `date` that disagrees with the
-filename, an `author` that disagrees with the folder.
+missing frontmatter field, a missing body section, a date prefix left on the filename (the prefix
+was retired in 2026-09 — its presence is itself the error), an `author` that disagrees with the
+folder. A **misordered** frontmatter field is a 경고, not an 오류.
 
 **경고 are yours to judge.** A source filename, a commit hash, a temp path, a tag outside the
 agreed list. Usually the fix is to rewrite the line per "What belongs in a journal" — but a raw
@@ -207,7 +208,7 @@ wiki, and that is not reversible.
 
 ## Choosing frontmatter values
 
-Of the 7 template fields, these must be chosen from fixed sets:
+Of the 9 template fields, these must be chosen from fixed sets:
 
 **`type` (one)** — entry kind:
 
@@ -235,7 +236,7 @@ Four questions, and they are short:
 ```
 무엇을 정하려고 재나     — the value or judgement this will change; "curiosity" is not one
 정답으로 볼 것          — what counts as a hit, in one sentence
-표본과 그게 충분한 이유  — the number, and whether it can move that decision
+표본과 그것으로 충분한 이유 — the number, and whether it can move that decision
 어떤 결과면 무엇을 정하나 — written before seeing the result
 ```
 

@@ -19,7 +19,9 @@ except Exception:
     pass' 2>/dev/null)
 
 case "$file" in
-  *.md) ;;
+  # 소식은 .html이라 .md만 보던 때는 훅을 통째로 빠져나갔다 — 낱말 규칙이
+  # 가장 많이 새는 산출물이 정작 검사 밖이었다(2026-09-16에 찾음).
+  *.md|*.html) ;;
   *) exit 0 ;;
 esac
 
