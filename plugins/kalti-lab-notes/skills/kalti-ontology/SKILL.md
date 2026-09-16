@@ -199,7 +199,9 @@ Count **every** link from `ontology/`, not just `derivedFrom`. Only `finding` ca
 obsidian backlinks file="<journal name>" format=json    # no ontology/ backlink = not yet refined
 ```
 
-A journal with no incoming link is **not automatically remaining work**. Most journals record what was built, renamed, deployed or set up, and honestly yield nothing to promote — reading one and finding nothing is a correct, common outcome, not a failure. If the cursor counts those forever it never reaches zero and stops meaning anything.
+A journal with no incoming link is **not automatically remaining work**. Some journals record only what was renamed, deployed or set up, and honestly yield nothing to promote — reading one and finding nothing is a correct, common outcome, not a failure. If the cursor counts those forever it never reaches zero and stops meaning anything.
+
+**But "it was a build record" is not by itself that finding.** A `build` entry very often carries a decision — what was chosen and what was given up — and the section below says so in as many words. Measured on this vault: a 2026-09-03 batch closed 33 journals in one pass as 뽑을 결론 없음, 30 of them `build` and two of them `type: decision`; re-read later, several held decisions with the alternatives and their costs written out. Judge each one on what its sentences say, never on its `type`.
 
 So a run that reads a journal and finds nothing records that fact in `reports/정제/검토기록.md`, and the cursor subtracts it. Never edit the journal itself to mark it — journals are evidence and belong to their author; the record layer is where operational state goes.
 
@@ -220,6 +222,30 @@ cat /tmp/cited /tmp/checked | sort -u | comm -23 /tmp/journals -
 ```
 
 Append to the record under a dated heading, in three groups, and say in one line per entry why nothing came out: **뽑을 결론 없음** (nothing to promote), **결론은 있으나 보류** (a conclusion exists but no single project owns it, so `partOf` cannot be chosen), **링크를 걸 수 없음** (the filename collides with others, so no wikilink can address it). The second and third are held work, not finished work — keep them visible.
+
+**The one-line reason per entry is what makes the record auditable, so a bare list is not an entry.** The 2026-09-03 batch wrote 33 names with one shared paragraph above them; nobody reading it later could tell what had actually been looked for in any given journal, and the entries turned out to be wrong without anything on the page to show it. If a run cannot say in one line what it looked for and why nothing survived, it has not read that journal closely enough to close it.
+
+### The record is a judgement under a convention, so a convention change re-opens it
+
+Closing a journal is permanent in effect — the cursor subtracts it and never raises it again. But
+the rules that produced the judgement keep moving: `decision` did not exist as an object type until
+2026-09-09, and until then "we went this way and not that way" had nowhere to be promoted to. Every
+journal closed before that date was judged with that kind of conclusion invisible.
+
+So **each dated heading records which conventions were in force**, as one line under the date:
+
+```
+## 2026-09-03
+규약: 객체 6종(종목·가설·발견·개념·자료·사람). 결정 종류 없음.
+```
+
+And when an object type or a promotion rule is **added**, the run that adds it states in its own
+summary which past headings are now stale, and those entries go back into the cursor rather than
+staying closed on a rule that no longer holds. The convention line is what makes that cheap: without
+it, re-opening means re-reading all of them to guess when they were judged.
+
+This is the refinement side of a limit the contrib view already states — card counts shift when the
+ontology convention shifts, so a figure from an old run is not comparable to a fresh one.
 
 **Pre-registrations are excluded from the cursor — by their `type`, never by their filename.** A journal titled "…사전등록 재실험…" is an `experiment` whose subject is a pre-registration, and a name filter drops it silently; that is a real entry in this vault. A `type: prereg` entry states what will count as correct *before* a measurement; it holds no conclusion to promote, so counting it would keep the backlog above zero forever. Its findings arrive in the `experiment` journal that follows it.
 
