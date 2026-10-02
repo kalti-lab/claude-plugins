@@ -67,6 +67,15 @@ number as if it were the count. `-a` reads the file as text instead. `shared/lin
 reports such a file as an error so it gets fixed at the source; `-a` is what keeps the
 tally right until someone does.
 
+**And sort and compare names with `LC_ALL=C`.** On macOS the default `en_US.UTF-8`
+collation treats different Hangul strings as equal — `printf '가나\n가다\n' | sort -u`
+prints one line. So `sort -u` silently drops distinct journal names, and `comm` (which
+expects input sorted the way it compares) misses lines, again with no error. Measured on
+this vault on 2026-10-02: the cursor's journal set shrank 285 → 256 and two uncited
+journals came out as 0. Byte order (`LC_ALL=C`) keeps every distinct name and makes
+`sort` and `comm` agree; put `export LC_ALL=C` at the top of any block that sorts, dedupes
+or `comm`s names.
+
 ---
 
 ## Syncing with git (`KALTI_GIT_SYNC`)

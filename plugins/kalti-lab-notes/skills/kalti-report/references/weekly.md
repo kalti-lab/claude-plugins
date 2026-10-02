@@ -63,6 +63,10 @@ That bucket exists so `/kalti-ontology` has somewhere to pick up from — but a 
 
 ```
 cd "$VAULT"
+# 정렬·비교는 바이트 순서로(LC_ALL=C). macOS의 en_US.UTF-8에서 sort는 서로 다른
+# 한글 이름을 같다고 봐서(가나 = 가다) sort -u가 지우고 comm도 어긋난다.
+# 실측(2026-10-02): 일지 285편이 256편으로 줄고, 미정제 2편이 0편으로 나왔다.
+export LC_ALL=C
 # 일지의 이름 집합. prereg는 type 칸으로 뺀다 — 파일 이름으로 거르면 제목에 "사전등록"이
 # 들어간 experiment 일지가 조용히 빠진다(볼트에 실제로 한 편 있었다).
 # 00-프로젝트-히스토리는 다른 일지를 요약한 회고라 정제 대상이 아니다
