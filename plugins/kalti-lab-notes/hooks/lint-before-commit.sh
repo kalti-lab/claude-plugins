@@ -10,30 +10,53 @@
 # 오류만 막는다. 경고는 판단이 필요한 것이라 통과시킨다.
 
 input=$(cat)
-cmd=$(printf '%s' "$input" | python3 -c '
+parsed=$(printf '%s' "$input" | python3 -c '
 import json, sys
 try:
     d = json.load(sys.stdin)
-    print(d.get("tool_input", {}).get("command", ""))
+    is_agy = "conversationId" in d or "toolCall" in d
+    cmd = d.get("tool_input", {}).get("command")
+    if not cmd:
+        tc = d.get("toolCall", {})
+        args = tc.get("args") or tc.get("arguments") or {}
+        cmd = args.get("CommandLine") or args.get("command")
+    val = cmd or ""
+    print(str(is_agy) + "\t" + val)
 except Exception:
-    pass' 2>/dev/null)
+    print("False\t")
+' 2>/dev/null)
+
+is_agy=$(printf '%s' "$parsed" | cut -f1)
+cmd=$(printf '%s' "$parsed" | cut -f2-)
+
+pass_hook() {
+  if [ "$is_agy" = "True" ]; then
+    echo '{"decision": "allow"}'
+  fi
+  exit 0
+}
 
 case "$cmd" in
   *"git commit"*) ;;
-  *) exit 0 ;;
+  *) pass_hook ;;
 esac
 
 . ~/.config/kalti/notes.env 2>/dev/null
 VAULT="${KALTI_VAULT:-$HOME/dev/lab-notes}"
-[ -d "$VAULT/journals" ] || exit 0
+[ -d "$VAULT/journals" ] || pass_hook
 
 # 볼트에 커밋할 것이 없으면 볼 일이 없다
 here="$(cd "$(dirname "$0")" && pwd)"
 staged=$(git -C "$VAULT" diff --cached --name-only 2>/dev/null | head -1)
-[ -n "$staged" ] || exit 0
+[ -n "$staged" ] || pass_hook
 
 out=$(python3 "$here/../shared/lint.py" "$VAULT" --quiet 2>&1)
 if [ $? -ne 0 ]; then
+  if [ "$is_agy" = "True" ]; then
+    reason=$(printf "볼트 검사에 오류가 있어 커밋을 멈춥니다. 오류를 고친 뒤 다시 커밋하십시오.\n(경고는 막지 않습니다. 오류만입니다.)\n%s" "$out")
+    python3 -c 'import json, sys; print(json.dumps({"decision": "deny", "reason": sys.argv[1]}))' "$reason"
+    exit 0
+  fi
   {
     echo "볼트 검사에 오류가 있어 커밋을 멈춥니다. 오류를 고친 뒤 다시 커밋하십시오."
     echo "(경고는 막지 않습니다. 오류만입니다.)"
@@ -41,4 +64,5 @@ if [ $? -ne 0 ]; then
   } >&2
   exit 2
 fi
-exit 0
+
+pass_hook

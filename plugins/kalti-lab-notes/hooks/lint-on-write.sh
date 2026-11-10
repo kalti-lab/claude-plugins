@@ -10,27 +10,43 @@
 # 한 줄이라도 빨리 통과시킨다.
 
 input=$(cat)
-file=$(printf '%s' "$input" | python3 -c '
+parsed=$(printf '%s' "$input" | python3 -c '
 import json, sys
 try:
     d = json.load(sys.stdin)
-    print(d.get("tool_input", {}).get("file_path", ""))
+    is_agy = "conversationId" in d or "toolCall" in d
+    file = d.get("tool_input", {}).get("file_path") or d.get("tool_input", {}).get("path")
+    if not file:
+        tc = d.get("toolCall", {})
+        args = tc.get("args") or tc.get("arguments") or {}
+        file = args.get("Path") or args.get("path") or args.get("filePath")
+    val = file or ""
+    print(str(is_agy) + "\t" + val)
 except Exception:
-    pass' 2>/dev/null)
+    print("False\t")
+' 2>/dev/null)
+
+is_agy=$(printf '%s' "$parsed" | cut -f1)
+file=$(printf '%s' "$parsed" | cut -f2-)
+
+pass_hook() {
+  [ "$is_agy" = "True" ] && echo "{}"
+  exit 0
+}
 
 case "$file" in
   # 소식은 .html이라 .md만 보던 때는 훅을 통째로 빠져나갔다 — 낱말 규칙이
   # 가장 많이 새는 산출물이 정작 검사 밖이었다(2026-09-16에 찾음).
   *.md|*.html) ;;
-  *) exit 0 ;;
+  *) pass_hook ;;
 esac
 
 . ~/.config/kalti/notes.env 2>/dev/null
 VAULT="${KALTI_VAULT:-$HOME/dev/lab-notes}"
-[ -d "$VAULT/journals" ] || exit 0
+[ -d "$VAULT/journals" ] || pass_hook
 case "$file" in
   "$VAULT"/*) ;;
-  *) exit 0 ;;
+  *) pass_hook ;;
 esac
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -41,6 +57,7 @@ if [ $? -ne 0 ]; then
     echo "낱말 검사(lint)에 걸렸습니다. shared/writing.md의 규칙대로 쉬운 말로 고치십시오."
     echo "$out"
   } >&2
+  [ "$is_agy" = "True" ] && echo "{}"
   exit 2
 fi
-exit 0
+pass_hook

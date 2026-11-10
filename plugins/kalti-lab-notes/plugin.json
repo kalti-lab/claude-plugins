@@ -1,0 +1,8 @@
+{
+  "name": "kalti-lab-notes",
+  "displayName": "kalti lab notes",
+  "version": "0.59.1",
+  "description": "kalti 연구일지 시스템 — 일지 작성·온톨로지 정제 규약을 LLM에 주입하는 스킬 묶음",
+  "author": "kalti-lab",
+  "repository": "https://github.com/kalti-lab/claude-plugins"
+}

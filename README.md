@@ -1,6 +1,6 @@
 # kalti-lab-notes 플러그인
 
-kalti 연구실용 스킬 묶음. Claude Code 플러그인 형식으로 배포하며, 이 형식을 지원하는 Codex에서도 같은 마켓플레이스에서 설치할 수 있다.
+kalti 연구실용 스킬 묶음. Claude Code 플러그인 형식으로 배포하며, 이 형식을 지원하는 Codex 및 Antigravity(AGY)에서도 같은 마켓플레이스/저장소에서 설치할 수 있다.
 
 ## kalti-lab-notes
 
@@ -42,18 +42,40 @@ codex plugin list --marketplace kalti-lab
 
 Codex의 설치 명령은 `install`이 아니라 `add`다. 마켓플레이스를 추가한 뒤에는 `codex plugin add` 대신 Codex CLI의 `/plugins`에서 설치할 수도 있다. Codex는 [Claude 호환 마켓플레이스 형식](https://learn.chatgpt.com/ko-KR/docs/enterprise/plugin-management)을 직접 읽으므로 같은 저장소를 사용한다.
 
+#### Antigravity (AGY)
+
+터미널에서 GitHub 저장소 URL로 바로 설치할 수 있다 (저장소를 미리 clone하지 않아도 자동 다운로드 및 설치):
+
+```bash
+agy plugin install https://github.com/kalti-lab/claude-plugins
+```
+
+로컬에 저장소가 이미 있다면 로컬 디렉터리 경로로 설치할 수도 있다:
+
+```bash
+agy plugin install ./plugins/kalti-lab-notes
+```
+
+또는 기존에 Claude Code에서 이미 설치해 사용 중이었다면 다음 한 줄로 즉시 가져올 수 있다:
+
+```bash
+agy plugin import claude
+```
+
 #### 최초 실행과 호출
 
-설치 또는 업데이트 후 새 Claude Code/Codex 세션을 시작한다. 스킬 호출 표기는 다음과 같다.
+설치 또는 업데이트 후 새 세션을 시작한다. 스킬 호출 표기는 다음과 같다.
 
-| 기능 | Claude Code | Codex |
-|---|---|---|
-| 1회 셋업 | `/kalti-setup` | `$kalti-lab-notes:kalti-setup` |
-| 지식 조회 | `/kalti-context` | `$kalti-lab-notes:kalti-context` |
-| 일지 작성 | `/kalti-journal` | `$kalti-lab-notes:kalti-journal` |
-| 주간 정리 | `/kalti-report` | `$kalti-lab-notes:kalti-report` |
-| 기여 현황 | `/kalti-report --contrib` | `$kalti-lab-notes:kalti-report --contrib` |
-| 온톨로지 정제 | `/kalti-ontology` | `$kalti-lab-notes:kalti-ontology` |
+| 기능 | Claude Code | Codex | Antigravity (AGY) |
+|---|---|---|---|
+| 1회 셋업 | `/kalti-setup` | `$kalti-lab-notes:kalti-setup` | `/kalti-setup` 또는 "셋업 실행해줘" |
+| 지식 조회 | `/kalti-context` | `$kalti-lab-notes:kalti-context` | `/kalti-context` 또는 "지식 조회해줘" |
+| 일지 작성 | `/kalti-journal` | `$kalti-lab-notes:kalti-journal` | `/kalti-journal` 또는 "일지 작성해줘" |
+| 주간 정리 | `/kalti-report` | `$kalti-lab-notes:kalti-report` | `/kalti-report` 또는 "주간 보고 정리해줘" |
+| 기여 현황 | `/kalti-report --contrib` | `$kalti-lab-notes:kalti-report --contrib` | `/kalti-report --contrib` |
+| 온톨로지 정제 | `/kalti-ontology` | `$kalti-lab-notes:kalti-ontology` | `/kalti-ontology` 또는 "온톨로지 정제해줘" |
+
+*(Antigravity는 온디맨드 스킬 감지 기능을 내장하여, 슬래시 명령어를 치지 않고 자연어로 요청해도 관련 스킬 규칙이 자동으로 로드됩니다.)*
 
 먼저 **한 번** `kalti-setup`을 돌리면 볼트 위치·본인 폴더가 `~/.config/kalti/notes.env`에 잡힌다. 그다음부턴 **호출 위치는 자유** — 작업하던 코드·실험 폴더 어디서 `kalti-journal`(일지)·`kalti-ontology`(정제)를 불러도, **일지는 항상 셋업에서 지정한 `journals/<본인>/`에 저장**된다. (저장 위치가 자유로운 게 아니라, *부르는 곳*이 자유로운 것 — 연구 작업이 보통 볼트 밖에서 일어나므로 호출만 전역으로 푼 것이다.)
 
